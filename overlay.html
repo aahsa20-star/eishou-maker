@@ -3,221 +3,244 @@
 <head>
 <meta charset="UTF-8">
 <title>詠唱オーバーレイ</title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&family=Noto+Serif+JP:wght@700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@400;700;800&family=Zen+Kaku+Gothic+New:wght@400;700&display=swap" rel="stylesheet">
 <style>
+:root {
+  --color-main: #F0E6C8;
+  --color-gold: #C8A84B;
+  --color-blue: #7EB8D4;
+  --color-red: #C84B4B;
+  --color-purple: #9B7EC8;
+  --color-bg: rgba(8, 8, 20, 0.88);
+  --color-border: rgba(200, 168, 75, 0.6);
+  --color-accent: var(--color-gold);
+}
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
   width: 1920px;
   height: 1080px;
   overflow: hidden;
   background: transparent;
-  font-family: 'Noto Serif JP', serif;
+  font-family: 'Zen Kaku Gothic New', sans-serif;
 }
-canvas#particles {
+
+/* Scanlines */
+.scanlines {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,0.03) 2px,
+    rgba(0,0,0,0.03) 4px
+  );
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* Vignette */
+.vignette {
   position: fixed;
   top: 0; left: 0;
   width: 100%; height: 100%;
   pointer-events: none;
-  z-index: 1;
-}
-.overlay-bg {
-  position: fixed;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
-  background: rgba(0, 0, 0, 0.75);
+  z-index: 2;
   opacity: 0;
   transition: opacity 0.5s;
-  z-index: 2;
+  box-shadow: inset 0 0 200px rgba(0,0,0,0.7);
 }
-.overlay-bg.visible { opacity: 1; }
-.chant-container {
+.vignette.visible { opacity: 1; }
+
+/* Chant Window */
+.chant-window {
   position: fixed;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
+  left: 50%;
+  top: 55%;
+  transform: translate(-50%, -50%);
+  width: 70%;
+  max-width: 900px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 2px;
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,0.05),
+    0 0 40px rgba(200, 168, 75, 0.15),
+    0 0 80px rgba(0, 0, 0, 0.5);
+  padding: 32px 40px 28px;
+  z-index: 5;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.chant-window.visible { opacity: 1; }
+
+.chant-type {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  margin-bottom: 20px;
+  color: var(--color-accent);
+  opacity: 0.7;
+}
+
+.chant-body {
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  z-index: 3;
-  padding: 80px 120px;
-  gap: 24px;
+  gap: 8px;
+  min-height: 120px;
 }
+
 .chant-line {
-  font-size: 48px;
-  font-weight: 900;
-  color: #D4AF37;
-  text-shadow:
-    0 0 20px rgba(255, 255, 255, 0.6),
-    0 0 40px rgba(212, 175, 55, 0.4),
-    0 0 80px rgba(212, 175, 55, 0.2);
-  text-align: center;
+  font-family: 'Shippori Mincho B1', serif;
+  font-size: 36px;
+  font-weight: 700;
+  color: var(--color-main);
+  line-height: 1.8;
   opacity: 0;
-  transform: translateY(20px);
-  transition: opacity 0.8s, transform 0.8s;
-  line-height: 1.6;
+  transform: translateY(8px);
+  transition: opacity 0.2s ease-out, transform 0.2s ease-out;
 }
 .chant-line.visible {
   opacity: 1;
   transform: translateY(0);
 }
 
-/* History sidebar */
+.chant-divider {
+  border: none;
+  border-top: 1px solid rgba(200, 168, 75, 0.2);
+  margin: 16px 0 12px;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.chant-divider.visible { opacity: 1; }
+
+.chant-words {
+  font-size: 13px;
+  color: rgba(240, 230, 200, 0.4);
+  letter-spacing: 1px;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.chant-words.visible { opacity: 1; }
+.chant-words span {
+  margin-right: 12px;
+}
+
+/* History Sidebar */
 .history-sidebar {
   position: fixed;
   top: 0; right: 0;
-  width: 360px;
+  width: 320px;
   height: 100%;
   display: flex;
   flex-direction: column;
   padding: 24px 20px;
-  gap: 12px;
   z-index: 0;
   pointer-events: none;
 }
 .history-sidebar-title {
-  font-size: 14px;
-  color: rgba(212, 175, 55, 0.3);
-  letter-spacing: 3px;
-  text-transform: uppercase;
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(240, 230, 200, 0.25);
+  letter-spacing: 4px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(200, 168, 75, 0.15);
+  margin-bottom: 12px;
 }
 .history-sidebar-item {
-  background: rgba(15, 10, 25, 0.4);
-  border: 1px solid rgba(212, 175, 55, 0.1);
-  border-radius: 8px;
-  padding: 10px 14px;
-  font-size: 14px;
-  color: rgba(212, 175, 55, 0.35);
-  line-height: 1.6;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(200, 168, 75, 0.06);
+  cursor: pointer;
+}
+.history-sidebar-num {
+  font-size: 11px;
+  color: rgba(200, 168, 75, 0.25);
+  font-weight: 700;
+  flex-shrink: 0;
+  width: 20px;
+}
+.history-sidebar-text {
+  font-size: 13px;
+  color: rgba(240, 230, 200, 0.3);
+  line-height: 1.5;
+  flex: 1;
   overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.history-sidebar-time {
+  font-size: 11px;
+  color: rgba(240, 230, 200, 0.15);
+  flex-shrink: 0;
 }
 
 /* Guide */
 .guide {
   position: fixed;
-  left: 20px;
-  bottom: 20px;
-  background: rgba(0, 0, 0, 0.6);
-  border-radius: 10px;
-  padding: 14px 20px;
-  font-family: 'Noto Sans JP', sans-serif;
+  left: 24px;
+  bottom: 24px;
   z-index: 0;
   pointer-events: none;
   transition: opacity 0.6s, transform 0.6s;
 }
 .guide.hidden {
   opacity: 0;
-  transform: translateY(20px);
-  pointer-events: none;
+  transform: translateY(12px);
 }
 .guide.visible {
   opacity: 1;
   transform: translateY(0);
 }
 .guide-title {
-  font-size: 16px;
+  font-size: 12px;
   font-weight: 700;
-  color: #fff;
+  color: rgba(240, 230, 200, 0.35);
+  letter-spacing: 2px;
   margin-bottom: 6px;
 }
 .guide-text {
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.7);
+  font-size: 13px;
+  color: rgba(240, 230, 200, 0.25);
   line-height: 1.8;
 }
 .guide-text .cmd {
-  color: #D4AF37;
+  color: var(--color-blue);
   font-weight: 700;
 }
 </style>
 </head>
 <body>
-<canvas id="particles"></canvas>
-<div class="overlay-bg" id="bg"></div>
-<div class="chant-container" id="container"></div>
-<div class="history-sidebar" id="historySidebar">
-  <div class="history-sidebar-title">履歴</div>
+<div class="scanlines"></div>
+<div class="vignette" id="vignette"></div>
+
+<div class="chant-window" id="chantWindow">
+  <div class="chant-type" id="chantType"></div>
+  <div class="chant-body" id="chantBody"></div>
+  <hr class="chant-divider" id="chantDivider">
+  <div class="chant-words" id="chantWords"></div>
 </div>
+
+<div class="history-sidebar" id="historySidebar">
+  <div class="history-sidebar-title">詠唱履歴</div>
+</div>
+
 <div class="guide hidden" id="guide">
-  <div class="guide-title">💬 チャットで参加しよう！</div>
+  <div class="guide-title">[ チャットで参加 ]</div>
   <div class="guide-text"><span class="cmd">!word 単語</span>　を送ってね<br>例）<span class="cmd">!word 闇</span>　<span class="cmd">!word 覇</span>　<span class="cmd">!word 混沌</span></div>
 </div>
 
 <script>
-// Particle system
-const canvas = document.getElementById('particles');
-const ctx = canvas.getContext('2d');
-let particles = [];
-let animating = false;
-
-function resizeCanvas() {
-  canvas.width = 1920;
-  canvas.height = 1080;
-}
-resizeCanvas();
-
-class Particle {
-  constructor() {
-    this.reset();
-  }
-  reset() {
-    const side = Math.random() * 4 | 0;
-    if (side === 0) { this.x = Math.random() * 1920; this.y = -10; }
-    else if (side === 1) { this.x = 1930; this.y = Math.random() * 1080; }
-    else if (side === 2) { this.x = Math.random() * 1920; this.y = 1090; }
-    else { this.x = -10; this.y = Math.random() * 1080; }
-    this.targetX = 960 + (Math.random() - 0.5) * 600;
-    this.targetY = 540 + (Math.random() - 0.5) * 400;
-    this.speed = 0.005 + Math.random() * 0.01;
-    this.progress = 0;
-    this.size = 1.5 + Math.random() * 3;
-    this.alpha = 0.3 + Math.random() * 0.7;
-    const colors = ['#D4AF37', '#FFD700', '#FFF8DC', '#FFFACD'];
-    this.color = colors[Math.random() * colors.length | 0];
-    this.startX = this.x;
-    this.startY = this.y;
-  }
-  update() {
-    this.progress += this.speed;
-    if (this.progress >= 1) { this.reset(); return; }
-    this.x = this.startX + (this.targetX - this.startX) * this.progress;
-    this.y = this.startY + (this.targetY - this.startY) * this.progress;
-    this.x += Math.sin(this.progress * 10 + this.startX) * 2;
-    this.y += Math.cos(this.progress * 8 + this.startY) * 2;
-  }
-  draw() {
-    const fade = this.progress < 0.2 ? this.progress / 0.2
-               : this.progress > 0.7 ? (1 - this.progress) / 0.3 : 1;
-    ctx.globalAlpha = this.alpha * fade;
-    ctx.beginPath();
-    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-    ctx.fillStyle = this.color;
-    ctx.shadowColor = this.color;
-    ctx.shadowBlur = 15;
-    ctx.fill();
-    ctx.shadowBlur = 0;
-  }
-}
-
-function startParticles() {
-  if (animating) return;
-  animating = true;
-  particles = Array.from({ length: 80 }, () => new Particle());
-  function loop() {
-    if (!animating) { ctx.clearRect(0, 0, 1920, 1080); return; }
-    ctx.clearRect(0, 0, 1920, 1080);
-    for (const p of particles) { p.update(); p.draw(); }
-    ctx.globalAlpha = 1;
-    requestAnimationFrame(loop);
-  }
-  loop();
-}
-
-function stopParticles() {
-  animating = false;
-}
+const TYPE_CONFIG = {
+  '召喚': { icon: '⚡', color: '#C8A84B' },
+  '解放': { icon: '🔓', color: '#7EB8D4' },
+  '封印': { icon: '🔒', color: '#9B7EC8' },
+  '滅亡': { icon: '💀', color: '#C84B4B' },
+  '覚醒': { icon: '👁', color: '#C8A84B' },
+};
 
 // Guide
 const guideEl = document.getElementById('guide');
@@ -233,54 +256,85 @@ function updateGuide() {
     guideEl.classList.add('hidden');
   }
 }
-// Initial fade-in
 setTimeout(updateGuide, 300);
 
 // Chant display
-function showChant(text) {
-  const bg = document.getElementById('bg');
-  const container = document.getElementById('container');
-  container.innerHTML = '';
+let chantTimeout = null;
+
+function showChant(text, type, words) {
+  // Clear any pending animation
+  if (chantTimeout) { clearTimeout(chantTimeout); chantTimeout = null; }
+
   chantActive = true;
   updateGuide();
 
-  // Split into sentences
+  const cfg = TYPE_CONFIG[type] || TYPE_CONFIG['召喚'];
+  document.documentElement.style.setProperty('--color-accent', cfg.color);
+
+  const vignette = document.getElementById('vignette');
+  const win = document.getElementById('chantWindow');
+  const body = document.getElementById('chantBody');
+  const typeEl = document.getElementById('chantType');
+  const divider = document.getElementById('chantDivider');
+  const wordsEl = document.getElementById('chantWords');
+
+  // Reset
+  body.innerHTML = '';
+  divider.classList.remove('visible');
+  wordsEl.classList.remove('visible');
+  typeEl.textContent = `${cfg.icon}  ${type || '召喚'}`;
+  typeEl.style.color = cfg.color;
+
+  // Split into lines
   const lines = text.split(/(?<=[。！\n])/).map(s => s.trim()).filter(Boolean);
 
-  // Create line elements
   const lineEls = lines.map(line => {
     const el = document.createElement('div');
     el.className = 'chant-line';
     el.textContent = line;
-    container.appendChild(el);
+    body.appendChild(el);
     return el;
   });
 
-  // Start sequence
-  startParticles();
-  bg.classList.add('visible');
+  // Set words
+  if (words && words.length > 0) {
+    wordsEl.innerHTML = '使用単語：' + words.map(w => `<span>${w}</span>`).join('');
+  } else {
+    wordsEl.innerHTML = '';
+  }
 
-  // Reveal lines one by one
+  // Animate in
+  vignette.classList.add('visible');
+  win.classList.add('visible');
+
+  // Reveal lines
+  const timeouts = [];
   lineEls.forEach((el, i) => {
-    setTimeout(() => el.classList.add('visible'), 800 + i * 800);
+    timeouts.push(setTimeout(() => el.classList.add('visible'), 400 + i * 600));
   });
 
+  // Show words after all lines
+  const wordsDelay = 400 + lines.length * 600 + 800;
+  timeouts.push(setTimeout(() => {
+    divider.classList.add('visible');
+    wordsEl.classList.add('visible');
+  }, wordsDelay));
+
   // Hold then fade out
-  const totalReveal = 800 + lineEls.length * 800;
   const holdTime = 5000;
-  setTimeout(() => {
-    bg.classList.remove('visible');
-    lineEls.forEach(el => {
-      el.style.transition = 'opacity 1s, transform 1s';
-      el.classList.remove('visible');
-    });
-    setTimeout(() => {
-      stopParticles();
-      container.innerHTML = '';
+  chantTimeout = setTimeout(() => {
+    win.classList.remove('visible');
+    vignette.classList.remove('visible');
+
+    chantTimeout = setTimeout(() => {
+      body.innerHTML = '';
+      divider.classList.remove('visible');
+      wordsEl.classList.remove('visible');
       chantActive = false;
       updateGuide();
-    }, 1200);
-  }, totalReveal + holdTime);
+      chantTimeout = null;
+    }, 500);
+  }, wordsDelay + holdTime);
 }
 
 // History sidebar
@@ -291,18 +345,27 @@ function renderOverlayHistory() {
   sidebar.appendChild(titleEl);
   try {
     const history = JSON.parse(localStorage.getItem('chant_history') || '[]');
-    history.forEach(entry => {
+    history.forEach((entry, i) => {
       const item = document.createElement('div');
       item.className = 'history-sidebar-item';
-      item.textContent = entry.text;
+      const time = new Date(entry.timestamp);
+      const hh = String(time.getHours()).padStart(2, '0');
+      const mm = String(time.getMinutes()).padStart(2, '0');
+      item.innerHTML = `<span class="history-sidebar-num">${String(i + 1).padStart(2, '0')}</span><span class="history-sidebar-text">${escHtml(entry.text)}</span><span class="history-sidebar-time">${hh}:${mm}</span>`;
       sidebar.appendChild(item);
     });
   } catch {}
 }
 
+function escHtml(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
 renderOverlayHistory();
 
-// Listen for localStorage changes from index.html
+// Listen for localStorage changes
 window.addEventListener('storage', (e) => {
   if (e.key === 'show_guide') {
     guideEnabled = e.newValue !== 'false';
@@ -313,7 +376,7 @@ window.addEventListener('storage', (e) => {
   if (e.key !== 'chant_data' || !e.newValue) return;
   try {
     const data = JSON.parse(e.newValue);
-    if (data.text) showChant(data.text);
+    if (data.text) showChant(data.text, data.type, data.words);
   } catch {}
 });
 </script>

@@ -223,13 +223,6 @@ body {
 }
 
 /* Generate Button */
-.generate-area {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  padding: 0 24px 20px;
-  gap: 16px;
-}
 .btn-generate {
   background: linear-gradient(135deg, #D4AF37, #a08520);
   color: #0a0a12;
@@ -323,6 +316,24 @@ body {
   cursor: pointer;
 }
 .btn-clear:hover { border-color: #a08060; color: #a08060; }
+
+/* Generate Area */
+.generate-area {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 0 24px 8px;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.rate-info {
+  text-align: right;
+  padding: 0 24px 20px;
+  font-size: 13px;
+  color: #D4AF37;
+}
+.rate-info.warning { color: #e0a030; }
+.rate-info.danger { color: #e06060; }
 
 /* Result Preview */
 .result-preview {
@@ -493,6 +504,7 @@ body {
   <button class="btn-clear" onclick="clearSelected()">選択をクリア</button>
   <button class="btn-generate" id="generateBtn" onclick="generate()">詠唱生成</button>
 </div>
+<div class="rate-info" id="rateInfo"></div>
 
 <div class="result-preview" id="resultPreview">
   <div class="result-text" id="resultText"></div>
@@ -643,11 +655,57 @@ function renderSelected() {
   });
 }
 
+// Rate limit display
+const RATE_MAX = 5;
+const RATE_WINDOW = 3600000; // 1 hour
+
+function getRateLogs() {
+  try { return JSON.parse(localStorage.getItem('rate_limit_log') || '[]'); } catch { return []; }
+}
+
+function getActiveRateLogs() {
+  const now = Date.now();
+  return getRateLogs().filter(t => now - t < RATE_WINDOW);
+}
+
+function addRateLog() {
+  const logs = [...getActiveRateLogs(), Date.now()];
+  localStorage.setItem('rate_limit_log', JSON.stringify(logs));
+  updateRateInfo();
+}
+
+function updateRateInfo() {
+  const logs = getActiveRateLogs();
+  const remaining = Math.max(0, RATE_MAX - logs.length);
+  const el = document.getElementById('rateInfo');
+  const btn = document.getElementById('generateBtn');
+
+  let text = `残り ✨ ${remaining} / ${RATE_MAX} 回`;
+  if (logs.length > 0 && remaining < RATE_MAX) {
+    const oldest = Math.min(...logs);
+    const resetAt = oldest + RATE_WINDOW;
+    const minsLeft = Math.max(1, Math.ceil((resetAt - Date.now()) / 60000));
+    text += `（${minsLeft}分後リセット）`;
+  }
+
+  el.textContent = text;
+  el.className = 'rate-info' + (remaining <= 0 ? ' danger' : remaining <= 2 ? ' warning' : '');
+
+  if (remaining <= 0) {
+    btn.disabled = true;
+    el.textContent = '残り ✨ 0 / 5 回 ― しばらく時間をおいてください';
+  }
+}
+
+updateRateInfo();
+setInterval(updateRateInfo, 30000);
+
 // Generate
 const API_URL = '/api/chant'; // Vercelデプロイ後はそのまま動く
 
 async function generate() {
   if (selected.length === 0) { alert('単語を選択してください'); return; }
+  if (getActiveRateLogs().length >= RATE_MAX) { updateRateInfo(); return; }
 
   const btn = document.getElementById('generateBtn');
   btn.disabled = true;
@@ -669,10 +727,13 @@ async function generate() {
 
     // Send to overlay
     const ts = Date.now();
-    localStorage.setItem('chant_data', JSON.stringify({ text, timestamp: ts }));
+    localStorage.setItem('chant_data', JSON.stringify({ text, timestamp: ts, type: selectedType, words: [...selected] }));
 
     // Save to history
     saveHistory({ text, words: [...selected], timestamp: ts });
+
+    // Rate limit log
+    addRateLog();
 
     // Speech
     if (speechEnabled && 'speechSynthesis' in window) {
@@ -682,8 +743,8 @@ async function generate() {
       utterance.rate = 0.75;
       utterance.pitch = 0.8;
       utterance.volume = 1.0;
-      utterance.onend = () => { btn.disabled = false; btn.textContent = '詠唱生成'; };
-      utterance.onerror = () => { btn.disabled = false; btn.textContent = '詠唱生成'; };
+      utterance.onend = () => { btn.disabled = false; btn.textContent = '詠唱生成'; updateRateInfo(); };
+      utterance.onerror = () => { btn.disabled = false; btn.textContent = '詠唱生成'; updateRateInfo(); };
       speechSynthesis.speak(utterance);
       return; // button stays disabled until speech ends
     }
