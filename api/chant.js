@@ -14,11 +14,11 @@ export default async function handler(req, res) {
   const entry = rateLimit.get(ip);
   if (entry && now < entry.resetAt) {
     if (entry.count >= 5) {
-      return res.status(429).json({ error: 'レート制限中です。1分後に再試行してください' });
+      return res.status(429).json({ error: 'レート制限中です。1時間に5回までです' });
     }
     entry.count++;
   } else {
-    rateLimit.set(ip, { count: 1, resetAt: now + 60000 });
+    rateLimit.set(ip, { count: 1, resetAt: now + 3600000 });
   }
 
   // Validate
