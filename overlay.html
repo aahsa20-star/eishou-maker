@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>詠唱オーバーレイ</title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&family=Noto+Serif+JP:wght@700;900&display=swap" rel="stylesheet">
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
@@ -93,6 +93,44 @@ canvas#particles {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+/* Guide */
+.guide {
+  position: fixed;
+  left: 20px;
+  bottom: 20px;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 10px;
+  padding: 14px 20px;
+  font-family: 'Noto Sans JP', sans-serif;
+  z-index: 0;
+  pointer-events: none;
+  transition: opacity 0.6s, transform 0.6s;
+}
+.guide.hidden {
+  opacity: 0;
+  transform: translateY(20px);
+  pointer-events: none;
+}
+.guide.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.guide-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 6px;
+}
+.guide-text {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.8;
+}
+.guide-text .cmd {
+  color: #D4AF37;
+  font-weight: 700;
+}
 </style>
 </head>
 <body>
@@ -101,6 +139,10 @@ canvas#particles {
 <div class="chant-container" id="container"></div>
 <div class="history-sidebar" id="historySidebar">
   <div class="history-sidebar-title">履歴</div>
+</div>
+<div class="guide hidden" id="guide">
+  <div class="guide-title">💬 チャットで参加しよう！</div>
+  <div class="guide-text"><span class="cmd">!word 単語</span>　を送ってね<br>例）<span class="cmd">!word 闇</span>　<span class="cmd">!word 覇</span>　<span class="cmd">!word 混沌</span></div>
 </div>
 
 <script>
@@ -177,11 +219,30 @@ function stopParticles() {
   animating = false;
 }
 
+// Guide
+const guideEl = document.getElementById('guide');
+let guideEnabled = localStorage.getItem('show_guide') !== 'false';
+let chantActive = false;
+
+function updateGuide() {
+  if (guideEnabled && !chantActive) {
+    guideEl.classList.remove('hidden');
+    guideEl.classList.add('visible');
+  } else {
+    guideEl.classList.remove('visible');
+    guideEl.classList.add('hidden');
+  }
+}
+// Initial fade-in
+setTimeout(updateGuide, 300);
+
 // Chant display
 function showChant(text) {
   const bg = document.getElementById('bg');
   const container = document.getElementById('container');
   container.innerHTML = '';
+  chantActive = true;
+  updateGuide();
 
   // Split into sentences
   const lines = text.split(/(?<=[。！\n])/).map(s => s.trim()).filter(Boolean);
@@ -216,6 +277,8 @@ function showChant(text) {
     setTimeout(() => {
       stopParticles();
       container.innerHTML = '';
+      chantActive = false;
+      updateGuide();
     }, 1200);
   }, totalReveal + holdTime);
 }
@@ -241,6 +304,11 @@ renderOverlayHistory();
 
 // Listen for localStorage changes from index.html
 window.addEventListener('storage', (e) => {
+  if (e.key === 'show_guide') {
+    guideEnabled = e.newValue !== 'false';
+    updateGuide();
+    return;
+  }
   if (e.key === 'chant_history') { renderOverlayHistory(); return; }
   if (e.key !== 'chant_data' || !e.newValue) return;
   try {

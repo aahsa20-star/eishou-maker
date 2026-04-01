@@ -22,7 +22,9 @@ export default async function handler(req, res) {
   }
 
   // Validate
-  const { words } = req.body || {};
+  const { words, type } = req.body || {};
+  const validTypes = ['召喚', '解放', '封印', '滅亡', '覚醒'];
+  const chantType = validTypes.includes(type) ? type : '召喚';
   if (!Array.isArray(words) || words.length === 0 || words.length > 20) {
     return res.status(400).json({ error: '単語を1〜20個指定してください' });
   }
@@ -48,7 +50,14 @@ export default async function handler(req, res) {
         model: 'claude-sonnet-4-20250514',
         max_tokens: 512,
         system: `あなたは厨二病な詠唱文を生成する専門家です。
-与えられた単語を必ず全て使い、それらを繋いでかっこいい召喚・解放・降臨系の詠唱文を1つ生成してください。
+与えられた単語を必ず全て使い、「${chantType}」タイプの詠唱文を1つ生成してください。
+${({
+  '召喚': 'トーン：強大な存在を呼び出す詠唱。威圧感と高揚感に満ちた、召喚の儀式のような荘厳さで。',
+  '解放': 'トーン：封じられた力が解き放たれる詠唱。爆発的な開放感、枷が砕ける激しさで。',
+  '封印': 'トーン：力を閉じ込める詠唱。重厚な静寂、呪いのような厳かさ、鎖が絡みつく雰囲気で。',
+  '滅亡': 'トーン：すべてが終わりを迎える詠唱。絶望と諦観、壮大な終末感で。',
+  '覚醒': 'トーン：眠れる力が目覚める詠唱。静かな始まりから徐々に高まる覚醒感で。',
+})[chantType]}
 以下のルールを守ること：
 - 3〜5文程度
 - 「——」や「！」「よ」「せよ」など詠唱らしい語尾を使う

@@ -254,6 +254,64 @@ body {
   transform: none;
   box-shadow: none;
 }
+
+/* Type Selector & Speech Toggle */
+.type-selector {
+  display: flex;
+  gap: 8px;
+  padding: 0 24px 16px;
+  align-items: center;
+}
+.type-btn {
+  flex: 1;
+  background: rgba(30, 20, 50, 0.8);
+  color: rgba(200, 190, 170, 0.5);
+  border: 1px solid rgba(100, 70, 130, 0.3);
+  padding: 12px 8px;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.25s;
+  text-align: center;
+}
+.type-btn:hover {
+  border-color: rgba(212, 175, 55, 0.4);
+  color: rgba(200, 190, 170, 0.8);
+}
+.type-btn.active {
+  background: linear-gradient(135deg, #D4AF37, #a08520);
+  color: #0a0a12;
+  border-color: #D4AF37;
+  box-shadow: 0 0 16px rgba(212, 175, 55, 0.4);
+  text-shadow: 0 1px 0 rgba(255,255,255,0.2);
+}
+.speech-toggle {
+  background: rgba(30, 20, 50, 0.8);
+  color: rgba(200, 190, 170, 0.5);
+  border: 1px solid rgba(100, 70, 130, 0.3);
+  padding: 12px 14px;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.25s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.speech-toggle:hover {
+  border-color: rgba(212, 175, 55, 0.4);
+  color: rgba(200, 190, 170, 0.8);
+}
+.speech-toggle.active {
+  background: linear-gradient(135deg, #D4AF37, #a08520);
+  color: #0a0a12;
+  border-color: #D4AF37;
+  box-shadow: 0 0 16px rgba(212, 175, 55, 0.4);
+  text-shadow: 0 1px 0 rgba(255,255,255,0.2);
+}
 .btn-clear {
   background: transparent;
   color: #806050;
@@ -282,6 +340,31 @@ body {
   color: #D4AF37;
   text-align: center;
   white-space: pre-wrap;
+}
+.result-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+.btn-copy {
+  background: transparent;
+  color: #D4AF37;
+  border: 1px solid rgba(212, 175, 55, 0.4);
+  padding: 6px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-copy:hover {
+  background: rgba(212, 175, 55, 0.15);
+  box-shadow: 0 0 8px rgba(212, 175, 55, 0.2);
+}
+.btn-copy.copied {
+  background: rgba(30, 120, 50, 0.4);
+  border-color: rgba(80, 200, 80, 0.5);
+  color: #60e060;
 }
 
 /* History */
@@ -396,6 +479,16 @@ body {
   </div>
 </div>
 
+<div class="type-selector">
+  <button class="type-btn active" data-type="召喚" onclick="selectType(this)">⚡ 召喚</button>
+  <button class="type-btn" data-type="解放" onclick="selectType(this)">🔓 解放</button>
+  <button class="type-btn" data-type="封印" onclick="selectType(this)">🔒 封印</button>
+  <button class="type-btn" data-type="滅亡" onclick="selectType(this)">💀 滅亡</button>
+  <button class="type-btn" data-type="覚醒" onclick="selectType(this)">👁 覚醒</button>
+  <button class="speech-toggle active" id="speechToggle" onclick="toggleSpeech()">🔊 読み上げ</button>
+  <button class="speech-toggle active" id="guideToggle" onclick="toggleGuide()">👁 参加説明</button>
+</div>
+
 <div class="generate-area">
   <button class="btn-clear" onclick="clearSelected()">選択をクリア</button>
   <button class="btn-generate" id="generateBtn" onclick="generate()">詠唱生成</button>
@@ -403,6 +496,9 @@ body {
 
 <div class="result-preview" id="resultPreview">
   <div class="result-text" id="resultText"></div>
+  <div class="result-actions">
+    <button class="btn-copy" id="copyBtn" onclick="copyChant()">📋 コピー</button>
+  </div>
 </div>
 
 <div class="history-area">
@@ -414,6 +510,8 @@ body {
 // State
 let words = {}; // { word: count }
 let selected = [];
+let selectedType = '召喚';
+let speechEnabled = true;
 let ws = null;
 let connected = false;
 
@@ -559,7 +657,7 @@ async function generate() {
     const res = await fetch(API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ words: selected })
+      body: JSON.stringify({ words: selected, type: selectedType })
     });
     const data = await res.json();
     if (data.error) throw new Error(data.error);
@@ -575,6 +673,20 @@ async function generate() {
 
     // Save to history
     saveHistory({ text, words: [...selected], timestamp: ts });
+
+    // Speech
+    if (speechEnabled && 'speechSynthesis' in window) {
+      speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'ja-JP';
+      utterance.rate = 0.75;
+      utterance.pitch = 0.8;
+      utterance.volume = 1.0;
+      utterance.onend = () => { btn.disabled = false; btn.textContent = '詠唱生成'; };
+      utterance.onerror = () => { btn.disabled = false; btn.textContent = '詠唱生成'; };
+      speechSynthesis.speak(utterance);
+      return; // button stays disabled until speech ends
+    }
   } catch (e) {
     alert('エラー: ' + e.message);
   }
@@ -620,9 +732,68 @@ function renderHistory() {
     const tags = (entry.words || []).map(w => `<span class="history-tag">${esc(w)}</span>`).join('');
     card.innerHTML = `<div class="history-chant">${esc(entry.text)}</div>
       <div class="history-meta">${tags}<span class="history-time">${hh}:${mm}</span>
-      <div class="history-actions"><button class="history-btn replay" onclick="replayChant(${i})">再表示</button><button class="history-btn delete" onclick="deleteHistory(${i})">削除</button></div></div>`;
+      <div class="history-actions"><button class="history-btn replay" onclick="copyHistoryChant(${i}, this)">📋</button><button class="history-btn replay" onclick="replayChant(${i})">再表示</button><button class="history-btn delete" onclick="deleteHistory(${i})">削除</button></div></div>`;
     list.appendChild(card);
   });
+}
+
+function selectType(btn) {
+  document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  selectedType = btn.dataset.type;
+}
+
+function toggleSpeech() {
+  speechEnabled = !speechEnabled;
+  document.getElementById('speechToggle').classList.toggle('active', speechEnabled);
+}
+
+let guideEnabled = localStorage.getItem('show_guide') !== 'false';
+document.getElementById('guideToggle').classList.toggle('active', guideEnabled);
+
+function toggleGuide() {
+  guideEnabled = !guideEnabled;
+  localStorage.setItem('show_guide', guideEnabled);
+  document.getElementById('guideToggle').classList.toggle('active', guideEnabled);
+}
+
+function doCopy(text, btn) {
+  const orig = btn.textContent;
+  const showSuccess = () => {
+    btn.textContent = '✅ コピーしました';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = orig; btn.classList.remove('copied'); }, 1500);
+  };
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(showSuccess).catch(() => {
+      fallbackCopy(text);
+      showSuccess();
+    });
+  } else {
+    fallbackCopy(text);
+    showSuccess();
+  }
+}
+
+function fallbackCopy(text) {
+  const el = document.createElement('textarea');
+  el.value = text;
+  el.style.position = 'fixed';
+  el.style.opacity = '0';
+  document.body.appendChild(el);
+  el.select();
+  document.execCommand('copy');
+  document.body.removeChild(el);
+}
+
+function copyChant() {
+  const text = document.getElementById('resultText').textContent;
+  doCopy(text, document.getElementById('copyBtn'));
+}
+
+function copyHistoryChant(i, btn) {
+  const entry = getHistory()[i];
+  if (entry) doCopy(entry.text, btn);
 }
 
 renderHistory();
