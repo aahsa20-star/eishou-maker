@@ -4,8 +4,5 @@
       "memory": 128,
       "maxDuration": 15
     }
-  },
-  "toolbar": {
-    "enabled": false
   }
 }
