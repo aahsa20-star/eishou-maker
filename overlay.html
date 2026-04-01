@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>詠唱オーバーレイ</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@700;900&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  width: 1920px;
+  height: 1080px;
+  overflow: hidden;
+  background: transparent;
+  font-family: 'Noto Serif JP', serif;
+}
+canvas#particles {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+.overlay-bg {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0, 0, 0, 0.75);
+  opacity: 0;
+  transition: opacity 0.5s;
+  z-index: 2;
+}
+.overlay-bg.visible { opacity: 1; }
+.chant-container {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 3;
+  padding: 80px 120px;
+  gap: 24px;
+}
+.chant-line {
+  font-size: 48px;
+  font-weight: 900;
+  color: #D4AF37;
+  text-shadow:
+    0 0 20px rgba(255, 255, 255, 0.6),
+    0 0 40px rgba(212, 175, 55, 0.4),
+    0 0 80px rgba(212, 175, 55, 0.2);
+  text-align: center;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.8s, transform 0.8s;
+  line-height: 1.6;
+}
+.chant-line.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+</style>
+</head>
+<body>
+<canvas id="particles"></canvas>
+<div class="overlay-bg" id="bg"></div>
+<div class="chant-container" id="container"></div>
+
+<script>
+// Particle system
+const canvas = document.getElementById('particles');
+const ctx = canvas.getContext('2d');
+let particles = [];
+let animating = false;
+
+function resizeCanvas() {
+  canvas.width = 1920;
+  canvas.height = 1080;
+}
+resizeCanvas();
+
+class Particle {
+  constructor() {
+    this.reset();
+  }
+  reset() {
+    const side = Math.random() * 4 | 0;
+    if (side === 0) { this.x = Math.random() * 1920; this.y = -10; }
+    else if (side === 1) { this.x = 1930; this.y = Math.random() * 1080; }
+    else if (side === 2) { this.x = Math.random() * 1920; this.y = 1090; }
+    else { this.x = -10; this.y = Math.random() * 1080; }
+    this.targetX = 960 + (Math.random() - 0.5) * 600;
+    this.targetY = 540 + (Math.random() - 0.5) * 400;
+    this.speed = 0.005 + Math.random() * 0.01;
+    this.progress = 0;
+    this.size = 1.5 + Math.random() * 3;
+    this.alpha = 0.3 + Math.random() * 0.7;
+    const colors = ['#D4AF37', '#FFD700', '#FFF8DC', '#FFFACD'];
+    this.color = colors[Math.random() * colors.length | 0];
+    this.startX = this.x;
+    this.startY = this.y;
+  }
+  update() {
+    this.progress += this.speed;
+    if (this.progress >= 1) { this.reset(); return; }
+    this.x = this.startX + (this.targetX - this.startX) * this.progress;
+    this.y = this.startY + (this.targetY - this.startY) * this.progress;
+    this.x += Math.sin(this.progress * 10 + this.startX) * 2;
+    this.y += Math.cos(this.progress * 8 + this.startY) * 2;
+  }
+  draw() {
+    const fade = this.progress < 0.2 ? this.progress / 0.2
+               : this.progress > 0.7 ? (1 - this.progress) / 0.3 : 1;
+    ctx.globalAlpha = this.alpha * fade;
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+    ctx.fillStyle = this.color;
+    ctx.shadowColor = this.color;
+    ctx.shadowBlur = 15;
+    ctx.fill();
+    ctx.shadowBlur = 0;
+  }
+}
+
+function startParticles() {
+  if (animating) return;
+  animating = true;
+  particles = Array.from({ length: 80 }, () => new Particle());
+  function loop() {
+    if (!animating) { ctx.clearRect(0, 0, 1920, 1080); return; }
+    ctx.clearRect(0, 0, 1920, 1080);
+    for (const p of particles) { p.update(); p.draw(); }
+    ctx.globalAlpha = 1;
+    requestAnimationFrame(loop);
+  }
+  loop();
+}
+
+function stopParticles() {
+  animating = false;
+}
+
+// Chant display
+function showChant(text) {
+  const bg = document.getElementById('bg');
+  const container = document.getElementById('container');
+  container.innerHTML = '';
+
+  // Split into sentences
+  const lines = text.split(/(?<=[。！\n])/).map(s => s.trim()).filter(Boolean);
+
+  // Create line elements
+  const lineEls = lines.map(line => {
+    const el = document.createElement('div');
+    el.className = 'chant-line';
+    el.textContent = line;
+    container.appendChild(el);
+    return el;
+  });
+
+  // Start sequence
+  startParticles();
+  bg.classList.add('visible');
+
+  // Reveal lines one by one
+  lineEls.forEach((el, i) => {
+    setTimeout(() => el.classList.add('visible'), 800 + i * 800);
+  });
+
+  // Hold then fade out
+  const totalReveal = 800 + lineEls.length * 800;
+  const holdTime = 5000;
+  setTimeout(() => {
+    bg.classList.remove('visible');
+    lineEls.forEach(el => {
+      el.style.transition = 'opacity 1s, transform 1s';
+      el.classList.remove('visible');
+    });
+    setTimeout(() => {
+      stopParticles();
+      container.innerHTML = '';
+    }, 1200);
+  }, totalReveal + holdTime);
+}
+
+// Listen for localStorage changes from index.html
+window.addEventListener('storage', (e) => {
+  if (e.key !== 'chant_data' || !e.newValue) return;
+  try {
+    const data = JSON.parse(e.newValue);
+    if (data.text) showChant(data.text);
+  } catch {}
+});
+</script>
+</body>
+</html>

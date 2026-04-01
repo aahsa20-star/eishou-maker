@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>詠唱メーカー</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: #0a0a12;
+  color: #e0d8c8;
+  font-family: 'Noto Sans JP', sans-serif;
+  min-height: 100vh;
+  background-image:
+    radial-gradient(ellipse at 20% 50%, rgba(60, 20, 80, 0.3) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 50%, rgba(20, 20, 60, 0.3) 0%, transparent 50%);
+}
+
+/* Header */
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 24px;
+  background: rgba(15, 10, 25, 0.9);
+  border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+  flex-wrap: wrap;
+}
+.header h1 {
+  font-size: 22px;
+  color: #D4AF37;
+  text-shadow: 0 0 12px rgba(212, 175, 55, 0.4);
+  margin-right: auto;
+}
+.header input {
+  background: rgba(30, 25, 45, 0.8);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  color: #e0d8c8;
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.header input:focus {
+  border-color: #D4AF37;
+}
+.header input.channel-input { width: 180px; }
+.header button {
+  background: linear-gradient(135deg, #3a1f5e, #2a1548);
+  color: #D4AF37;
+  border: 1px solid rgba(212, 175, 55, 0.4);
+  padding: 8px 18px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.header button:hover {
+  background: linear-gradient(135deg, #4a2f6e, #3a2558);
+  box-shadow: 0 0 12px rgba(212, 175, 55, 0.2);
+}
+.status {
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 12px;
+  background: rgba(80, 30, 30, 0.5);
+  color: #e06060;
+}
+.status.connected {
+  background: rgba(30, 80, 30, 0.5);
+  color: #60e060;
+}
+
+/* Main Layout */
+.main {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  padding: 20px 24px;
+  max-height: calc(100vh - 220px);
+}
+
+.panel {
+  background: rgba(15, 10, 25, 0.6);
+  border: 1px solid rgba(212, 175, 55, 0.15);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+}
+.panel-title {
+  font-size: 14px;
+  color: #D4AF37;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-weight: 700;
+}
+
+/* Word Cards */
+.word-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  overflow-y: auto;
+  max-height: 45vh;
+  align-content: flex-start;
+}
+.word-card {
+  background: linear-gradient(135deg, rgba(40, 30, 60, 0.8), rgba(25, 20, 45, 0.8));
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: 8px;
+  padding: 10px 16px;
+  cursor: pointer;
+  transition: all 0.25s;
+  position: relative;
+  user-select: none;
+}
+.word-card:hover {
+  border-color: #D4AF37;
+  box-shadow: 0 0 16px rgba(212, 175, 55, 0.3);
+  transform: translateY(-2px);
+}
+.word-card .word-text {
+  font-size: 16px;
+  font-weight: 700;
+}
+.word-card .word-count {
+  font-size: 11px;
+  color: #888;
+  margin-top: 2px;
+}
+.word-card.hot {
+  border-color: #D4AF37;
+  background: linear-gradient(135deg, rgba(80, 60, 20, 0.6), rgba(50, 35, 15, 0.6));
+  animation: pulse-gold 2s ease-in-out infinite;
+}
+@keyframes pulse-gold {
+  0%, 100% { box-shadow: 0 0 8px rgba(212, 175, 55, 0.3); }
+  50% { box-shadow: 0 0 24px rgba(212, 175, 55, 0.6); }
+}
+
+/* Manual Input */
+.manual-input {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.manual-input input {
+  flex: 1;
+  background: rgba(30, 25, 45, 0.8);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  color: #e0d8c8;
+  padding: 10px 14px;
+  border-radius: 6px;
+  font-size: 16px;
+  font-family: inherit;
+  outline: none;
+}
+.manual-input input:focus { border-color: #D4AF37; }
+.manual-input button {
+  background: linear-gradient(135deg, #3a1f5e, #2a1548);
+  color: #D4AF37;
+  border: 1px solid rgba(212, 175, 55, 0.4);
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+/* Selected Area */
+.selected-area {
+  background: rgba(10, 8, 18, 0.5);
+  border: 1px solid rgba(212, 175, 55, 0.15);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 16px 24px;
+  min-height: 80px;
+}
+.selected-area .panel-title { margin-bottom: 10px; }
+.selected-words {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  min-height: 40px;
+}
+.selected-word {
+  background: linear-gradient(135deg, #3a2060, #261548);
+  border: 1px solid rgba(212, 175, 55, 0.4);
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 16px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: grab;
+  transition: all 0.2s;
+  user-select: none;
+}
+.selected-word:active { cursor: grabbing; }
+.selected-word .remove {
+  color: #a08060;
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+  transition: color 0.2s;
+}
+.selected-word .remove:hover { color: #ff6060; }
+.selected-word.drag-over {
+  border-color: #D4AF37;
+  box-shadow: 0 0 16px rgba(212, 175, 55, 0.4);
+}
+.placeholder-text {
+  color: #555;
+  font-size: 14px;
+  padding: 8px;
+}
+
+/* Generate Button */
+.generate-area {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 0 24px 20px;
+  gap: 16px;
+}
+.btn-generate {
+  background: linear-gradient(135deg, #D4AF37, #a08520);
+  color: #0a0a12;
+  border: none;
+  padding: 16px 48px;
+  border-radius: 10px;
+  font-size: 20px;
+  font-weight: 900;
+  font-family: inherit;
+  cursor: pointer;
+  letter-spacing: 4px;
+  transition: all 0.3s;
+  text-shadow: 0 1px 0 rgba(255,255,255,0.2);
+}
+.btn-generate:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 30px rgba(212, 175, 55, 0.5);
+}
+.btn-generate:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+.btn-clear {
+  background: transparent;
+  color: #806050;
+  border: 1px solid rgba(128, 96, 80, 0.3);
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  cursor: pointer;
+}
+.btn-clear:hover { border-color: #a08060; color: #a08060; }
+
+/* Result Preview */
+.result-preview {
+  margin: 0 24px 20px;
+  padding: 20px;
+  background: rgba(10, 8, 18, 0.7);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: 10px;
+  display: none;
+}
+.result-preview.visible { display: block; }
+.result-text {
+  font-size: 18px;
+  line-height: 2;
+  color: #D4AF37;
+  text-align: center;
+  white-space: pre-wrap;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(212, 175, 55, 0.2); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>詠唱メーカー</h1>
+  <input class="channel-input" id="channel" placeholder="Twitchチャンネル名">
+  <button id="connectBtn" onclick="toggleConnect()">接続</button>
+  <span class="status" id="status">未接続</span>
+</div>
+
+<div class="main">
+  <div class="panel">
+    <div class="panel-title">投稿された単語</div>
+    <div class="word-grid" id="wordGrid"></div>
+  </div>
+  <div class="panel">
+    <div class="panel-title">手動追加</div>
+    <div class="manual-input">
+      <input id="manualWord" placeholder="単語を入力..." onkeydown="if(event.key==='Enter')addManualWord()">
+      <button onclick="addManualWord()">追加</button>
+    </div>
+    <div class="panel-title" style="margin-top:16px">ヒント</div>
+    <p style="color:#777;font-size:13px;line-height:1.8">
+      チャットに <code style="color:#D4AF37">!word 単語</code> で投稿された単語が左に表示されます。<br>
+      クリックで選択 → 下の並び替えエリアへ → 詠唱生成！
+    </p>
+  </div>
+</div>
+
+<div class="selected-area">
+  <div class="panel-title">選択済み単語（ドラッグで並び替え）</div>
+  <div class="selected-words" id="selectedWords">
+    <span class="placeholder-text">単語をクリックして追加...</span>
+  </div>
+</div>
+
+<div class="generate-area">
+  <button class="btn-clear" onclick="clearSelected()">選択をクリア</button>
+  <button class="btn-generate" id="generateBtn" onclick="generate()">詠唱生成</button>
+</div>
+
+<div class="result-preview" id="resultPreview">
+  <div class="result-text" id="resultText"></div>
+</div>
+
+<script>
+// State
+let words = {}; // { word: count }
+let selected = [];
+let ws = null;
+let connected = false;
+
+// Init
+const savedChannel = localStorage.getItem('twitch_channel');
+if (savedChannel) document.getElementById('channel').value = savedChannel;
+
+// Twitch
+function toggleConnect() {
+  if (connected) { disconnect(); return; }
+  const ch = document.getElementById('channel').value.trim().toLowerCase();
+  if (!ch) return;
+  localStorage.setItem('twitch_channel', ch);
+  connect(ch);
+}
+
+function connect(channel) {
+  const st = document.getElementById('status');
+  const btn = document.getElementById('connectBtn');
+  st.textContent = '接続中...';
+  st.className = 'status';
+
+  ws = new WebSocket('wss://irc-ws.chat.twitch.tv');
+  ws.onopen = () => {
+    ws.send('NICK justinfan12345');
+    ws.send('JOIN #' + channel);
+  };
+  ws.onmessage = (e) => {
+    const lines = e.data.split('\r\n');
+    for (const line of lines) {
+      if (line.startsWith('PING')) { ws.send('PONG :tmi.twitch.tv'); continue; }
+      if (line.includes('366')) {
+        connected = true;
+        st.textContent = '接続中: #' + channel;
+        st.className = 'status connected';
+        btn.textContent = '切断';
+      }
+      const match = line.match(/PRIVMSG\s+#\S+\s+:!word\s+(.+)/i);
+      if (match) {
+        const w = match[1].trim().substring(0, 20);
+        if (w) addWord(w);
+      }
+    }
+  };
+  ws.onclose = () => { disconnect(); };
+  ws.onerror = () => { disconnect(); };
+}
+
+function disconnect() {
+  if (ws) { ws.close(); ws = null; }
+  connected = false;
+  document.getElementById('status').textContent = '未接続';
+  document.getElementById('status').className = 'status';
+  document.getElementById('connectBtn').textContent = '接続';
+}
+
+// Words
+function addWord(w) {
+  words[w] = (words[w] || 0) + 1;
+  renderWords();
+}
+
+function renderWords() {
+  const grid = document.getElementById('wordGrid');
+  const sorted = Object.entries(words).sort((a, b) => b[1] - a[1]);
+  grid.innerHTML = '';
+  for (const [w, count] of sorted) {
+    const card = document.createElement('div');
+    card.className = 'word-card' + (count >= 3 ? ' hot' : '');
+    card.innerHTML = `<div class="word-text">${esc(w)}</div><div class="word-count">${count}票</div>`;
+    card.onclick = () => selectWord(w);
+    grid.appendChild(card);
+  }
+}
+
+function addManualWord() {
+  const input = document.getElementById('manualWord');
+  const w = input.value.trim().substring(0, 20);
+  if (!w) return;
+  addWord(w);
+  selectWord(w);
+  input.value = '';
+}
+
+// Selection
+function selectWord(w) {
+  if (selected.includes(w)) return;
+  selected.push(w);
+  renderSelected();
+}
+
+function removeSelected(i) {
+  selected.splice(i, 1);
+  renderSelected();
+}
+
+function clearSelected() {
+  selected = [];
+  renderSelected();
+  document.getElementById('resultPreview').classList.remove('visible');
+}
+
+let dragIdx = null;
+function renderSelected() {
+  const container = document.getElementById('selectedWords');
+  if (selected.length === 0) {
+    container.innerHTML = '<span class="placeholder-text">単語をクリックして追加...</span>';
+    return;
+  }
+  container.innerHTML = '';
+  selected.forEach((w, i) => {
+    const el = document.createElement('div');
+    el.className = 'selected-word';
+    el.draggable = true;
+    el.innerHTML = `<span>${esc(w)}</span><span class="remove" onclick="event.stopPropagation();removeSelected(${i})">&times;</span>`;
+    el.addEventListener('dragstart', () => { dragIdx = i; el.style.opacity = '0.4'; });
+    el.addEventListener('dragend', () => { el.style.opacity = '1'; });
+    el.addEventListener('dragover', (e) => { e.preventDefault(); el.classList.add('drag-over'); });
+    el.addEventListener('dragleave', () => { el.classList.remove('drag-over'); });
+    el.addEventListener('drop', (e) => {
+      e.preventDefault();
+      el.classList.remove('drag-over');
+      if (dragIdx === null || dragIdx === i) return;
+      const item = selected.splice(dragIdx, 1)[0];
+      selected.splice(i, 0, item);
+      renderSelected();
+    });
+    container.appendChild(el);
+  });
+}
+
+// Generate
+const API_URL = '/api/chant'; // Vercelデプロイ後はそのまま動く
+
+async function generate() {
+  if (selected.length === 0) { alert('単語を選択してください'); return; }
+
+  const btn = document.getElementById('generateBtn');
+  btn.disabled = true;
+  btn.textContent = '詠唱中...';
+
+  try {
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ words: selected })
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    const text = data.text;
+
+    // Show preview
+    document.getElementById('resultText').textContent = text;
+    document.getElementById('resultPreview').classList.add('visible');
+
+    // Send to overlay
+    localStorage.setItem('chant_data', JSON.stringify({
+      text: text,
+      timestamp: Date.now()
+    }));
+  } catch (e) {
+    alert('エラー: ' + e.message);
+  }
+  btn.disabled = false;
+  btn.textContent = '詠唱生成';
+}
+
+function esc(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+</script>
+</body>
+</html>
