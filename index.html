@@ -284,6 +284,77 @@ body {
   white-space: pre-wrap;
 }
 
+/* History */
+.history-area {
+  margin: 0 24px 20px;
+}
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.history-card {
+  background: linear-gradient(135deg, rgba(30, 20, 50, 0.7), rgba(20, 15, 35, 0.7));
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: 10px;
+  padding: 14px 18px;
+  transition: border-color 0.2s;
+}
+.history-card:hover { border-color: rgba(212, 175, 55, 0.4); }
+.history-chant {
+  font-size: 14px;
+  color: #D4AF37;
+  line-height: 1.8;
+  white-space: pre-wrap;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.history-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+.history-tag {
+  background: rgba(212, 175, 55, 0.15);
+  color: #c0a030;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+.history-time {
+  font-size: 11px;
+  color: #666;
+  margin-left: auto;
+}
+.history-actions {
+  display: flex;
+  gap: 6px;
+  margin-left: 8px;
+}
+.history-btn {
+  font-size: 11px;
+  padding: 3px 10px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+.history-btn.replay {
+  background: rgba(212, 175, 55, 0.2);
+  color: #D4AF37;
+}
+.history-btn.replay:hover { background: rgba(212, 175, 55, 0.4); }
+.history-btn.delete {
+  background: rgba(120, 30, 30, 0.3);
+  color: #a05050;
+}
+.history-btn.delete:hover { background: rgba(120, 30, 30, 0.5); color: #e06060; }
+
 /* Scrollbar */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
@@ -332,6 +403,11 @@ body {
 
 <div class="result-preview" id="resultPreview">
   <div class="result-text" id="resultText"></div>
+</div>
+
+<div class="history-area">
+  <div class="panel-title">詠唱履歴</div>
+  <div class="history-list" id="historyList"></div>
 </div>
 
 <script>
@@ -494,16 +570,62 @@ async function generate() {
     document.getElementById('resultPreview').classList.add('visible');
 
     // Send to overlay
-    localStorage.setItem('chant_data', JSON.stringify({
-      text: text,
-      timestamp: Date.now()
-    }));
+    const ts = Date.now();
+    localStorage.setItem('chant_data', JSON.stringify({ text, timestamp: ts }));
+
+    // Save to history
+    saveHistory({ text, words: [...selected], timestamp: ts });
   } catch (e) {
     alert('エラー: ' + e.message);
   }
   btn.disabled = false;
   btn.textContent = '詠唱生成';
 }
+
+// History
+function getHistory() {
+  try { return JSON.parse(localStorage.getItem('chant_history') || '[]'); } catch { return []; }
+}
+
+function saveHistory(entry) {
+  const history = [entry, ...getHistory()].slice(0, 5);
+  localStorage.setItem('chant_history', JSON.stringify(history));
+  renderHistory();
+}
+
+function deleteHistory(i) {
+  const history = getHistory();
+  history.splice(i, 1);
+  localStorage.setItem('chant_history', JSON.stringify(history));
+  renderHistory();
+}
+
+function replayChant(i) {
+  const entry = getHistory()[i];
+  if (!entry) return;
+  localStorage.setItem('chant_data', JSON.stringify({ text: entry.text, timestamp: Date.now() }));
+}
+
+function renderHistory() {
+  const list = document.getElementById('historyList');
+  const history = getHistory();
+  if (history.length === 0) { list.innerHTML = '<span class="placeholder-text">まだ履歴がありません</span>'; return; }
+  list.innerHTML = '';
+  history.forEach((entry, i) => {
+    const card = document.createElement('div');
+    card.className = 'history-card';
+    const time = new Date(entry.timestamp);
+    const hh = String(time.getHours()).padStart(2, '0');
+    const mm = String(time.getMinutes()).padStart(2, '0');
+    const tags = (entry.words || []).map(w => `<span class="history-tag">${esc(w)}</span>`).join('');
+    card.innerHTML = `<div class="history-chant">${esc(entry.text)}</div>
+      <div class="history-meta">${tags}<span class="history-time">${hh}:${mm}</span>
+      <div class="history-actions"><button class="history-btn replay" onclick="replayChant(${i})">再表示</button><button class="history-btn delete" onclick="deleteHistory(${i})">削除</button></div></div>`;
+    list.appendChild(card);
+  });
+}
+
+renderHistory();
 
 function esc(s) {
   const d = document.createElement('div');
