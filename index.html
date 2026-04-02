@@ -59,7 +59,7 @@ body {
 }
 .header input {
   background: var(--bg-input);
-  border: 1px solid var(--border);
+  border: 1px solid rgba(160,120,48,0.4);
   color: var(--fg-base);
   padding: 10px 14px;
   border-radius: 0;
@@ -68,7 +68,7 @@ body {
   outline: none;
   transition: border-color 0.2s;
 }
-.header input:focus { border-color: var(--gold); }
+.header input:focus { border-color: #C8A050; box-shadow: 0 0 8px rgba(160,120,48,0.2); }
 .header input.channel-input { width: 180px; }
 .header button {
   background: transparent;
@@ -102,7 +102,8 @@ body {
 
 .panel {
   background: linear-gradient(135deg, #13110D 0%, #0F1410 100%);
-  border: 1px solid var(--border);
+  border: 1px solid rgba(160,120,48,0.5);
+  box-shadow: 0 0 0 1px rgba(160,120,48,0.1), inset 0 1px 0 rgba(255,255,255,0.03);
   border-radius: 0;
   padding: 20px;
   display: flex;
@@ -113,42 +114,32 @@ body {
   content: '';
   position: absolute;
   top: -1px; left: -1px;
-  width: 16px; height: 16px;
-  border-top: 2px solid var(--gold);
-  border-left: 2px solid var(--gold);
+  width: 20px; height: 20px;
+  border-top: 2px solid #C8A050;
+  border-left: 2px solid #C8A050;
 }
 .panel::after {
   content: '';
   position: absolute;
   bottom: -1px; right: -1px;
-  width: 16px; height: 16px;
-  border-bottom: 2px solid var(--gold);
-  border-right: 2px solid var(--gold);
+  width: 20px; height: 20px;
+  border-bottom: 2px solid #C8A050;
+  border-right: 2px solid #C8A050;
 }
 .panel-title {
   font-family: 'Zen Kaku Gothic New', sans-serif;
-  font-size: 16px;
+  font-size: 17px;
   font-weight: 600;
-  color: var(--gold);
+  color: #D4A84B;
   margin-bottom: 12px;
-  letter-spacing: 0.2em;
-  display: flex;
-  align-items: center;
-  gap: 10px;
+  letter-spacing: 0.15em;
+  padding: 4px 12px;
+  background: rgba(160,120,48,0.1);
+  border-left: 3px solid var(--gold);
   text-shadow: 0 0 10px rgba(160,120,48,0.3);
 }
-.panel-title.teal { color: #5A8A80; text-shadow: 0 0 10px rgba(90,138,128,0.3); }
-.panel-title.purple { color: #6A5A8A; text-shadow: 0 0 10px rgba(106,90,138,0.3); }
-.panel-title::before {
-  content: '';
-  display: block;
-  width: 3px;
-  height: 1.2em;
-  background: var(--gold);
-}
-.panel-title.teal::before { background: #5A8A80; }
-.panel-title.gold::before { background: #A07830; }
-.panel-title.purple::before { background: #6A5A8A; }
+.panel-title.teal { color: #7AB8B0; text-shadow: 0 0 10px rgba(90,138,128,0.3); border-left-color: #5A8A80; background: rgba(90,138,128,0.1); }
+.panel-title.purple { color: #9A8AB0; text-shadow: 0 0 10px rgba(106,90,138,0.3); border-left-color: #6A5A8A; background: rgba(106,90,138,0.1); }
 
 /* Word Cards */
 .word-grid {
@@ -243,7 +234,7 @@ body {
 .manual-input input {
   flex: 1;
   background: var(--bg-input);
-  border: 1px solid var(--border);
+  border: 1px solid rgba(160,120,48,0.4);
   color: var(--fg-base);
   padding: 12px 16px;
   border-radius: 0;
@@ -251,7 +242,7 @@ body {
   font-family: inherit;
   outline: none;
 }
-.manual-input input:focus { border-color: var(--gold); }
+.manual-input input:focus { border-color: #C8A050; box-shadow: 0 0 8px rgba(160,120,48,0.2); }
 .manual-input button {
   background: transparent;
   color: var(--gold);
@@ -270,7 +261,8 @@ body {
 /* Selected Area */
 .selected-area {
   background: linear-gradient(135deg, #13110D 0%, #0F1410 100%);
-  border: 1px solid var(--border);
+  border: 1px solid rgba(160,120,48,0.5);
+  box-shadow: 0 0 0 1px rgba(160,120,48,0.1), inset 0 1px 0 rgba(255,255,255,0.03);
   border-radius: 0;
   padding: 20px 24px;
   margin: 20px 32px;
@@ -281,17 +273,17 @@ body {
   content: '';
   position: absolute;
   top: -1px; left: -1px;
-  width: 16px; height: 16px;
-  border-top: 2px solid var(--gold);
-  border-left: 2px solid var(--gold);
+  width: 20px; height: 20px;
+  border-top: 2px solid #C8A050;
+  border-left: 2px solid #C8A050;
 }
 .selected-area::after {
   content: '';
   position: absolute;
   bottom: -1px; right: -1px;
-  width: 16px; height: 16px;
-  border-bottom: 2px solid var(--gold);
-  border-right: 2px solid var(--gold);
+  width: 20px; height: 20px;
+  border-bottom: 2px solid #C8A050;
+  border-right: 2px solid #C8A050;
 }
 .selected-area .panel-title { margin-bottom: 10px; }
 .selected-words {
@@ -338,25 +330,25 @@ body {
 /* Generate Button */
 .btn-generate {
   background: linear-gradient(135deg, rgba(160,120,48,0.2) 0%, rgba(90,138,128,0.1) 100%);
-  color: var(--gold-bright);
-  border: 1px solid var(--gold);
+  color: #E8DFC8;
+  border: 2px solid #C8A050;
   padding: 20px 48px;
   width: 100%;
   border-radius: 0;
   font-family: 'Zen Kaku Gothic New', sans-serif;
-  font-size: 22px;
+  font-size: 24px;
   font-weight: 800;
   cursor: pointer;
-  letter-spacing: 0.3em;
+  letter-spacing: 0.4em;
   transition: all 0.2s;
   text-shadow: 0 0 12px rgba(200,160,80,0.5), 0 0 24px rgba(200,160,80,0.2);
-  box-shadow: 0 0 20px rgba(160,120,48,0.15), inset 0 0 20px rgba(160,120,48,0.05);
+  box-shadow: 0 0 20px rgba(160,120,48,0.15), inset 0 1px 0 rgba(255,255,255,0.05);
 }
 .btn-generate:hover {
-  background: rgba(160,120,48,0.25);
+  background: rgba(160,120,48,0.28);
   color: var(--fg-base);
   text-shadow: 0 0 16px rgba(200,160,80,0.7), 0 0 32px rgba(200,160,80,0.3);
-  box-shadow: 0 0 30px rgba(160,120,48,0.25), inset 0 0 30px rgba(160,120,48,0.08);
+  box-shadow: 0 0 30px rgba(160,120,48,0.3);
 }
 .btn-generate:disabled {
   opacity: 0.3;
@@ -374,8 +366,8 @@ body {
 .type-btn {
   flex: 1;
   background: transparent;
-  color: var(--fg-dim);
-  border: 1px solid var(--border);
+  color: rgba(232,223,200,0.6);
+  border: 1px solid rgba(160,120,48,0.35);
   padding: 12px 0;
   border-radius: 0;
   font-family: 'Zen Kaku Gothic New', sans-serif;
@@ -397,16 +389,16 @@ body {
 .type-btn[data-type="滅亡"] { border-color: rgba(122,48,48,0.3); }
 .type-btn[data-type="覚醒"] { border-color: rgba(90,122,90,0.3); }
 .type-btn.active {
-  background: rgba(160,120,48,0.1);
-  border-color: var(--gold);
-  color: var(--fg-base);
+  background: rgba(160,120,48,0.2);
+  border: 2px solid #C8A050;
+  color: #E8DFC8;
   text-shadow: 0 0 10px rgba(200,160,80,0.5);
-  box-shadow: 0 0 15px rgba(160,120,48,0.2), inset 0 0 15px rgba(160,120,48,0.05);
+  box-shadow: 0 0 12px rgba(160,120,48,0.25), inset 0 0 15px rgba(160,120,48,0.05);
 }
-.type-btn.active[data-type="解放"] { border-color: var(--teal); color: var(--teal); background: rgba(90,138,128,0.08); text-shadow: 0 0 10px rgba(90,138,128,0.5); box-shadow: 0 0 15px rgba(90,138,128,0.2), inset 0 0 15px rgba(90,138,128,0.05); }
-.type-btn.active[data-type="封印"] { border-color: #6A5A8A; color: #8A7AA0; background: rgba(106,90,138,0.08); text-shadow: 0 0 10px rgba(106,90,138,0.5); box-shadow: 0 0 15px rgba(106,90,138,0.2), inset 0 0 15px rgba(106,90,138,0.05); }
-.type-btn.active[data-type="滅亡"] { border-color: #7A3030; color: #A05050; background: rgba(122,48,48,0.08); text-shadow: 0 0 10px rgba(122,48,48,0.5); box-shadow: 0 0 15px rgba(122,48,48,0.2), inset 0 0 15px rgba(122,48,48,0.05); }
-.type-btn.active[data-type="覚醒"] { border-color: #5A7A5A; color: #7A9A7A; background: rgba(90,122,90,0.08); text-shadow: 0 0 10px rgba(90,122,90,0.5); box-shadow: 0 0 15px rgba(90,122,90,0.2), inset 0 0 15px rgba(90,122,90,0.05); }
+.type-btn.active[data-type="解放"] { border: 2px solid var(--teal); color: var(--teal); background: rgba(90,138,128,0.12); text-shadow: 0 0 10px rgba(90,138,128,0.5); box-shadow: 0 0 12px rgba(90,138,128,0.25), inset 0 0 15px rgba(90,138,128,0.05); }
+.type-btn.active[data-type="封印"] { border: 2px solid #6A5A8A; color: #8A7AA0; background: rgba(106,90,138,0.12); text-shadow: 0 0 10px rgba(106,90,138,0.5); box-shadow: 0 0 12px rgba(106,90,138,0.25), inset 0 0 15px rgba(106,90,138,0.05); }
+.type-btn.active[data-type="滅亡"] { border: 2px solid #7A3030; color: #A05050; background: rgba(122,48,48,0.12); text-shadow: 0 0 10px rgba(122,48,48,0.5); box-shadow: 0 0 12px rgba(122,48,48,0.25), inset 0 0 15px rgba(122,48,48,0.05); }
+.type-btn.active[data-type="覚醒"] { border: 2px solid #5A7A5A; color: #7A9A7A; background: rgba(90,122,90,0.12); text-shadow: 0 0 10px rgba(90,122,90,0.5); box-shadow: 0 0 12px rgba(90,122,90,0.25), inset 0 0 15px rgba(90,122,90,0.05); }
 .controls-row {
   display: flex;
   gap: 8px;
@@ -419,8 +411,8 @@ body {
 
 .speech-toggle {
   background: transparent;
-  color: var(--fg-dim);
-  border: 1px solid var(--border);
+  color: rgba(232,223,200,0.7);
+  border: 1px solid rgba(160,120,48,0.4);
   padding: 12px 16px;
   border-radius: 0;
   font-size: 15px;
@@ -436,8 +428,9 @@ body {
   color: var(--fg-base);
 }
 .speech-toggle.active {
-  color: var(--gold);
-  border-color: var(--gold);
+  color: #E8DFC8;
+  border-color: #C8A050;
+  background: rgba(160,120,48,0.12);
   text-shadow: 0 0 8px rgba(160,120,48,0.4);
 }
 .se-controls {
@@ -503,7 +496,8 @@ body {
   margin: 0 32px 20px;
   padding: 20px;
   background: var(--bg-panel);
-  border: 1px solid var(--border);
+  border: 1px solid rgba(160,120,48,0.5);
+  box-shadow: 0 0 0 1px rgba(160,120,48,0.1), inset 0 1px 0 rgba(255,255,255,0.03);
   border-radius: 0;
   display: none;
   position: relative;
@@ -512,17 +506,17 @@ body {
   content: '';
   position: absolute;
   top: -1px; left: -1px;
-  width: 16px; height: 16px;
-  border-top: 2px solid var(--gold);
-  border-left: 2px solid var(--gold);
+  width: 20px; height: 20px;
+  border-top: 2px solid #C8A050;
+  border-left: 2px solid #C8A050;
 }
 .result-preview::after {
   content: '';
   position: absolute;
   bottom: -1px; right: -1px;
-  width: 16px; height: 16px;
-  border-bottom: 2px solid var(--gold);
-  border-right: 2px solid var(--gold);
+  width: 20px; height: 20px;
+  border-bottom: 2px solid #C8A050;
+  border-right: 2px solid #C8A050;
 }
 .result-preview.visible { display: block; }
 .result-text {
