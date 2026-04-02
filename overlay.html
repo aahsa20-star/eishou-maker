@@ -719,36 +719,44 @@ async function runCountdown(type) {
   labelEl.style.opacity = '0';
 }
 
-window.addEventListener('storage', (e) => {
-  if (e.key === 'se_enabled') {
-    sfx.setEnabled(e.newValue !== 'false');
-    return;
-  }
-  if (e.key === 'se_volume') {
-    sfx.setVolume(parseFloat(e.newValue || '0.5'));
-    return;
-  }
-  if (e.key === 'show_guide') {
-    guideEnabled = e.newValue !== 'false';
-    updateGuide();
-    return;
-  }
-  if (e.key === 'chant_history') { renderOverlayHistory(); return; }
-  if (e.key === 'countdown_data' && e.newValue) {
+// メッセージ処理（storage / BroadcastChannel共通）
+function handleOverlayMessage(key, value) {
+  if (key === 'se_enabled') { sfx.setEnabled(value !== 'false' && value !== false); return; }
+  if (key === 'se_volume') { sfx.setVolume(parseFloat(value || '0.5')); return; }
+  if (key === 'show_guide') { guideEnabled = value !== 'false' && value !== false; updateGuide(); return; }
+  if (key === 'chant_history') { renderOverlayHistory(); return; }
+  if (key === 'countdown_data') {
     try {
-      const data = JSON.parse(e.newValue);
+      const data = typeof value === 'object' ? value : JSON.parse(value);
       if (data.state === 'counting') {
+        console.log('[overlay] カウントダウン開始:', data.type);
         runCountdown(data.type || '召喚');
       }
-    } catch {}
+    } catch (err) { console.error('countdown処理エラー:', err); }
     return;
   }
-  if (e.key !== 'chant_data' || !e.newValue) return;
-  try {
-    const data = JSON.parse(e.newValue);
-    if (data.text) showChant(data.text, data.type, data.words);
-  } catch (err) { console.error('chant_data処理エラー:', err); }
+  if (key === 'chant_data') {
+    try {
+      const data = typeof value === 'object' ? value : JSON.parse(value);
+      if (data.text) {
+        console.log('[overlay] 詠唱データ受信:', data.type);
+        showChant(data.text, data.type, data.words);
+      }
+    } catch (err) { console.error('chant_data処理エラー:', err); }
+  }
+}
+
+// localStorage storageイベント
+window.addEventListener('storage', (e) => {
+  if (e.newValue != null) handleOverlayMessage(e.key, e.newValue);
 });
+
+// BroadcastChannel（バックアップ通信）
+const overlayChannel = new BroadcastChannel('eishou_overlay');
+overlayChannel.onmessage = (e) => {
+  console.log('[overlay] BroadcastChannel受信:', e.data.key);
+  handleOverlayMessage(e.data.key, e.data.data);
+};
 </script>
 </body>
 </html>

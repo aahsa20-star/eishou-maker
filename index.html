@@ -1038,6 +1038,7 @@ updateRateInfo();
 setInterval(updateRateInfo, 30000);
 
 const API_URL = '/api/chant';
+const overlayChannel = new BroadcastChannel('eishou_overlay');
 
 async function generate() {
   if (selected.length === 0) { alert('単語を選択してください'); return; }
@@ -1049,11 +1050,9 @@ async function generate() {
   if (bgmEnabled) sfx.stopBGM();
 
   // カウントダウン開始をoverlayに通知
-  localStorage.setItem('countdown_data', JSON.stringify({
-    state: 'counting',
-    type: selectedType,
-    timestamp: Date.now()
-  }));
+  const countdownMsg = { key: 'countdown_data', data: { state: 'counting', type: selectedType, timestamp: Date.now() } };
+  localStorage.setItem('countdown_data', JSON.stringify(countdownMsg.data));
+  overlayChannel.postMessage(countdownMsg);
 
   // カウントダウン待機（500ms暗転 + 3×1100msカウント + 1300msラベル ≈ 5.1秒）
   await new Promise(r => setTimeout(r, 5200));
@@ -1074,7 +1073,9 @@ async function generate() {
     document.getElementById('resultPreview').classList.add('visible');
 
     const ts = Date.now();
-    localStorage.setItem('chant_data', JSON.stringify({ text, timestamp: ts, type: selectedType, words: [...selected] }));
+    const chantMsg = { text, timestamp: ts, type: selectedType, words: [...selected] };
+    localStorage.setItem('chant_data', JSON.stringify(chantMsg));
+    overlayChannel.postMessage({ key: 'chant_data', data: chantMsg });
     saveHistory({ text, words: [...selected], type: selectedType, timestamp: ts });
     addRateLog();
 
@@ -1115,7 +1116,9 @@ function deleteHistory(i) {
 function replayChant(i) {
   const entry = getHistory()[i];
   if (!entry) return;
-  localStorage.setItem('chant_data', JSON.stringify({ text: entry.text, type: entry.type, words: entry.words, timestamp: Date.now() }));
+  const replayMsg = { text: entry.text, type: entry.type, words: entry.words, timestamp: Date.now() };
+  localStorage.setItem('chant_data', JSON.stringify(replayMsg));
+  overlayChannel.postMessage({ key: 'chant_data', data: replayMsg });
 }
 function renderHistory() {
   const list = document.getElementById('historyList');
