@@ -401,6 +401,39 @@ body {
   color: var(--gold);
   border-color: var(--gold);
 }
+.se-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.se-volume {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 80px;
+  height: 4px;
+  background: var(--border);
+  outline: none;
+}
+.se-volume::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  background: var(--gold);
+  cursor: pointer;
+}
+.se-volume::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  background: var(--gold);
+  border: none;
+  cursor: pointer;
+}
+.se-volume.disabled {
+  opacity: 0.3;
+  pointer-events: none;
+}
 .btn-clear {
   background: transparent;
   color: var(--fg-dim);
@@ -604,6 +637,10 @@ body {
   <button class="type-btn" data-type="覚醒" onclick="selectType(this)">覚醒</button>
   <button class="speech-toggle active" id="speechToggle" onclick="toggleSpeech()">読み上げ</button>
   <button class="speech-toggle active" id="guideToggle" onclick="toggleGuide()">参加説明</button>
+  <div class="se-controls">
+    <button class="speech-toggle active" id="seToggle" onclick="toggleSE()">効果音</button>
+    <input type="range" class="se-volume" id="seVolume" min="0" max="100" value="50" oninput="setSEVolume(this.value)">
+  </div>
 </div>
 
 <div class="generate-area">
@@ -625,6 +662,132 @@ body {
 </div>
 
 <script>
+// ── Sound Engine ──
+class SoundEngine {
+  constructor() {
+    this.ctx = null;
+    this.masterGain = null;
+    this.reverbNode = null;
+    this.enabled = localStorage.getItem('se_enabled') !== 'false';
+    this.volume = parseFloat(localStorage.getItem('se_volume') ?? '0.5');
+  }
+  init() {
+    if (this.ctx) { this.ctx.resume(); return; }
+    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    this.masterGain = this.ctx.createGain();
+    this.masterGain.gain.value = this.enabled ? this.volume : 0;
+    this.masterGain.connect(this.ctx.destination);
+    const len = this.ctx.sampleRate * 2;
+    const buf = this.ctx.createBuffer(2, len, this.ctx.sampleRate);
+    for (let ch = 0; ch < 2; ch++) {
+      const d = buf.getChannelData(ch);
+      for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2.5);
+    }
+    this.reverbNode = this.ctx.createConvolver();
+    this.reverbNode.buffer = buf;
+    this.reverbNode.connect(this.masterGain);
+  }
+  setVolume(v) {
+    this.volume = v;
+    localStorage.setItem('se_volume', String(v));
+    if (this.masterGain) this.masterGain.gain.value = this.enabled ? v : 0;
+  }
+  setEnabled(b) {
+    this.enabled = b;
+    localStorage.setItem('se_enabled', String(b));
+    if (this.masterGain) this.masterGain.gain.value = b ? this.volume : 0;
+  }
+  _osc(freq, type, dur, gain, env, opts = {}) {
+    if (!this.enabled || !this.ctx) return;
+    const t = this.ctx.currentTime + (opts.delay || 0);
+    const o = this.ctx.createOscillator();
+    const g = this.ctx.createGain();
+    o.type = type;
+    o.frequency.setValueAtTime(freq, t);
+    if (opts.freqEnd) o.frequency.exponentialRampToValueAtTime(opts.freqEnd, t + dur);
+    if (opts.detune) o.detune.value = opts.detune;
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.linearRampToValueAtTime(gain, t + (env.a || 0.01));
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g);
+    if (opts.reverb && this.reverbNode) {
+      const rg = this.ctx.createGain();
+      rg.gain.value = opts.reverbMix || 0.3;
+      g.connect(rg);
+      rg.connect(this.reverbNode);
+    }
+    g.connect(this.masterGain);
+    o.start(t);
+    o.stop(t + dur + 0.05);
+  }
+  _noise(dur, gain, filterFreq, filterType = 'lowpass', opts = {}) {
+    if (!this.enabled || !this.ctx) return;
+    const t = this.ctx.currentTime + (opts.delay || 0);
+    const len = Math.floor(this.ctx.sampleRate * dur);
+    const buf = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+    const s = this.ctx.createBufferSource();
+    s.buffer = buf;
+    const g = this.ctx.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.linearRampToValueAtTime(gain, t + (opts.attack || 0.01));
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    const f = this.ctx.createBiquadFilter();
+    f.type = filterType;
+    f.frequency.value = filterFreq;
+    if (opts.Q) f.Q.value = opts.Q;
+    s.connect(f);
+    f.connect(g);
+    if (opts.reverb && this.reverbNode) {
+      const rg = this.ctx.createGain();
+      rg.gain.value = 0.2;
+      g.connect(rg);
+      rg.connect(this.reverbNode);
+    }
+    g.connect(this.masterGain);
+    s.start(t);
+    s.stop(t + dur);
+  }
+
+  // 単語受信：星が降るようなきらめき
+  wordReceived() {
+    this.init();
+    const base = 900 + Math.random() * 300;
+    this._osc(base, 'sine', 0.35, 0.12, { a: 0.005 }, { reverb: true, reverbMix: 0.4 });
+    this._osc(base * 1.5, 'sine', 0.25, 0.06, { a: 0.02 }, { delay: 0.03, reverb: true });
+  }
+  // 単語選択：魔法陣に宝石を置く音
+  wordSelected() {
+    this.init();
+    this._osc(440, 'sine', 0.5, 0.15, { a: 0.005 }, { reverb: true, reverbMix: 0.5 });
+    this._osc(660, 'triangle', 0.35, 0.08, { a: 0.02 }, { delay: 0.02, reverb: true });
+    this._osc(220, 'sine', 0.4, 0.06, { a: 0.01 });
+  }
+  // 単語削除：消え去る音
+  wordRemoved() {
+    this.init();
+    this._osc(600, 'sine', 0.2, 0.08, { a: 0.005 }, { freqEnd: 250 });
+  }
+  // 詠唱開始：儀式の始まり
+  ritualStart(type) {
+    this.init();
+    const bases = { '召喚': 80, '解放': 100, '封印': 60, '滅亡': 50, '覚醒': 90 };
+    const base = bases[type] || 80;
+    this._osc(base, 'sine', 3, 0.2, { a: 0.3 }, { freqEnd: base * 2.5, reverb: true, reverbMix: 0.5 });
+    this._osc(base * 0.5, 'sine', 3.5, 0.1, { a: 0.5 }, { reverb: true });
+    this._noise(2.5, 0.06, 300, 'lowpass', { attack: 0.5, reverb: true });
+    this._osc(base * 12, 'sine', 2, 0.03, { a: 0.8 }, { delay: 0.5, reverb: true, reverbMix: 0.6 });
+  }
+  // コピー確認音
+  uiConfirm() {
+    this.init();
+    this._osc(800, 'sine', 0.15, 0.08, { a: 0.005 });
+    this._osc(1200, 'sine', 0.15, 0.06, { a: 0.005 }, { delay: 0.08 });
+  }
+}
+const sfx = new SoundEngine();
+
 let words = {};
 let selected = [];
 let selectedType = '召喚';
@@ -684,6 +847,7 @@ function disconnect() {
 }
 
 function addWord(w) {
+  sfx.wordReceived();
   words[w] = (words[w] || 0) + 1;
   renderWords();
 }
@@ -703,6 +867,7 @@ function renderWords() {
 }
 
 function deleteWord(w, btn) {
+  sfx.wordRemoved();
   const card = btn.closest('.word-card');
   card.classList.add('removing');
   setTimeout(() => {
@@ -714,6 +879,7 @@ function deleteWord(w, btn) {
 }
 
 function clearAllWords() {
+  sfx.wordRemoved();
   const removedWords = Object.keys(words);
   words = {};
   selected = selected.filter(w => !removedWords.includes(w));
@@ -732,11 +898,13 @@ function addManualWord() {
 
 function selectWord(w) {
   if (selected.includes(w)) return;
+  sfx.wordSelected();
   selected.push(w);
   renderSelected();
 }
 
 function removeSelected(i) {
+  sfx.wordRemoved();
   selected.splice(i, 1);
   renderSelected();
 }
@@ -822,6 +990,7 @@ async function generate() {
   const btn = document.getElementById('generateBtn');
   btn.disabled = true;
   btn.textContent = '詠唱中...';
+  sfx.ritualStart(selectedType);
 
   try {
     const res = await fetch(API_URL, {
@@ -915,7 +1084,24 @@ function toggleGuide() {
   document.getElementById('guideToggle').classList.toggle('active', guideEnabled);
 }
 
+// SE controls
+const seToggleEl = document.getElementById('seToggle');
+const seVolumeEl = document.getElementById('seVolume');
+seToggleEl.classList.toggle('active', sfx.enabled);
+seVolumeEl.value = sfx.volume * 100;
+if (!sfx.enabled) seVolumeEl.classList.add('disabled');
+
+function toggleSE() {
+  sfx.setEnabled(!sfx.enabled);
+  seToggleEl.classList.toggle('active', sfx.enabled);
+  seVolumeEl.classList.toggle('disabled', !sfx.enabled);
+}
+function setSEVolume(val) {
+  sfx.setVolume(val / 100);
+}
+
 function doCopy(text, btn) {
+  sfx.uiConfirm();
   const orig = btn.textContent;
   const showSuccess = () => {
     btn.textContent = '完了';
