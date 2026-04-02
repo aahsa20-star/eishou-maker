@@ -537,6 +537,7 @@ function showChant(text, type, words) {
   });
 
   const lines = text.split(/(?<=[。！\n])/).map(s => s.trim()).filter(Boolean);
+  console.log('[showChant] lines:', lines.length, lines);
 
   const lineEls = lines.map(line => {
     const el = document.createElement('div');
@@ -579,6 +580,7 @@ function showChant(text, type, words) {
     const lineStart = cumulativeStart;
     cumulativeStart += chars.length * charDelay + 400;
     setTimeout(() => {
+      console.log('[showChant] line', i, 'reveal at', lineStart, 'ms, chars:', chars.length);
       el.style.opacity = '1';
       chars.forEach((ch, ci) => {
         setTimeout(() => {
