@@ -8,18 +8,18 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  // Rate limit: 一時的に無効化
-  // const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || 'unknown';
-  // const now = Date.now();
-  // const entry = rateLimit.get(ip);
-  // if (entry && now < entry.resetAt) {
-  //   if (entry.count >= 5) {
-  //     return res.status(429).json({ error: 'レート制限中です。1時間に5回までです' });
-  //   }
-  //   entry.count++;
-  // } else {
-  //   rateLimit.set(ip, { count: 1, resetAt: now + 3600000 });
-  // }
+  // Rate limit: 5 req/hour per IP
+  const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || 'unknown';
+  const now = Date.now();
+  const entry = rateLimit.get(ip);
+  if (entry && now < entry.resetAt) {
+    if (entry.count >= 5) {
+      return res.status(429).json({ error: 'レート制限中です。1時間に5回までです' });
+    }
+    entry.count++;
+  } else {
+    rateLimit.set(ip, { count: 1, resetAt: now + 3600000 });
+  }
 
   // Validate
   const { words, type } = req.body || {};
