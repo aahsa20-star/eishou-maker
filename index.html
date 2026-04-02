@@ -520,17 +520,6 @@ body {
 }
 .result-preview.visible { display: block; }
 
-/* Overlay Preview */
-.overlay-preview-area {
-  margin: 0 32px 20px;
-}
-.overlay-preview-frame {
-  width: 100%;
-  height: 360px;
-  border: 1px solid var(--border);
-  border-radius: 0;
-  background: #000;
-}
 .result-text {
   font-family: 'Yuji Syuku', serif;
   font-size: 22px;
@@ -697,11 +686,6 @@ body {
   <div class="result-actions">
     <button class="btn-copy" id="copyBtn" onclick="copyChant()">コピー</button>
   </div>
-</div>
-
-<div class="overlay-preview-area">
-  <div class="panel-title">演出プレビュー</div>
-  <iframe id="overlayPreview" src="/overlay.html" class="overlay-preview-frame"></iframe>
 </div>
 
 <div class="history-area">
@@ -1057,6 +1041,45 @@ setInterval(updateRateInfo, 30000);
 const API_URL = '/api/chant';
 const overlayChannel = new BroadcastChannel('eishou_overlay');
 
+function showResultWithTyping(text) {
+  const container = document.getElementById('resultText');
+  container.innerHTML = '';
+  const lines = text.split(/(?<=[。！\n])/).map(s => s.trim()).filter(Boolean);
+  const charDelay = 50;
+  let cumulativeStart = 0;
+
+  lines.forEach((line, i) => {
+    const lineEl = document.createElement('div');
+    lineEl.style.opacity = '0';
+    lineEl.style.transition = 'opacity 0.2s';
+    const spans = [];
+    line.split('').forEach(ch => {
+      const span = document.createElement('span');
+      span.textContent = ch;
+      span.style.opacity = '0';
+      span.style.display = 'inline-block';
+      span.style.transition = 'opacity 0.12s ease-in';
+      lineEl.appendChild(span);
+      spans.push(span);
+    });
+    container.appendChild(lineEl);
+
+    const lineStart = cumulativeStart;
+    cumulativeStart += spans.length * charDelay + 300;
+
+    setTimeout(() => {
+      lineEl.style.opacity = '1';
+      spans.forEach((sp, ci) => {
+        setTimeout(() => {
+          sp.style.opacity = '1';
+          sp.style.textShadow = '0 0 8px rgba(200,160,80,0.5)';
+          setTimeout(() => { sp.style.textShadow = ''; sp.style.transition = 'opacity 0.12s, text-shadow 0.4s'; }, 150);
+        }, ci * charDelay);
+      });
+    }, lineStart);
+  });
+}
+
 async function generate() {
   if (selected.length === 0) { alert('単語を選択してください'); return; }
   if (getActiveRateLogs().length >= RATE_MAX) { updateRateInfo(); return; }
@@ -1086,7 +1109,7 @@ async function generate() {
     if (data.error) throw new Error(data.error);
     const text = data.text;
 
-    document.getElementById('resultText').textContent = text;
+    showResultWithTyping(text);
     document.getElementById('resultPreview').classList.add('visible');
 
     const ts = Date.now();
