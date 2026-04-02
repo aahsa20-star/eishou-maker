@@ -1046,6 +1046,7 @@ async function generate() {
   const btn = document.getElementById('generateBtn');
   btn.disabled = true;
   btn.textContent = '準備中...';
+  if (bgmEnabled) sfx.stopBGM();
 
   // カウントダウン開始をoverlayに通知
   localStorage.setItem('countdown_data', JSON.stringify({
@@ -1084,8 +1085,8 @@ async function generate() {
       utterance.rate = 0.75;
       utterance.pitch = 0.8;
       utterance.volume = 1.0;
-      utterance.onend = () => { btn.disabled = false; btn.textContent = '詠唱生成'; updateRateInfo(); };
-      utterance.onerror = () => { btn.disabled = false; btn.textContent = '詠唱生成'; updateRateInfo(); };
+      utterance.onend = () => { btn.disabled = false; btn.textContent = '詠唱生成'; updateRateInfo(); if (bgmEnabled && sfx.enabled) sfx.startBGM(); };
+      utterance.onerror = () => { btn.disabled = false; btn.textContent = '詠唱生成'; updateRateInfo(); if (bgmEnabled && sfx.enabled) sfx.startBGM(); };
       speechSynthesis.speak(utterance);
       return;
     }
@@ -1094,6 +1095,7 @@ async function generate() {
   }
   btn.disabled = false;
   btn.textContent = '詠唱生成';
+  if (bgmEnabled && sfx.enabled) sfx.startBGM();
 }
 
 function getHistory() {
