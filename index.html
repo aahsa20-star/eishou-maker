@@ -36,7 +36,7 @@ body {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 16px 24px;
+  padding: 20px 32px;
   background: rgba(14,12,9,0.95);
   border-bottom: 1px solid var(--border);
   flex-wrap: wrap;
@@ -84,7 +84,7 @@ body {
 }
 .header button:hover { border-color: var(--gold); }
 .status {
-  font-size: 12px;
+  font-size: 14px;
   font-family: 'Zen Kaku Gothic New', sans-serif;
   padding: 4px 10px;
   color: var(--fg-dim);
@@ -96,8 +96,7 @@ body {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 20px;
-  padding: 20px 24px;
-  max-height: calc(100vh - 220px);
+  padding: 20px 32px;
 }
 
 .panel {
@@ -113,7 +112,7 @@ body {
   content: '';
   position: absolute;
   top: -1px; left: -1px;
-  width: 12px; height: 12px;
+  width: 16px; height: 16px;
   border-top: 2px solid var(--gold);
   border-left: 2px solid var(--gold);
 }
@@ -121,7 +120,7 @@ body {
   content: '';
   position: absolute;
   bottom: -1px; right: -1px;
-  width: 12px; height: 12px;
+  width: 16px; height: 16px;
   border-bottom: 2px solid var(--gold);
   border-right: 2px solid var(--gold);
 }
@@ -139,8 +138,8 @@ body {
 .panel-title::before {
   content: '';
   display: block;
-  width: 2px;
-  height: 1em;
+  width: 3px;
+  height: 1.2em;
   background: var(--gold);
 }
 .panel-title.teal { color: #5A8A80; }
@@ -266,8 +265,8 @@ body {
   background: linear-gradient(135deg, #13110D 0%, #0F1410 100%);
   border: 1px solid var(--border);
   border-radius: 0;
-  padding: 16px 20px;
-  margin: 16px 24px;
+  padding: 20px 24px;
+  margin: 20px 32px;
   min-height: 80px;
   position: relative;
 }
@@ -275,7 +274,7 @@ body {
   content: '';
   position: absolute;
   top: -1px; left: -1px;
-  width: 12px; height: 12px;
+  width: 16px; height: 16px;
   border-top: 2px solid var(--gold);
   border-left: 2px solid var(--gold);
 }
@@ -283,7 +282,7 @@ body {
   content: '';
   position: absolute;
   bottom: -1px; right: -1px;
-  width: 12px; height: 12px;
+  width: 16px; height: 16px;
   border-bottom: 2px solid var(--gold);
   border-right: 2px solid var(--gold);
 }
@@ -332,7 +331,8 @@ body {
   background: linear-gradient(135deg, rgba(160,120,48,0.2) 0%, rgba(90,138,128,0.1) 100%);
   color: var(--gold-bright);
   border: 1px solid var(--gold);
-  padding: 16px 48px;
+  padding: 20px 48px;
+  width: 100%;
   border-radius: 0;
   font-family: 'Zen Kaku Gothic New', sans-serif;
   font-size: 22px;
@@ -353,9 +353,10 @@ body {
 /* Type Selector & Toggles */
 .type-selector {
   display: flex;
-  gap: 6px;
-  padding: 0 24px 16px;
+  gap: 8px;
+  padding: 0 32px 12px;
   align-items: center;
+  flex-wrap: wrap;
 }
 .type-btn {
   flex: 1;
@@ -390,6 +391,15 @@ body {
 .type-btn.active[data-type="封印"] { border-color: #6A5A8A; color: #8A7AA0; background: rgba(106,90,138,0.08); }
 .type-btn.active[data-type="滅亡"] { border-color: #7A3030; color: #A05050; background: rgba(122,48,48,0.08); }
 .type-btn.active[data-type="覚醒"] { border-color: #5A7A5A; color: #7A9A7A; background: rgba(90,122,90,0.08); }
+.controls-row {
+  display: flex;
+  gap: 8px;
+  padding: 0 32px 16px;
+  align-items: center;
+}
+.controls-row .btn-clear {
+  margin-left: auto;
+}
 
 .speech-toggle {
   background: transparent;
@@ -422,22 +432,22 @@ body {
 .se-volume {
   -webkit-appearance: none;
   appearance: none;
-  width: 80px;
-  height: 4px;
+  width: 100px;
+  height: 6px;
   background: var(--border);
   outline: none;
 }
 .se-volume::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 12px;
-  height: 12px;
+  width: 16px;
+  height: 16px;
   background: var(--gold);
   cursor: pointer;
 }
 .se-volume::-moz-range-thumb {
-  width: 12px;
-  height: 12px;
+  width: 16px;
+  height: 16px;
   background: var(--gold);
   border: none;
   cursor: pointer;
@@ -460,16 +470,11 @@ body {
 
 /* Generate Area */
 .generate-area {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  padding: 0 24px 8px;
-  gap: 16px;
-  flex-wrap: wrap;
+  padding: 0 32px 8px;
 }
 .rate-info {
   text-align: right;
-  padding: 0 24px 20px;
+  padding: 0 32px 20px;
   font-size: 15px;
   color: var(--fg-dim);
 }
@@ -478,7 +483,7 @@ body {
 
 /* Result Preview */
 .result-preview {
-  margin: 0 24px 20px;
+  margin: 0 32px 20px;
   padding: 20px;
   background: var(--bg-panel);
   border: 1px solid var(--border);
@@ -490,7 +495,7 @@ body {
   content: '';
   position: absolute;
   top: -1px; left: -1px;
-  width: 12px; height: 12px;
+  width: 16px; height: 16px;
   border-top: 2px solid var(--gold);
   border-left: 2px solid var(--gold);
 }
@@ -498,7 +503,7 @@ body {
   content: '';
   position: absolute;
   bottom: -1px; right: -1px;
-  width: 12px; height: 12px;
+  width: 16px; height: 16px;
   border-bottom: 2px solid var(--gold);
   border-right: 2px solid var(--gold);
 }
@@ -532,7 +537,7 @@ body {
 .btn-copy.copied { border-color: var(--teal); color: var(--teal); }
 
 /* History */
-.history-area { margin: 0 24px 20px; }
+.history-area { margin: 0 32px 20px; }
 .history-list {
   display: flex;
   flex-direction: column;
@@ -647,16 +652,18 @@ body {
   <button class="type-btn" data-type="封印" onclick="selectType(this)">封印</button>
   <button class="type-btn" data-type="滅亡" onclick="selectType(this)">滅亡</button>
   <button class="type-btn" data-type="覚醒" onclick="selectType(this)">覚醒</button>
+</div>
+<div class="controls-row">
   <button class="speech-toggle active" id="speechToggle" onclick="toggleSpeech()">読み上げ</button>
   <button class="speech-toggle active" id="guideToggle" onclick="toggleGuide()">参加説明</button>
   <div class="se-controls">
     <button class="speech-toggle active" id="seToggle" onclick="toggleSE()">効果音</button>
     <input type="range" class="se-volume" id="seVolume" min="0" max="100" value="50" oninput="setSEVolume(this.value)">
   </div>
+  <button class="btn-clear" onclick="clearSelected()">クリア</button>
 </div>
 
 <div class="generate-area">
-  <button class="btn-clear" onclick="clearSelected()">クリア</button>
   <button class="btn-generate" id="generateBtn" onclick="generate()">詠唱生成</button>
 </div>
 <div class="rate-info" id="rateInfo"></div>
