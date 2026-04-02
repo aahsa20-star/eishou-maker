@@ -537,8 +537,6 @@ function showChant(text, type, words) {
   });
 
   const lines = text.split(/(?<=[。！\n])/).map(s => s.trim()).filter(Boolean);
-  console.log('[showChant] lines:', lines.length, lines);
-
   const lineEls = lines.map(line => {
     const el = document.createElement('div');
     el.className = 'chant-line';
@@ -580,7 +578,6 @@ function showChant(text, type, words) {
     const lineStart = cumulativeStart;
     cumulativeStart += chars.length * charDelay + 400;
     setTimeout(() => {
-      console.log('[showChant] line', i, 'reveal at', lineStart, 'ms, chars:', chars.length);
       el.style.opacity = '1';
       chars.forEach((ch, ci) => {
         setTimeout(() => {
@@ -736,7 +733,6 @@ function handleOverlayMessage(key, value) {
       const data = typeof value === 'object' ? value : JSON.parse(value);
       if (data.state === 'counting' && data.timestamp !== lastCountdownTs) {
         lastCountdownTs = data.timestamp;
-        console.log('[overlay] カウントダウン開始:', data.type);
         runCountdown(data.type || '召喚');
       }
     } catch (err) { console.error('countdown処理エラー:', err); }
@@ -747,7 +743,6 @@ function handleOverlayMessage(key, value) {
       const data = typeof value === 'object' ? value : JSON.parse(value);
       if (data.text && data.timestamp !== lastChantTs) {
         lastChantTs = data.timestamp;
-        console.log('[overlay] 詠唱データ受信:', data.type);
         showChant(data.text, data.type, data.words);
       }
     } catch (err) { console.error('chant_data処理エラー:', err); }
@@ -762,7 +757,6 @@ window.addEventListener('storage', (e) => {
 // BroadcastChannel（バックアップ通信）
 const overlayChannel = new BroadcastChannel('eishou_overlay');
 overlayChannel.onmessage = (e) => {
-  console.log('[overlay] BroadcastChannel受信:', e.data.key);
   handleOverlayMessage(e.data.key, e.data.data);
 };
 </script>

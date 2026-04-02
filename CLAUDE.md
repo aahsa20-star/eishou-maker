@@ -27,7 +27,7 @@ vercel.json     - Vercel設定（メモリ128MB、タイムアウト15秒）
 - **Twitch連携**: IRC WebSocket（justinfan匿名接続）
 - **音声**: Web Audio API（SoundEngineクラスでオシレーター合成）
 - **読み上げ**: Web Speech API（SpeechSynthesisUtterance）
-- **ページ間通信**: localStorage + storageイベント
+- **ページ間通信**: localStorage + storageイベント + BroadcastChannel
 
 ## 主要機能
 
@@ -37,7 +37,7 @@ vercel.json     - Vercel設定（メモリ128MB、タイムアウト15秒）
 - 単語カード表示（投票数、ホットカード、個別削除、全削除）
 - ドラッグ&ドロップで単語並び替え
 - 詠唱タイプ選択（召喚/解放/封印/滅亡/覚醒）
-- AI詠唱生成 → プレビュー → コピー
+- AI詠唱生成 → カウントダウン演出 → タイピングエフェクト表示 → コピー
 - 詠唱履歴（最新5件、コピー/再表示/削除）
 - 読み上げON/OFF、参加説明ON/OFF
 - 効果音ON/OFF + ボリュームスライダー
