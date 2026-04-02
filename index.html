@@ -669,6 +669,7 @@ body {
   <button class="speech-toggle active" id="guideToggle" onclick="toggleGuide()">参加説明</button>
   <div class="se-controls">
     <button class="speech-toggle active" id="seToggle" onclick="toggleSE()">効果音</button>
+    <button class="speech-toggle active" id="bgmToggle" onclick="toggleBGM()">BGM</button>
     <input type="range" class="se-volume" id="seVolume" min="0" max="100" value="50" oninput="setSEVolume(this.value)">
   </div>
   <button class="btn-clear" onclick="clearSelected()">クリア</button>
@@ -917,7 +918,6 @@ function connect(channel) {
         st.textContent = '接続中: #' + channel;
         st.className = 'status connected';
         btn.textContent = '切断';
-        if (sfx.enabled) sfx.startBGM();
       }
       const match = line.match(/PRIVMSG\s+#\S+\s+:!word\s+(.+)/i);
       if (match) {
@@ -933,7 +933,6 @@ function connect(channel) {
 function disconnect() {
   if (ws) { ws.close(); ws = null; }
   connected = false;
-  sfx.stopBGM();
   document.getElementById('status').textContent = '未接続';
   document.getElementById('status').className = 'status';
   document.getElementById('connectBtn').textContent = '接続';
@@ -1190,11 +1189,33 @@ function toggleSE() {
   sfx.setEnabled(!sfx.enabled);
   seToggleEl.classList.toggle('active', sfx.enabled);
   seVolumeEl.classList.toggle('disabled', !sfx.enabled);
-  if (sfx.enabled && connected) sfx.startBGM();
+  if (sfx.enabled && bgmEnabled) sfx.startBGM();
 }
 function setSEVolume(val) {
   sfx.setVolume(val / 100);
 }
+
+// BGM controls
+let bgmEnabled = localStorage.getItem('bgm_enabled') !== 'false';
+const bgmToggleEl = document.getElementById('bgmToggle');
+bgmToggleEl.classList.toggle('active', bgmEnabled);
+
+function toggleBGM() {
+  bgmEnabled = !bgmEnabled;
+  localStorage.setItem('bgm_enabled', bgmEnabled);
+  bgmToggleEl.classList.toggle('active', bgmEnabled);
+  if (bgmEnabled && sfx.enabled) {
+    sfx.startBGM();
+  } else {
+    sfx.stopBGM();
+  }
+}
+
+// ページ読み込み時にBGM自動開始（ユーザー操作で初期化）
+document.addEventListener('click', function initBGM() {
+  if (bgmEnabled && sfx.enabled) sfx.startBGM();
+  document.removeEventListener('click', initBGM);
+}, { once: true });
 
 function doCopy(text, btn) {
   sfx.uiConfirm();
