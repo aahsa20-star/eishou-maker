@@ -1045,8 +1045,19 @@ async function generate() {
 
   const btn = document.getElementById('generateBtn');
   btn.disabled = true;
+  btn.textContent = '準備中...';
+
+  // カウントダウン開始をoverlayに通知
+  localStorage.setItem('countdown_data', JSON.stringify({
+    state: 'counting',
+    type: selectedType,
+    timestamp: Date.now()
+  }));
+
+  // カウントダウン待機（3カウント + 詠唱ラベル = 約4秒）
+  await new Promise(r => setTimeout(r, 4000));
+
   btn.textContent = '詠唱中...';
-  sfx.ritualStart(selectedType);
 
   try {
     const res = await fetch(API_URL, {

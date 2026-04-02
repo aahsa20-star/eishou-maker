@@ -242,6 +242,38 @@ body {
   flex-shrink: 0;
 }
 
+/* Countdown Overlay */
+.countdown-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0);
+  z-index: 100;
+  pointer-events: none;
+  transition: background 0.5s;
+}
+.countdown-overlay.active {
+  background: rgba(0,0,0,0.6);
+}
+.countdown-number {
+  font-family: 'Yuji Syuku', serif;
+  font-size: 220px;
+  font-weight: 700;
+  color: var(--gold-bright);
+  opacity: 0;
+  position: absolute;
+}
+.countdown-label {
+  font-family: 'Yuji Syuku', serif;
+  font-size: 60px;
+  font-weight: 700;
+  color: var(--fg-base);
+  opacity: 0;
+  position: absolute;
+}
+
 /* Guide */
 .guide {
   position: fixed;
@@ -284,6 +316,11 @@ body {
   <span class="deco-line-bar"></span>
   <span class="deco-line-diamond"></span>
   <span class="deco-line-bar"></span>
+</div>
+
+<div class="countdown-overlay" id="countdownOverlay">
+  <div class="countdown-number" id="countdownNumber"></div>
+  <div class="countdown-label" id="countdownLabel">——詠唱——</div>
 </div>
 
 <div class="chant-window" id="chantWindow">
@@ -519,39 +556,44 @@ function showChant(text, type, words) {
   // Animate in
   bg.classList.add('visible');
   deco.classList.add('visible');
-  sfx.ritualStart(type || '召喚');
-  setTimeout(() => win.classList.add('visible'), 200);
+  setTimeout(() => {
+    win.classList.add('visible');
+    win.animate([
+      { clipPath: 'inset(0 0 100% 0)', opacity: 0.8 },
+      { clipPath: 'inset(0 0 0% 0)', opacity: 1 }
+    ], { duration: 500, easing: 'cubic-bezier(0.4, 0, 0.1, 1)', fill: 'forwards' });
+  }, 200);
 
   // Reveal lines
   lineEls.forEach((el, i) => {
     setTimeout(() => {
-      // 筆走りエフェクト：clip-pathで左から右に表示
+      const textLen = el.textContent.length;
+      const dur = 400 + textLen * 15;
       el.style.opacity = '1';
+      // 筆走り：左→右にclip-path展開
       el.animate([
-        { clipPath: 'inset(0 100% 0 0)', opacity: 0.3 },
-        { clipPath: 'inset(0 0% 0 0)', opacity: 1 }
+        { clipPath: 'inset(0 100% 0 0)' },
+        { clipPath: 'inset(0 0% 0 0)' }
       ], {
-        duration: 500,
-        easing: 'cubic-bezier(0.2, 0, 0.3, 1)',
+        duration: dur,
+        easing: 'cubic-bezier(0.2, 0, 0.1, 1)',
         fill: 'forwards'
       });
-      // 筆の尾（光のトレイル）
-      const trail = el.querySelector('::after') || el;
-      el.style.setProperty('--trail', '1');
-      const afterAnim = document.createElement('span');
-      afterAnim.style.cssText = 'position:absolute;top:0;right:-40px;width:40px;height:100%;background:linear-gradient(90deg,transparent,rgba(200,160,80,0.4));pointer-events:none;';
-      el.appendChild(afterAnim);
-      afterAnim.animate([
-        { transform: 'translateX(-40px)', opacity: 0.8 },
-        { transform: 'translateX(40px)', opacity: 0 }
-      ], { duration: 300, delay: 400, easing: 'ease-out', fill: 'forwards' });
-      setTimeout(() => afterAnim.remove(), 800);
+      // 筆の尾：光のトレイル
+      const trail = document.createElement('span');
+      trail.style.cssText = 'position:absolute;top:0;right:0;width:60px;height:100%;background:linear-gradient(90deg,transparent,rgba(200,160,80,0.5));pointer-events:none;opacity:0;';
+      el.appendChild(trail);
+      trail.animate([
+        { transform: 'translateX(-100%)', opacity: 0.6 },
+        { transform: 'translateX(120%)', opacity: 0 }
+      ], { duration: dur, easing: 'ease-out', fill: 'forwards' });
+      setTimeout(() => trail.remove(), dur + 100);
 
       sfx.lineReveal(i, lineEls.length);
-    }, 600 + i * 600);
+    }, 700 + i * 700);
   });
 
-  const wordsDelay = 600 + lines.length * 600 + 800;
+  const wordsDelay = 700 + lineEls.length * 700 + 1000;
   setTimeout(() => {
     divider.classList.add('visible');
     wordsEl.classList.add('visible');
@@ -606,6 +648,76 @@ function escHtml(s) {
 
 renderOverlayHistory();
 
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+async function runCountdown(type) {
+  const overlay = document.getElementById('countdownOverlay');
+  const numEl = document.getElementById('countdownNumber');
+  const labelEl = document.getElementById('countdownLabel');
+
+  // Type-specific colors
+  const typeColors = {
+    '召喚': '#C8A050', '解放': '#7AB8B0', '封印': '#8A7AA0',
+    '滅亡': '#A05050', '覚醒': '#7A9A7A'
+  };
+  const color = typeColors[type] || '#C8A050';
+  numEl.style.color = color;
+  labelEl.style.color = color;
+
+  // Darken background
+  overlay.style.pointerEvents = 'auto';
+  overlay.classList.add('active');
+
+  await sleep(500);
+
+  // Count: 3, 2, 1
+  for (const num of ['3', '2', '1']) {
+    numEl.textContent = num;
+    numEl.style.opacity = '1';
+    // Brush stroke: top to bottom
+    numEl.animate([
+      { clipPath: 'inset(0 0 100% 0)', opacity: 0.8 },
+      { clipPath: 'inset(0 0 0% 0)', opacity: 1 }
+    ], { duration: 600, easing: 'cubic-bezier(0.2, 0, 0.1, 1)', fill: 'forwards' });
+
+    // SE: low pitched tone for each count
+    sfx.init();
+    sfx._osc(220, 'sine', 0.5, 0.15, { a: 0.005 }, { reverb: true, reverbMix: 0.5 });
+    sfx._osc(330, 'triangle', 0.35, 0.08, { a: 0.02 }, { delay: 0.02, reverb: true });
+
+    await sleep(800);
+    // Slide up and fade out
+    numEl.animate([
+      { opacity: 1, transform: 'translateY(0)' },
+      { opacity: 0, transform: 'translateY(-30px)' }
+    ], { duration: 300, fill: 'forwards' });
+    await sleep(300);
+  }
+
+  // Show "——詠唱——"
+  labelEl.style.opacity = '1';
+  labelEl.animate([
+    { clipPath: 'inset(0 100% 0 0)', opacity: 0.8 },
+    { clipPath: 'inset(0 0% 0 0)', opacity: 1 }
+  ], { duration: 500, easing: 'cubic-bezier(0.2, 0, 0.1, 1)', fill: 'forwards' });
+
+  sfx.ritualStart(type);
+
+  await sleep(1000);
+  // Fade out label
+  labelEl.animate([
+    { opacity: 1 },
+    { opacity: 0 }
+  ], { duration: 300, fill: 'forwards' });
+  await sleep(300);
+
+  // Clean up
+  overlay.classList.remove('active');
+  overlay.style.pointerEvents = 'none';
+  numEl.style.opacity = '0';
+  labelEl.style.opacity = '0';
+}
+
 window.addEventListener('storage', (e) => {
   if (e.key === 'se_enabled') {
     sfx.setEnabled(e.newValue !== 'false');
@@ -621,6 +733,15 @@ window.addEventListener('storage', (e) => {
     return;
   }
   if (e.key === 'chant_history') { renderOverlayHistory(); return; }
+  if (e.key === 'countdown_data' && e.newValue) {
+    try {
+      const data = JSON.parse(e.newValue);
+      if (data.state === 'counting') {
+        runCountdown(data.type || '召喚');
+      }
+    } catch {}
+    return;
+  }
   if (e.key !== 'chant_data' || !e.newValue) return;
   try {
     const data = JSON.parse(e.newValue);
