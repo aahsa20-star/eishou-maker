@@ -542,7 +542,15 @@ function showChant(text, type, words) {
   const lineEls = lines.map(line => {
     const el = document.createElement('div');
     el.className = 'chant-line';
-    el.textContent = line;
+    // 一文字ずつspanに分割
+    line.split('').forEach(ch => {
+      const span = document.createElement('span');
+      span.textContent = ch;
+      span.style.opacity = '0';
+      span.style.display = 'inline-block';
+      span.style.transition = 'opacity 0.15s ease-in';
+      el.appendChild(span);
+    });
     body.appendChild(el);
     return el;
   });
@@ -566,42 +574,39 @@ function showChant(text, type, words) {
 
   // Reveal lines
   lineEls.forEach((el, i) => {
+    const chars = el.querySelectorAll('span');
+    const charDelay = 60; // 1文字あたり60ms
+    const lineStart = 700 + i * (chars.length * charDelay + 400);
     setTimeout(() => {
-      const textLen = el.textContent.length;
-      const dur = 400 + textLen * 15;
       el.style.opacity = '1';
-      // 筆走り：左→右にclip-path展開
-      el.animate([
-        { clipPath: 'inset(0 100% 0 0)' },
-        { clipPath: 'inset(0 0% 0 0)' }
-      ], {
-        duration: dur,
-        easing: 'cubic-bezier(0.2, 0, 0.1, 1)',
-        fill: 'forwards'
+      chars.forEach((ch, ci) => {
+        setTimeout(() => {
+          ch.style.opacity = '1';
+          ch.style.textShadow = '0 0 12px rgba(200,160,80,0.6)';
+          // 発光を徐々に消す
+          setTimeout(() => { ch.style.textShadow = ''; ch.style.transition = 'text-shadow 0.5s'; }, 200);
+        }, ci * charDelay);
       });
-      // 筆の尾：光のトレイル
-      const trail = document.createElement('span');
-      trail.style.cssText = 'position:absolute;top:0;right:0;width:60px;height:100%;background:linear-gradient(90deg,transparent,rgba(200,160,80,0.5));pointer-events:none;opacity:0;';
-      el.appendChild(trail);
-      trail.animate([
-        { transform: 'translateX(-100%)', opacity: 0.6 },
-        { transform: 'translateX(120%)', opacity: 0 }
-      ], { duration: dur, easing: 'ease-out', fill: 'forwards' });
-      setTimeout(() => trail.remove(), dur + 100);
-
       sfx.lineReveal(i, lineEls.length);
-    }, 700 + i * 700);
+    }, lineStart);
   });
 
-  const wordsDelay = 700 + lineEls.length * 700 + 1000;
+  // wordsDelayを最終行の完了に合わせて再計算
+  const lastLine = lineEls[lineEls.length - 1];
+  const lastCharCount = lastLine ? lastLine.querySelectorAll('span').length : 0;
+  const totalLineTime = lineEls.reduce((acc, el, i) => {
+    const chars = el.querySelectorAll('span').length;
+    return 700 + i * (chars * 60 + 400);
+  }, 0) + lastCharCount * 60 + 800;
+
   setTimeout(() => {
     divider.classList.add('visible');
     wordsEl.classList.add('visible');
     sfx.chantComplete(type || '召喚');
-  }, wordsDelay);
+  }, totalLineTime);
 
   // Hold then fade out
-  const holdTime = 5000;
+  const holdTime = totalLineTime + 5000;
   chantTimeout = setTimeout(() => {
     win.classList.remove('visible');
     deco.classList.remove('visible');
