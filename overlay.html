@@ -82,7 +82,6 @@ body {
   z-index: 5;
   clip-path: inset(0 0 100% 0);
   transition: clip-path 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
 }
 .chant-window.visible { clip-path: inset(0 0 0% 0); }
 
@@ -573,10 +572,12 @@ function showChant(text, type, words) {
   }, 200);
 
   // Reveal lines
+  const charDelay = 60; // 1文字あたり60ms
+  let cumulativeStart = 700;
   lineEls.forEach((el, i) => {
     const chars = el.querySelectorAll('span');
-    const charDelay = 60; // 1文字あたり60ms
-    const lineStart = 700 + i * (chars.length * charDelay + 400);
+    const lineStart = cumulativeStart;
+    cumulativeStart += chars.length * charDelay + 400;
     setTimeout(() => {
       el.style.opacity = '1';
       chars.forEach((ch, ci) => {
@@ -591,13 +592,8 @@ function showChant(text, type, words) {
     }, lineStart);
   });
 
-  // wordsDelayを最終行の完了に合わせて再計算
-  const lastLine = lineEls[lineEls.length - 1];
-  const lastCharCount = lastLine ? lastLine.querySelectorAll('span').length : 0;
-  const totalLineTime = lineEls.reduce((acc, el, i) => {
-    const chars = el.querySelectorAll('span').length;
-    return 700 + i * (chars * 60 + 400);
-  }, 0) + lastCharCount * 60 + 800;
+  // 全行の表示完了時間を計算
+  const totalLineTime = cumulativeStart + 800;
 
   setTimeout(() => {
     divider.classList.add('visible');
@@ -751,7 +747,7 @@ window.addEventListener('storage', (e) => {
   try {
     const data = JSON.parse(e.newValue);
     if (data.text) showChant(data.text, data.type, data.words);
-  } catch {}
+  } catch (err) { console.error('chant_data処理エラー:', err); }
 });
 </script>
 </body>
