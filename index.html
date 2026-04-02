@@ -1139,7 +1139,7 @@ function deleteHistory(i) {
 function replayChant(i) {
   const entry = getHistory()[i];
   if (!entry) return;
-  localStorage.setItem('chant_data', JSON.stringify({ text: entry.text, timestamp: Date.now() }));
+  localStorage.setItem('chant_data', JSON.stringify({ text: entry.text, type: entry.type, words: entry.words, timestamp: Date.now() }));
 }
 function renderHistory() {
   const list = document.getElementById('historyList');
