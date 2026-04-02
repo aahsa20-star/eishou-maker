@@ -1054,8 +1054,8 @@ async function generate() {
     timestamp: Date.now()
   }));
 
-  // カウントダウン待機（3カウント + 詠唱ラベル = 約4秒）
-  await new Promise(r => setTimeout(r, 4000));
+  // カウントダウン待機（500ms暗転 + 3×1100msカウント + 1300msラベル ≈ 5.1秒）
+  await new Promise(r => setTimeout(r, 5200));
 
   btn.textContent = '詠唱中...';
 
