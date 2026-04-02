@@ -49,6 +49,7 @@ body {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   letter-spacing: 0.05em;
+  filter: drop-shadow(0 0 8px rgba(200,160,80,0.4));
 }
 .header-line {
   width: 100%;
@@ -134,7 +135,10 @@ body {
   display: flex;
   align-items: center;
   gap: 10px;
+  text-shadow: 0 0 10px rgba(160,120,48,0.3);
 }
+.panel-title.teal { color: #5A8A80; text-shadow: 0 0 10px rgba(90,138,128,0.3); }
+.panel-title.purple { color: #6A5A8A; text-shadow: 0 0 10px rgba(106,90,138,0.3); }
 .panel-title::before {
   content: '';
   display: block;
@@ -142,8 +146,6 @@ body {
   height: 1.2em;
   background: var(--gold);
 }
-.panel-title.teal { color: #5A8A80; }
-.panel-title.purple { color: #6A5A8A; }
 .panel-title.teal::before { background: #5A8A80; }
 .panel-title.gold::before { background: #A07830; }
 .panel-title.purple::before { background: #6A5A8A; }
@@ -175,6 +177,7 @@ body {
   font-size: 18px;
   font-weight: 500;
   color: var(--fg-base);
+  text-shadow: 0 1px 3px rgba(0,0,0,0.5);
 }
 .word-card .word-count {
   font-size: 11px;
@@ -184,6 +187,10 @@ body {
 .word-card.hot {
   border-color: var(--gold);
   background: rgba(160,120,48,0.12);
+  box-shadow: 0 0 12px rgba(160,120,48,0.2);
+}
+.word-card.hot .word-text {
+  text-shadow: 0 0 8px rgba(200,160,80,0.4), 0 1px 3px rgba(0,0,0,0.5);
 }
 .word-card .word-delete {
   position: absolute;
@@ -307,6 +314,8 @@ body {
   cursor: grab;
   transition: all 0.2s;
   user-select: none;
+  text-shadow: 0 0 6px rgba(200,160,80,0.3), 0 1px 3px rgba(0,0,0,0.5);
+  box-shadow: 0 0 10px rgba(160,120,48,0.1);
 }
 .selected-word:active { cursor: grabbing; }
 .selected-word .remove {
@@ -340,10 +349,14 @@ body {
   cursor: pointer;
   letter-spacing: 0.3em;
   transition: all 0.2s;
+  text-shadow: 0 0 12px rgba(200,160,80,0.5), 0 0 24px rgba(200,160,80,0.2);
+  box-shadow: 0 0 20px rgba(160,120,48,0.15), inset 0 0 20px rgba(160,120,48,0.05);
 }
 .btn-generate:hover {
   background: rgba(160,120,48,0.25);
   color: var(--fg-base);
+  text-shadow: 0 0 16px rgba(200,160,80,0.7), 0 0 32px rgba(200,160,80,0.3);
+  box-shadow: 0 0 30px rgba(160,120,48,0.25), inset 0 0 30px rgba(160,120,48,0.08);
 }
 .btn-generate:disabled {
   opacity: 0.3;
@@ -367,6 +380,7 @@ body {
   border-radius: 0;
   font-family: 'Zen Kaku Gothic New', sans-serif;
   font-size: 18px;
+  text-shadow: 0 0 8px rgba(160,120,48,0.2);
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
@@ -386,11 +400,13 @@ body {
   background: rgba(160,120,48,0.1);
   border-color: var(--gold);
   color: var(--fg-base);
+  text-shadow: 0 0 10px rgba(200,160,80,0.5);
+  box-shadow: 0 0 15px rgba(160,120,48,0.2), inset 0 0 15px rgba(160,120,48,0.05);
 }
-.type-btn.active[data-type="解放"] { border-color: var(--teal); color: var(--teal); background: rgba(90,138,128,0.08); }
-.type-btn.active[data-type="封印"] { border-color: #6A5A8A; color: #8A7AA0; background: rgba(106,90,138,0.08); }
-.type-btn.active[data-type="滅亡"] { border-color: #7A3030; color: #A05050; background: rgba(122,48,48,0.08); }
-.type-btn.active[data-type="覚醒"] { border-color: #5A7A5A; color: #7A9A7A; background: rgba(90,122,90,0.08); }
+.type-btn.active[data-type="解放"] { border-color: var(--teal); color: var(--teal); background: rgba(90,138,128,0.08); text-shadow: 0 0 10px rgba(90,138,128,0.5); box-shadow: 0 0 15px rgba(90,138,128,0.2), inset 0 0 15px rgba(90,138,128,0.05); }
+.type-btn.active[data-type="封印"] { border-color: #6A5A8A; color: #8A7AA0; background: rgba(106,90,138,0.08); text-shadow: 0 0 10px rgba(106,90,138,0.5); box-shadow: 0 0 15px rgba(106,90,138,0.2), inset 0 0 15px rgba(106,90,138,0.05); }
+.type-btn.active[data-type="滅亡"] { border-color: #7A3030; color: #A05050; background: rgba(122,48,48,0.08); text-shadow: 0 0 10px rgba(122,48,48,0.5); box-shadow: 0 0 15px rgba(122,48,48,0.2), inset 0 0 15px rgba(122,48,48,0.05); }
+.type-btn.active[data-type="覚醒"] { border-color: #5A7A5A; color: #7A9A7A; background: rgba(90,122,90,0.08); text-shadow: 0 0 10px rgba(90,122,90,0.5); box-shadow: 0 0 15px rgba(90,122,90,0.2), inset 0 0 15px rgba(90,122,90,0.05); }
 .controls-row {
   display: flex;
   gap: 8px;
@@ -422,6 +438,7 @@ body {
 .speech-toggle.active {
   color: var(--gold);
   border-color: var(--gold);
+  text-shadow: 0 0 8px rgba(160,120,48,0.4);
 }
 .se-controls {
   display: flex;
