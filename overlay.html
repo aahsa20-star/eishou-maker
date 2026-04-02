@@ -3,17 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <title>詠唱オーバーレイ</title>
-<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@400;700;800&family=Zen+Kaku+Gothic+New:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;700&display=swap" rel="stylesheet">
 <style>
 :root {
-  --color-main: #F0E6C8;
-  --color-gold: #C8A84B;
-  --color-blue: #7EB8D4;
-  --color-red: #C84B4B;
-  --color-purple: #9B7EC8;
-  --color-bg: rgba(8, 8, 20, 0.88);
-  --color-border: rgba(200, 168, 75, 0.6);
-  --color-accent: var(--color-gold);
+  --sao-blue:     #4FC3F7;
+  --sao-teal:     #00BCD4;
+  --sao-gold:     #B8952A;
+  --sao-red:      #EF5350;
+  --sao-purple:   #7C4DFF;
+  --sao-white:    #E8F4FD;
+  --color-accent: var(--sao-blue);
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
 vercel-live-feedback, [data-vercel-toolbar] { display: none !important; }
@@ -25,34 +24,30 @@ body {
   font-family: 'Zen Kaku Gothic New', sans-serif;
 }
 
-/* Scanlines */
-.scanlines {
+/* Background overlay */
+.overlay-bg {
   position: fixed;
   top: 0; left: 0;
   width: 100%; height: 100%;
-  background: repeating-linear-gradient(
-    0deg,
-    transparent,
-    transparent 2px,
-    rgba(0,0,0,0.03) 2px,
-    rgba(0,0,0,0.03) 4px
-  );
+  background: radial-gradient(ellipse at center, rgba(3,10,20,0.9) 0%, rgba(3,10,20,0.6) 100%);
   pointer-events: none;
-  z-index: 10;
+  z-index: 1;
+  opacity: 0;
+  transition: opacity 0.5s;
 }
+.overlay-bg.visible { opacity: 1; }
 
-/* Vignette */
-.vignette {
+/* Magic circle canvas */
+canvas#magicCircle {
   position: fixed;
   top: 0; left: 0;
   width: 100%; height: 100%;
   pointer-events: none;
   z-index: 2;
   opacity: 0;
-  transition: opacity 0.5s;
-  box-shadow: inset 0 0 200px rgba(0,0,0,0.7);
+  transition: opacity 0.8s;
 }
-.vignette.visible { opacity: 1; }
+canvas#magicCircle.visible { opacity: 1; }
 
 /* Chant Window */
 .chant-window {
@@ -62,27 +57,49 @@ body {
   transform: translate(-50%, -50%);
   width: 70%;
   max-width: 900px;
-  background: var(--color-bg);
-  border: 1px solid var(--color-border);
-  border-radius: 2px;
+  background: rgba(4,20,40,0.9);
+  border: 1px solid rgba(79,195,247,0.5);
+  border-radius: 0;
+  clip-path: polygon(0 16px, 16px 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%);
   box-shadow:
-    inset 0 0 0 1px rgba(255,255,255,0.05),
-    0 0 40px rgba(200, 168, 75, 0.15),
-    0 0 80px rgba(0, 0, 0, 0.5);
-  padding: 32px 40px 28px;
+    0 0 40px rgba(79,195,247,0.1),
+    inset 0 0 40px rgba(79,195,247,0.03);
+  padding: 0;
   z-index: 5;
   opacity: 0;
   transition: opacity 0.3s;
 }
 .chant-window.visible { opacity: 1; }
 
-.chant-type {
+.chant-header {
+  display: flex;
+  align-items: center;
+  padding: 12px 28px;
+  border-bottom: 1px solid rgba(79,195,247,0.15);
+}
+.chant-header-label {
+  font-family: 'Rajdhani', sans-serif;
   font-size: 13px;
   font-weight: 700;
-  letter-spacing: 3px;
-  margin-bottom: 20px;
+  color: rgba(79,195,247,0.5);
+  letter-spacing: 0.2em;
+}
+.chant-header-line {
+  flex: 1;
+  height: 1px;
+  background: rgba(79,195,247,0.15);
+  margin: 0 16px;
+}
+.chant-header-type {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
   color: var(--color-accent);
-  opacity: 0.7;
+}
+
+.chant-content {
+  padding: 24px 32px 20px;
 }
 
 .chant-body {
@@ -93,10 +110,9 @@ body {
 }
 
 .chant-line {
-  font-family: 'Shippori Mincho B1', serif;
   font-size: 36px;
   font-weight: 700;
-  color: var(--color-main);
+  color: var(--sao-white);
   line-height: 1.8;
   opacity: 0;
   transform: translateY(8px);
@@ -109,7 +125,7 @@ body {
 
 .chant-divider {
   border: none;
-  border-top: 1px solid rgba(200, 168, 75, 0.2);
+  border-top: 1px solid rgba(79,195,247,0.15);
   margin: 16px 0 12px;
   opacity: 0;
   transition: opacity 0.3s;
@@ -117,8 +133,9 @@ body {
 .chant-divider.visible { opacity: 1; }
 
 .chant-words {
+  font-family: 'Rajdhani', sans-serif;
   font-size: 13px;
-  color: rgba(240, 230, 200, 0.4);
+  color: rgba(79,195,247,0.4);
   letter-spacing: 1px;
   opacity: 0;
   transition: opacity 0.3s;
@@ -139,14 +156,17 @@ body {
   padding: 24px 20px;
   z-index: 0;
   pointer-events: none;
+  border-left: 1px solid rgba(79,195,247,0.1);
+  background: rgba(4,20,40,0.5);
 }
 .history-sidebar-title {
+  font-family: 'Rajdhani', sans-serif;
   font-size: 12px;
   font-weight: 700;
-  color: rgba(240, 230, 200, 0.25);
-  letter-spacing: 4px;
+  color: rgba(79,195,247,0.3);
+  letter-spacing: 0.2em;
   padding-bottom: 10px;
-  border-bottom: 1px solid rgba(200, 168, 75, 0.15);
+  border-bottom: 1px solid rgba(79,195,247,0.1);
   margin-bottom: 12px;
 }
 .history-sidebar-item {
@@ -154,19 +174,19 @@ body {
   align-items: baseline;
   gap: 10px;
   padding: 8px 0;
-  border-bottom: 1px solid rgba(200, 168, 75, 0.06);
-  cursor: pointer;
+  border-bottom: 1px solid rgba(79,195,247,0.05);
 }
 .history-sidebar-num {
+  font-family: 'Rajdhani', sans-serif;
   font-size: 11px;
-  color: rgba(200, 168, 75, 0.25);
+  color: rgba(79,195,247,0.25);
   font-weight: 700;
   flex-shrink: 0;
   width: 20px;
 }
 .history-sidebar-text {
   font-size: 13px;
-  color: rgba(240, 230, 200, 0.3);
+  color: rgba(232,244,253,0.3);
   line-height: 1.5;
   flex: 1;
   overflow: hidden;
@@ -174,8 +194,9 @@ body {
   white-space: nowrap;
 }
 .history-sidebar-time {
+  font-family: 'Rajdhani', sans-serif;
   font-size: 11px;
-  color: rgba(240, 230, 200, 0.15);
+  color: rgba(79,195,247,0.15);
   flex-shrink: 0;
 }
 
@@ -197,51 +218,141 @@ body {
   transform: translateY(0);
 }
 .guide-title {
+  font-family: 'Rajdhani', sans-serif;
   font-size: 12px;
   font-weight: 700;
-  color: rgba(240, 230, 200, 0.35);
-  letter-spacing: 2px;
+  color: rgba(79,195,247,0.4);
+  letter-spacing: 0.2em;
   margin-bottom: 6px;
 }
 .guide-text {
   font-size: 13px;
-  color: rgba(240, 230, 200, 0.25);
+  color: rgba(232,244,253,0.3);
   line-height: 1.8;
 }
 .guide-text .cmd {
-  color: var(--color-blue);
+  color: var(--sao-blue);
   font-weight: 700;
 }
 </style>
 </head>
 <body>
-<div class="scanlines"></div>
-<div class="vignette" id="vignette"></div>
+<div class="overlay-bg" id="overlayBg"></div>
+<canvas id="magicCircle" width="1920" height="1080"></canvas>
 
 <div class="chant-window" id="chantWindow">
-  <div class="chant-type" id="chantType"></div>
-  <div class="chant-body" id="chantBody"></div>
-  <hr class="chant-divider" id="chantDivider">
-  <div class="chant-words" id="chantWords"></div>
+  <div class="chant-header">
+    <span class="chant-header-label">CHANT SYSTEM</span>
+    <span class="chant-header-line"></span>
+    <span class="chant-header-type" id="chantType">召喚</span>
+  </div>
+  <div class="chant-content">
+    <div class="chant-body" id="chantBody"></div>
+    <hr class="chant-divider" id="chantDivider">
+    <div class="chant-words" id="chantWords"></div>
+  </div>
 </div>
 
 <div class="history-sidebar" id="historySidebar">
-  <div class="history-sidebar-title">詠唱履歴</div>
+  <div class="history-sidebar-title">CHANT LOG</div>
 </div>
 
 <div class="guide hidden" id="guide">
-  <div class="guide-title">[ チャットで参加 ]</div>
-  <div class="guide-text"><span class="cmd">!word 単語</span>　を送ってね<br>例）<span class="cmd">!word 闇</span>　<span class="cmd">!word 覇</span>　<span class="cmd">!word 混沌</span></div>
+  <div class="guide-title">> CHAT COMMAND</div>
+  <div class="guide-text"><span class="cmd">!word [単語]</span> を送信<br>例）<span class="cmd">!word 闇</span>　<span class="cmd">!word 覇</span>　<span class="cmd">!word 混沌</span></div>
 </div>
 
 <script>
 const TYPE_CONFIG = {
-  '召喚': { icon: '⚡', color: '#C8A84B' },
-  '解放': { icon: '🔓', color: '#7EB8D4' },
-  '封印': { icon: '🔒', color: '#9B7EC8' },
-  '滅亡': { icon: '💀', color: '#C84B4B' },
-  '覚醒': { icon: '👁', color: '#C8A84B' },
+  '召喚': { color: '#4FC3F7' },
+  '解放': { color: '#00BCD4' },
+  '封印': { color: '#7C4DFF' },
+  '滅亡': { color: '#EF5350' },
+  '覚醒': { color: '#B8952A' },
 };
+
+// Magic circle
+const mcCanvas = document.getElementById('magicCircle');
+const mcCtx = mcCanvas.getContext('2d');
+let mcAnimating = false;
+let mcAngle = 0;
+
+function drawMagicCircle() {
+  if (!mcAnimating) return;
+  mcCtx.clearRect(0, 0, 1920, 1080);
+
+  const cx = 960, cy = 594; // slightly below center (matches window position)
+  const color = getComputedStyle(document.documentElement).getPropertyValue('--color-accent').trim() || '#4FC3F7';
+
+  // Parse color for rgba
+  mcCtx.strokeStyle = color;
+  mcCtx.lineWidth = 1;
+  mcCtx.globalAlpha = 0.12;
+
+  // Outer circle (clockwise)
+  mcCtx.save();
+  mcCtx.translate(cx, cy);
+  mcCtx.rotate(mcAngle);
+  mcCtx.setLineDash([12, 8, 4, 8]);
+  mcCtx.beginPath();
+  mcCtx.arc(0, 0, 380, 0, Math.PI * 2);
+  mcCtx.stroke();
+  mcCtx.restore();
+
+  // Inner circle (counter-clockwise)
+  mcCtx.save();
+  mcCtx.translate(cx, cy);
+  mcCtx.rotate(-mcAngle * 0.7);
+  mcCtx.setLineDash([6, 12, 20, 12]);
+  mcCtx.beginPath();
+  mcCtx.arc(0, 0, 320, 0, Math.PI * 2);
+  mcCtx.stroke();
+  mcCtx.restore();
+
+  // Innermost circle (slow clockwise)
+  mcCtx.save();
+  mcCtx.translate(cx, cy);
+  mcCtx.rotate(mcAngle * 0.3);
+  mcCtx.setLineDash([2, 16]);
+  mcCtx.globalAlpha = 0.08;
+  mcCtx.beginPath();
+  mcCtx.arc(0, 0, 260, 0, Math.PI * 2);
+  mcCtx.stroke();
+  mcCtx.restore();
+
+  // Cross lines
+  mcCtx.save();
+  mcCtx.translate(cx, cy);
+  mcCtx.rotate(mcAngle * 0.5);
+  mcCtx.globalAlpha = 0.06;
+  mcCtx.setLineDash([]);
+  for (let i = 0; i < 6; i++) {
+    const a = (Math.PI / 3) * i;
+    mcCtx.beginPath();
+    mcCtx.moveTo(Math.cos(a) * 200, Math.sin(a) * 200);
+    mcCtx.lineTo(Math.cos(a) * 380, Math.sin(a) * 380);
+    mcCtx.stroke();
+  }
+  mcCtx.restore();
+
+  mcCtx.globalAlpha = 1;
+  mcCtx.setLineDash([]);
+  mcAngle += 0.003;
+  requestAnimationFrame(drawMagicCircle);
+}
+
+function startMagicCircle() {
+  if (mcAnimating) return;
+  mcAnimating = true;
+  mcCanvas.classList.add('visible');
+  drawMagicCircle();
+}
+
+function stopMagicCircle() {
+  mcAnimating = false;
+  mcCanvas.classList.remove('visible');
+  setTimeout(() => mcCtx.clearRect(0, 0, 1920, 1080), 800);
+}
 
 // Guide
 const guideEl = document.getElementById('guide');
@@ -263,7 +374,6 @@ setTimeout(updateGuide, 300);
 let chantTimeout = null;
 
 function showChant(text, type, words) {
-  // Clear any pending animation
   if (chantTimeout) { clearTimeout(chantTimeout); chantTimeout = null; }
 
   chantActive = true;
@@ -272,7 +382,7 @@ function showChant(text, type, words) {
   const cfg = TYPE_CONFIG[type] || TYPE_CONFIG['召喚'];
   document.documentElement.style.setProperty('--color-accent', cfg.color);
 
-  const vignette = document.getElementById('vignette');
+  const bg = document.getElementById('overlayBg');
   const win = document.getElementById('chantWindow');
   const body = document.getElementById('chantBody');
   const typeEl = document.getElementById('chantType');
@@ -283,7 +393,7 @@ function showChant(text, type, words) {
   body.innerHTML = '';
   divider.classList.remove('visible');
   wordsEl.classList.remove('visible');
-  typeEl.textContent = `${cfg.icon}  ${type || '召喚'}`;
+  typeEl.textContent = type || '召喚';
   typeEl.style.color = cfg.color;
 
   // Split into lines
@@ -299,33 +409,34 @@ function showChant(text, type, words) {
 
   // Set words
   if (words && words.length > 0) {
-    wordsEl.innerHTML = '使用単語：' + words.map(w => `<span>${w}</span>`).join('');
+    wordsEl.innerHTML = 'WORDS: ' + words.map(w => `<span>${w}</span>`).join('');
   } else {
     wordsEl.innerHTML = '';
   }
 
   // Animate in
-  vignette.classList.add('visible');
+  bg.classList.add('visible');
   win.classList.add('visible');
+  startMagicCircle();
 
   // Reveal lines
-  const timeouts = [];
   lineEls.forEach((el, i) => {
-    timeouts.push(setTimeout(() => el.classList.add('visible'), 400 + i * 600));
+    setTimeout(() => el.classList.add('visible'), 400 + i * 600);
   });
 
   // Show words after all lines
   const wordsDelay = 400 + lines.length * 600 + 800;
-  timeouts.push(setTimeout(() => {
+  setTimeout(() => {
     divider.classList.add('visible');
     wordsEl.classList.add('visible');
-  }, wordsDelay));
+  }, wordsDelay);
 
   // Hold then fade out
   const holdTime = 5000;
   chantTimeout = setTimeout(() => {
     win.classList.remove('visible');
-    vignette.classList.remove('visible');
+    bg.classList.remove('visible');
+    stopMagicCircle();
 
     chantTimeout = setTimeout(() => {
       body.innerHTML = '';
@@ -334,7 +445,7 @@ function showChant(text, type, words) {
       chantActive = false;
       updateGuide();
       chantTimeout = null;
-    }, 500);
+    }, 800);
   }, wordsDelay + holdTime);
 }
 
