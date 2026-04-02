@@ -721,11 +721,14 @@ class SoundEngine {
     this.volume = v;
     localStorage.setItem('se_volume', String(v));
     if (this.masterGain) this.masterGain.gain.value = this.enabled ? v : 0;
+    this._updateBGMVolume();
   }
   setEnabled(b) {
     this.enabled = b;
     localStorage.setItem('se_enabled', String(b));
     if (this.masterGain) this.masterGain.gain.value = b ? this.volume : 0;
+    this._updateBGMVolume();
+    if (!b) this.stopBGM();
   }
   _osc(freq, type, dur, gain, env, opts = {}) {
     if (!this.enabled || !this.ctx) return;
@@ -815,6 +818,64 @@ class SoundEngine {
     this._osc(800, 'sine', 0.15, 0.08, { a: 0.005 });
     this._osc(1200, 'sine', 0.15, 0.06, { a: 0.005 }, { delay: 0.08 });
   }
+
+  // ── BGM ──
+  startBGM() {
+    if (this._bgmActive) return;
+    this.init();
+    this._bgmActive = true;
+    // レイヤー1：低音ドローン（完全5度）
+    this._droneOscs = [55, 82.4].map(freq => {
+      const o = this.ctx.createOscillator();
+      const g = this.ctx.createGain();
+      o.type = 'sine';
+      o.frequency.value = freq;
+      g.gain.value = this.enabled ? 0.03 * this.volume : 0;
+      o.connect(g);
+      g.connect(this.ctx.destination);
+      o.start();
+      return { osc: o, gain: g };
+    });
+    // レイヤー2：ランダム音粒
+    this._spawnBGMTone();
+  }
+  stopBGM() {
+    this._bgmActive = false;
+    if (this._droneOscs) {
+      this._droneOscs.forEach(({ osc }) => { try { osc.stop(); } catch(e) {} });
+      this._droneOscs = null;
+    }
+  }
+  _spawnBGMTone() {
+    if (!this._bgmActive || !this.enabled || !this.ctx) return;
+    const freqs = [261.6, 329.6, 392, 523.3, 659.3];
+    const o = this.ctx.createOscillator();
+    const g = this.ctx.createGain();
+    o.type = 'sine';
+    o.frequency.value = freqs[Math.floor(Math.random() * freqs.length)];
+    const now = this.ctx.currentTime;
+    g.gain.setValueAtTime(0, now);
+    g.gain.linearRampToValueAtTime(0.05 * this.volume, now + 0.3);
+    g.gain.exponentialRampToValueAtTime(0.001, now + 2.5);
+    o.connect(g);
+    if (this.reverbNode) {
+      const rg = this.ctx.createGain();
+      rg.gain.value = 0.4;
+      g.connect(rg);
+      rg.connect(this.reverbNode);
+    }
+    g.connect(this.masterGain);
+    o.start(now);
+    o.stop(now + 2.5);
+    setTimeout(() => this._spawnBGMTone(), 3000 + Math.random() * 4000);
+  }
+  _updateBGMVolume() {
+    if (this._droneOscs) {
+      this._droneOscs.forEach(({ gain }) => {
+        gain.gain.value = this.enabled ? 0.03 * this.volume : 0;
+      });
+    }
+  }
 }
 const sfx = new SoundEngine();
 
@@ -856,6 +917,7 @@ function connect(channel) {
         st.textContent = '接続中: #' + channel;
         st.className = 'status connected';
         btn.textContent = '切断';
+        if (sfx.enabled) sfx.startBGM();
       }
       const match = line.match(/PRIVMSG\s+#\S+\s+:!word\s+(.+)/i);
       if (match) {
@@ -871,6 +933,7 @@ function connect(channel) {
 function disconnect() {
   if (ws) { ws.close(); ws = null; }
   connected = false;
+  sfx.stopBGM();
   document.getElementById('status').textContent = '未接続';
   document.getElementById('status').className = 'status';
   document.getElementById('connectBtn').textContent = '接続';
@@ -1127,6 +1190,7 @@ function toggleSE() {
   sfx.setEnabled(!sfx.enabled);
   seToggleEl.classList.toggle('active', sfx.enabled);
   seVolumeEl.classList.toggle('disabled', !sfx.enabled);
+  if (sfx.enabled && connected) sfx.startBGM();
 }
 function setSEVolume(val) {
   sfx.setVolume(val / 100);
