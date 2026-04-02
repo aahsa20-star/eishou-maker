@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>詠唱メーカー</title>
-<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Yuji+Syuku&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root {
   --fg-base:     #E8DFC8;
@@ -45,7 +45,9 @@ body {
   margin-right: auto;
   font-size: 20px;
   font-weight: 700;
-  color: var(--fg-base);
+  background: linear-gradient(135deg, #C8A050 0%, #7AB8B0 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
   letter-spacing: 0.05em;
 }
 .header-line {
@@ -99,7 +101,7 @@ body {
 }
 
 .panel {
-  background: var(--bg-panel);
+  background: linear-gradient(135deg, #13110D 0%, #0F1410 100%);
   border: 1px solid var(--border);
   border-radius: 0;
   padding: 20px;
@@ -141,6 +143,11 @@ body {
   height: 1em;
   background: var(--gold);
 }
+.panel-title.teal { color: #5A8A80; }
+.panel-title.purple { color: #6A5A8A; }
+.panel-title.teal::before { background: #5A8A80; }
+.panel-title.gold::before { background: #A07830; }
+.panel-title.purple::before { background: #6A5A8A; }
 
 /* Word Cards */
 .word-grid {
@@ -256,7 +263,7 @@ body {
 
 /* Selected Area */
 .selected-area {
-  background: var(--bg-panel);
+  background: linear-gradient(135deg, #13110D 0%, #0F1410 100%);
   border: 1px solid var(--border);
   border-radius: 0;
   padding: 16px 20px;
@@ -322,7 +329,7 @@ body {
 
 /* Generate Button */
 .btn-generate {
-  background: rgba(160,120,48,0.15);
+  background: linear-gradient(135deg, rgba(160,120,48,0.2) 0%, rgba(90,138,128,0.1) 100%);
   color: var(--gold-bright);
   border: 1px solid var(--gold);
   padding: 14px 40px;
@@ -369,6 +376,11 @@ body {
   border-color: var(--border-gold);
   color: var(--fg-base);
 }
+.type-btn[data-type="召喚"] { border-color: rgba(160,120,48,0.3); }
+.type-btn[data-type="解放"] { border-color: rgba(90,138,128,0.3); }
+.type-btn[data-type="封印"] { border-color: rgba(106,90,138,0.3); }
+.type-btn[data-type="滅亡"] { border-color: rgba(122,48,48,0.3); }
+.type-btn[data-type="覚醒"] { border-color: rgba(90,122,90,0.3); }
 .type-btn.active {
   background: rgba(160,120,48,0.1);
   border-color: var(--gold);
@@ -492,7 +504,7 @@ body {
 }
 .result-preview.visible { display: block; }
 .result-text {
-  font-family: 'Zen Kaku Gothic New', sans-serif;
+  font-family: 'Yuji Syuku', serif;
   font-size: 18px;
   font-weight: 600;
   line-height: 2;
@@ -535,7 +547,7 @@ body {
 }
 .history-card:hover { border-color: var(--border-gold); }
 .history-chant {
-  font-family: 'Zen Kaku Gothic New', sans-serif;
+  font-family: 'Yuji Syuku', serif;
   font-size: 14px;
   font-weight: 400;
   color: var(--fg-base);
@@ -603,18 +615,18 @@ body {
 <div class="main">
   <div class="panel">
     <div class="panel-header">
-      <div class="panel-title">投稿された単語</div>
+      <div class="panel-title teal">投稿された単語</div>
       <button class="btn-clear-words" id="clearWordsBtn" onclick="clearAllWords()" style="display:none">全削除</button>
     </div>
     <div class="word-grid" id="wordGrid"></div>
   </div>
   <div class="panel">
-    <div class="panel-title">手動追加</div>
+    <div class="panel-title gold">手動追加</div>
     <div class="manual-input">
       <input id="manualWord" placeholder="単語を入力..." onkeydown="if(event.key==='Enter')addManualWord()">
       <button onclick="addManualWord()">追加</button>
     </div>
-    <div class="panel-title" style="margin-top:16px">ヒント</div>
+    <div class="panel-title gold" style="margin-top:16px">ヒント</div>
     <p style="color:var(--fg-dim);font-size:13px;line-height:1.8">
       チャットに <code style="color:var(--teal)">!word 単語</code> で投稿された単語が左に表示されます。<br>
       クリックで選択 → 下の並び替えエリアへ → 詠唱生成
@@ -623,7 +635,7 @@ body {
 </div>
 
 <div class="selected-area">
-  <div class="panel-title">選択済み単語（ドラッグで並び替え）</div>
+  <div class="panel-title teal">選択済み単語（ドラッグで並び替え）</div>
   <div class="selected-words" id="selectedWords">
     <span class="placeholder-text">単語をクリックして追加...</span>
   </div>
@@ -657,7 +669,7 @@ body {
 </div>
 
 <div class="history-area">
-  <div class="panel-title">詠唱履歴</div>
+  <div class="panel-title purple">詠唱履歴</div>
   <div class="history-list" id="historyList"></div>
 </div>
 
@@ -1007,7 +1019,7 @@ async function generate() {
 
     const ts = Date.now();
     localStorage.setItem('chant_data', JSON.stringify({ text, timestamp: ts, type: selectedType, words: [...selected] }));
-    saveHistory({ text, words: [...selected], timestamp: ts });
+    saveHistory({ text, words: [...selected], type: selectedType, timestamp: ts });
     addRateLog();
 
     if (speechEnabled && 'speechSynthesis' in window) {
@@ -1056,6 +1068,8 @@ function renderHistory() {
   history.forEach((entry, i) => {
     const card = document.createElement('div');
     card.className = 'history-card';
+    const typeColors = { '召喚': 'rgba(160,120,48,0.05)', '解放': 'rgba(90,138,128,0.05)', '封印': 'rgba(106,90,138,0.05)', '滅亡': 'rgba(122,48,48,0.05)', '覚醒': 'rgba(90,122,90,0.05)' };
+    card.style.background = typeColors[entry.type] || 'rgba(160,120,48,0.05)';
     const time = new Date(entry.timestamp);
     const hh = String(time.getHours()).padStart(2, '0');
     const mm = String(time.getMinutes()).padStart(2, '0');
