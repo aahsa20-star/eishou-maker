@@ -820,61 +820,25 @@ class SoundEngine {
     this._osc(1200, 'sine', 0.15, 0.06, { a: 0.005 }, { delay: 0.08 });
   }
 
-  // ── BGM ──
+  // ── BGM（MP3ループ再生） ──
   startBGM() {
-    if (this._bgmActive) return;
-    this.init();
-    this._bgmActive = true;
-    // レイヤー1：低音ドローン（完全5度）
-    this._droneOscs = [55, 82.4].map(freq => {
-      const o = this.ctx.createOscillator();
-      const g = this.ctx.createGain();
-      o.type = 'sine';
-      o.frequency.value = freq;
-      g.gain.value = this.enabled ? 0.03 * this.volume : 0;
-      o.connect(g);
-      g.connect(this.ctx.destination);
-      o.start();
-      return { osc: o, gain: g };
-    });
-    // レイヤー2：ランダム音粒
-    this._spawnBGMTone();
+    if (this._bgmAudio) return;
+    const audio = new Audio('/bgm/Moonlight_on_Vellum.mp3');
+    audio.loop = true;
+    audio.volume = this.enabled ? 0.3 * this.volume : 0;
+    audio.play().catch(() => {});
+    this._bgmAudio = audio;
   }
   stopBGM() {
-    this._bgmActive = false;
-    if (this._droneOscs) {
-      this._droneOscs.forEach(({ osc }) => { try { osc.stop(); } catch(e) {} });
-      this._droneOscs = null;
+    if (this._bgmAudio) {
+      this._bgmAudio.pause();
+      this._bgmAudio.currentTime = 0;
+      this._bgmAudio = null;
     }
-  }
-  _spawnBGMTone() {
-    if (!this._bgmActive || !this.enabled || !this.ctx) return;
-    const freqs = [261.6, 329.6, 392, 523.3, 659.3];
-    const o = this.ctx.createOscillator();
-    const g = this.ctx.createGain();
-    o.type = 'sine';
-    o.frequency.value = freqs[Math.floor(Math.random() * freqs.length)];
-    const now = this.ctx.currentTime;
-    g.gain.setValueAtTime(0, now);
-    g.gain.linearRampToValueAtTime(0.05 * this.volume, now + 0.3);
-    g.gain.exponentialRampToValueAtTime(0.001, now + 2.5);
-    o.connect(g);
-    if (this.reverbNode) {
-      const rg = this.ctx.createGain();
-      rg.gain.value = 0.4;
-      g.connect(rg);
-      rg.connect(this.reverbNode);
-    }
-    g.connect(this.masterGain);
-    o.start(now);
-    o.stop(now + 2.5);
-    setTimeout(() => this._spawnBGMTone(), 3000 + Math.random() * 4000);
   }
   _updateBGMVolume() {
-    if (this._droneOscs) {
-      this._droneOscs.forEach(({ gain }) => {
-        gain.gain.value = this.enabled ? 0.03 * this.volume : 0;
-      });
+    if (this._bgmAudio) {
+      this._bgmAudio.volume = this.enabled ? 0.3 * this.volume : 0;
     }
   }
 }
