@@ -719,6 +719,10 @@ async function runCountdown(type) {
   labelEl.style.opacity = '0';
 }
 
+// 重複排除用（storageとBroadcastChannelの二重受信を防ぐ）
+let lastCountdownTs = 0;
+let lastChantTs = 0;
+
 // メッセージ処理（storage / BroadcastChannel共通）
 function handleOverlayMessage(key, value) {
   if (key === 'se_enabled') { sfx.setEnabled(value !== 'false' && value !== false); return; }
@@ -728,7 +732,8 @@ function handleOverlayMessage(key, value) {
   if (key === 'countdown_data') {
     try {
       const data = typeof value === 'object' ? value : JSON.parse(value);
-      if (data.state === 'counting') {
+      if (data.state === 'counting' && data.timestamp !== lastCountdownTs) {
+        lastCountdownTs = data.timestamp;
         console.log('[overlay] カウントダウン開始:', data.type);
         runCountdown(data.type || '召喚');
       }
@@ -738,7 +743,8 @@ function handleOverlayMessage(key, value) {
   if (key === 'chant_data') {
     try {
       const data = typeof value === 'object' ? value : JSON.parse(value);
-      if (data.text) {
+      if (data.text && data.timestamp !== lastChantTs) {
+        lastChantTs = data.timestamp;
         console.log('[overlay] 詠唱データ受信:', data.type);
         showChant(data.text, data.type, data.words);
       }
