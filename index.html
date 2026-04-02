@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>詠唱メーカー</title>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Shippori+Mincho+B1:wght@400;600;800&family=Zen+Kaku+Gothic+New:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root {
   --fg-base:     #E8DFC8;
@@ -43,20 +43,8 @@ body {
 }
 .header-title {
   margin-right: auto;
-}
-.header-title .en {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 11px;
-  font-weight: 400;
-  color: var(--fg-dim);
-  letter-spacing: 0.2em;
-  display: block;
-  margin-bottom: 2px;
-}
-.header-title .ja {
-  font-family: 'Shippori Mincho B1', serif;
-  font-size: 22px;
-  font-weight: 800;
+  font-size: 20px;
+  font-weight: 700;
   color: var(--fg-base);
   letter-spacing: 0.05em;
 }
@@ -86,7 +74,7 @@ body {
   padding: 8px 18px;
   border-radius: 0;
   font-size: 14px;
-  font-family: 'Cormorant Garamond', serif;
+  font-family: 'Zen Kaku Gothic New', sans-serif;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
@@ -136,7 +124,7 @@ body {
   border-right: 2px solid var(--gold);
 }
 .panel-title {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: 'Zen Kaku Gothic New', sans-serif;
   font-size: 14px;
   font-weight: 600;
   color: var(--gold);
@@ -258,7 +246,7 @@ body {
   padding: 10px 20px;
   border-radius: 0;
   font-size: 14px;
-  font-family: 'Cormorant Garamond', serif;
+  font-family: 'Zen Kaku Gothic New', sans-serif;
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
@@ -339,7 +327,7 @@ body {
   border: 1px solid var(--gold);
   padding: 14px 40px;
   border-radius: 0;
-  font-family: 'Shippori Mincho B1', serif;
+  font-family: 'Zen Kaku Gothic New', sans-serif;
   font-size: 18px;
   font-weight: 800;
   cursor: pointer;
@@ -369,7 +357,7 @@ body {
   border: 1px solid var(--border);
   padding: 10px 8px;
   border-radius: 0;
-  font-family: 'Shippori Mincho B1', serif;
+  font-family: 'Zen Kaku Gothic New', sans-serif;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
@@ -471,7 +459,7 @@ body {
 }
 .result-preview.visible { display: block; }
 .result-text {
-  font-family: 'Shippori Mincho B1', serif;
+  font-family: 'Zen Kaku Gothic New', sans-serif;
   font-size: 18px;
   font-weight: 600;
   line-height: 2;
@@ -514,7 +502,7 @@ body {
 }
 .history-card:hover { border-color: var(--border-gold); }
 .history-chant {
-  font-family: 'Shippori Mincho B1', serif;
+  font-family: 'Zen Kaku Gothic New', sans-serif;
   font-size: 14px;
   font-weight: 400;
   color: var(--fg-base);
@@ -573,10 +561,7 @@ body {
 <body>
 
 <div class="header">
-  <div class="header-title">
-    <span class="en">Chant Maker</span>
-    <span class="ja">詠唱メーカー</span>
-  </div>
+  <div class="header-title">詠唱メーカー</div>
   <input class="channel-input" id="channel" placeholder="Twitchチャンネル名">
   <button id="connectBtn" onclick="toggleConnect()">接続</button>
   <span class="status" id="status">未接続</span>
