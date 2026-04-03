@@ -7,6 +7,18 @@
     "api/image.js": {
       "memory": 128,
       "maxDuration": 30
+    },
+    "api/auth/callback.js": {
+      "memory": 128,
+      "maxDuration": 10
+    },
+    "api/auth/verify.js": {
+      "memory": 128,
+      "maxDuration": 5
+    },
+    "api/auth/logout.js": {
+      "memory": 128,
+      "maxDuration": 5
     }
   }
 }

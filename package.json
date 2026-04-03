@@ -1,0 +1,7 @@
+{
+  "private": true,
+  "dependencies": {
+    "jsonwebtoken": "^9.0.0",
+    "cookie": "^0.6.0"
+  }
+}

@@ -43,7 +43,7 @@ body {
   flex-wrap: wrap;
 }
 .header-title {
-  margin-right: auto;
+  margin-right: 0;
   font-size: 28px;
   font-weight: 700;
   background: linear-gradient(135deg, #C8A050 0%, #7AB8B0 100%);
@@ -92,6 +92,42 @@ body {
   color: var(--fg-dim);
 }
 .status.connected { color: var(--teal); }
+.auth-area {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+}
+.auth-area .auth-login-btn {
+  background: transparent;
+  color: #9146FF;
+  border: 1px solid rgba(145,70,255,0.4);
+  padding: 6px 14px;
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.auth-area .auth-login-btn:hover { border-color: #9146FF; color: #B380FF; }
+.auth-user {
+  color: var(--fg-dim);
+  font-family: 'Zen Kaku Gothic New', sans-serif;
+}
+.auth-user.subscriber {
+  color: var(--gold-bright);
+}
+.auth-user .star { margin-right: 4px; }
+.auth-logout-btn {
+  background: transparent;
+  border: none;
+  color: var(--fg-dim);
+  font-size: 11px;
+  cursor: pointer;
+  padding: 2px 6px;
+  font-family: inherit;
+}
+.auth-logout-btn:hover { color: var(--fg-base); }
 
 /* Main Layout */
 .main {
@@ -539,6 +575,14 @@ body {
 }
 .rate-info.warning { color: var(--gold); }
 .rate-info.danger { color: #7A3030; }
+.rate-info-image {
+  font-size: 11px;
+  color: var(--fg-dim);
+  text-align: center;
+  padding: 2px 0 0;
+}
+.rate-info-image.warning { color: var(--gold); }
+.rate-info-image.danger { color: #7A3030; }
 
 /* Odai */
 .odai-area {
@@ -1338,6 +1382,9 @@ body {
   <input class="channel-input" id="channel" placeholder="Twitchチャンネル名">
   <button id="connectBtn" onclick="toggleConnect()">接続</button>
   <span class="status" id="status">未接続</span>
+  <div class="auth-area" id="authArea">
+    <button class="auth-login-btn" id="authLoginBtn" onclick="twitchLogin()">Twitchでログイン</button>
+  </div>
 </div>
 
 <div class="odai-area">
@@ -1442,6 +1489,7 @@ body {
       <button id="chantStampBtn" onclick="makeStamp()" style="display:none">スタンプを作る</button>
     </div>
     <div class="chant-ov-stamp-hint" id="chantStampHint" style="display:none">ダウンロードした画像をEmote Generatorにアップしてスタンプを作れます</div>
+    <div class="rate-info-image" id="imageRateInfo"></div>
   </div>
 </div>
 <div class="ov-info-odai" id="ovInfoOdai"></div>
@@ -2075,8 +2123,46 @@ function renderSelected() {
   });
 }
 
-const RATE_MAX = 5;
+// ── 認証 ──
+let authState = { loggedIn: false, userName: null, isSubscriber: false };
+const TWITCH_AUTH_URL = 'https://id.twitch.tv/oauth2/authorize?client_id=wo0r7r7n2oru29gkjewg6jz2lzohhk&redirect_uri=https://eishou-maker.vercel.app/api/auth/callback&response_type=code&scope=user:read:subscriptions';
+
+function twitchLogin() {
+  window.location.href = TWITCH_AUTH_URL;
+}
+async function twitchLogout() {
+  await fetch('/api/auth/logout');
+  authState = { loggedIn: false, userName: null, isSubscriber: false };
+  updateAuthUI();
+  updateRateInfo();
+}
+async function checkAuth() {
+  try {
+    const res = await fetch('/api/auth/verify');
+    const data = await res.json();
+    if (data.loggedIn) {
+      authState = { loggedIn: true, userName: data.userName, isSubscriber: data.isSubscriber };
+    }
+  } catch {}
+  updateAuthUI();
+  updateRateInfo();
+}
+function updateAuthUI() {
+  const area = document.getElementById('authArea');
+  if (!authState.loggedIn) {
+    area.innerHTML = '<button class="auth-login-btn" onclick="twitchLogin()">Twitchでログイン</button>';
+  } else if (authState.isSubscriber) {
+    area.innerHTML = `<span class="auth-user subscriber"><span class="star">★</span>${authState.userName}（サブスクライバー）</span><button class="auth-logout-btn" onclick="twitchLogout()">ログアウト</button>`;
+  } else {
+    area.innerHTML = `<span class="auth-user">${authState.userName} でログイン中</span><button class="auth-logout-btn" onclick="twitchLogout()">ログアウト</button>`;
+  }
+}
+checkAuth();
+
+// ── レート制限 ──
 const RATE_WINDOW = 3600000;
+function getRateMax() { return authState.isSubscriber ? 50 : 5; }
+function getImageRateMax() { return authState.isSubscriber ? 30 : 3; }
 
 function getRateLogs() {
   try { return JSON.parse(localStorage.getItem('rate_limit_log') || '[]'); } catch { return []; }
@@ -2085,18 +2171,31 @@ function getActiveRateLogs() {
   const now = Date.now();
   return getRateLogs().filter(t => now - t < RATE_WINDOW);
 }
+function getImageRateLogs() {
+  try { return JSON.parse(localStorage.getItem('image_rate_limit_log') || '[]'); } catch { return []; }
+}
+function getActiveImageRateLogs() {
+  const now = Date.now();
+  return getImageRateLogs().filter(t => now - t < RATE_WINDOW);
+}
 function addRateLog() {
   const logs = [...getActiveRateLogs(), Date.now()];
   localStorage.setItem('rate_limit_log', JSON.stringify(logs));
   updateRateInfo();
 }
+function addImageRateLog() {
+  const logs = [...getActiveImageRateLogs(), Date.now()];
+  localStorage.setItem('image_rate_limit_log', JSON.stringify(logs));
+  updateImageRateInfo();
+}
 function updateRateInfo() {
   const logs = getActiveRateLogs();
-  const remaining = Math.max(0, RATE_MAX - logs.length);
+  const max = getRateMax();
+  const remaining = Math.max(0, max - logs.length);
   const el = document.getElementById('rateInfo');
   const btn = document.getElementById('generateBtn');
-  let text = `残り ${remaining} / ${RATE_MAX} 回`;
-  if (logs.length > 0 && remaining < RATE_MAX) {
+  let text = `残り ${remaining} / ${max} 回`;
+  if (logs.length > 0 && remaining < max) {
     const oldest = Math.min(...logs);
     const resetAt = oldest + RATE_WINDOW;
     const minsLeft = Math.max(1, Math.ceil((resetAt - Date.now()) / 60000));
@@ -2106,11 +2205,20 @@ function updateRateInfo() {
   el.className = 'rate-info' + (remaining <= 0 ? ' danger' : remaining <= 2 ? ' warning' : '');
   if (remaining <= 0) {
     btn.disabled = true;
-    el.textContent = '残り 0 / 5 回 ― しばらく時間をおいてください';
+    el.textContent = `残り 0 / ${max} 回 ― しばらく時間をおいてください`;
   }
 }
+function updateImageRateInfo() {
+  const el = document.getElementById('imageRateInfo');
+  if (!el) return;
+  const logs = getActiveImageRateLogs();
+  const max = getImageRateMax();
+  const remaining = Math.max(0, max - logs.length);
+  el.textContent = `画像生成 残り ${remaining} / ${max} 回`;
+  el.className = 'rate-info-image' + (remaining <= 0 ? ' danger' : remaining <= 1 ? ' warning' : '');
+}
 updateRateInfo();
-setInterval(updateRateInfo, 30000);
+setInterval(() => { updateRateInfo(); updateImageRateInfo(); }, 30000);
 
 const API_URL = '/api/chant';
 
@@ -2303,6 +2411,7 @@ function showChantOverlay(text, type, chantWords, evaluation, imageUrl) {
     }
     document.getElementById('chantOvActions').classList.add('visible');
     document.getElementById('chantCloseBtn').classList.add('visible');
+    updateImageRateInfo();
     sfx.chantComplete(type || '召喚');
 
     // 画像URLがあれば復元
@@ -2378,6 +2487,14 @@ document.addEventListener('keydown', (e) => {
 // ── DALL-E 3 画像生成 ──
 async function generateChantImage() {
   if (!_lastChantOverlay) return;
+
+  // 画像レート制限チェック
+  if (getActiveImageRateLogs().length >= getImageRateMax()) {
+    updateImageRateInfo();
+    alert('画像生成のレート制限に達しました');
+    return;
+  }
+
   const btn = document.getElementById('chantGenImageBtn');
   const imageArea = document.getElementById('chantOvImage');
 
@@ -2411,6 +2528,7 @@ async function generateChantImage() {
     // 履歴に画像URLを追記
     if (_lastChantOverlay) _lastChantOverlay.imageUrl = data.url;
 
+    addImageRateLog();
     btn.textContent = '画像生成';
     btn.disabled = false;
   } catch (e) {
@@ -2554,7 +2672,7 @@ function showResultWithTyping(text) {
 
 async function generate() {
   if (selected.length === 0) { alert('単語を選択してください'); return; }
-  if (getActiveRateLogs().length >= RATE_MAX) { updateRateInfo(); return; }
+  if (getActiveRateLogs().length >= getRateMax()) { updateRateInfo(); return; }
 
   const btn = document.getElementById('generateBtn');
   btn.disabled = true;

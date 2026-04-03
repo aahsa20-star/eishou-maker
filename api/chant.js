@@ -1,4 +1,7 @@
-const rateLimit = new Map(); // IP -> { count, resetAt }
+import jwt from 'jsonwebtoken';
+import { parse } from 'cookie';
+
+const rateLimit = new Map(); // key -> { count, resetAt }
 
 export default async function handler(req, res) {
   // CORS
@@ -8,18 +11,42 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
+  // JWT認証（サブスクライバー判定）
+  let isSubscriber = false;
+  let authUserName = null;
+  try {
+    const cookies = parse(req.headers.cookie || '');
+    const token = cookies.eishou_token;
+    if (token && process.env.JWT_SECRET) {
+      const payload = jwt.verify(token, process.env.JWT_SECRET);
+      isSubscriber = !!payload.isSubscriber;
+      authUserName = payload.userName;
+    }
+  } catch {}
+
   // Rate limit
   const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || 'unknown';
+  const limit = isSubscriber ? 50 : 5;
   const now = Date.now();
   const entry = rateLimit.get(ip);
   if (entry && now < entry.resetAt) {
-    if (entry.count >= 5) {
-      return res.status(429).json({ error: 'レート制限中です。1時間に5回までです' });
+    if (entry.count >= limit) {
+      return res.status(429).json({
+        error: isSubscriber
+          ? 'レート制限中です。1時間に50回までです'
+          : 'レート制限中です。1時間に5回までです',
+        limit,
+        remaining: 0
+      });
     }
     entry.count++;
   } else {
     rateLimit.set(ip, { count: 1, resetAt: now + 3600000 });
   }
+
+  // 残り回数を計算
+  const currentEntry = rateLimit.get(ip);
+  const remaining = Math.max(0, limit - (currentEntry ? currentEntry.count : 0));
 
   // Validate
   const { words, type } = req.body || {};
@@ -91,7 +118,7 @@ EVAL:以降はJSONのみ出力すること`,
     }
     // リテラル \n を実際の改行に変換
     chantText = chantText.replace(/\\n/g, '\n');
-    return res.status(200).json({ text: chantText, evaluation });
+    return res.status(200).json({ text: chantText, evaluation, remaining, limit });
   } catch (e) {
     return res.status(500).json({ error: '詠唱の生成に失敗しました' });
   }
