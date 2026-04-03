@@ -3,6 +3,10 @@
     "api/chant.js": {
       "memory": 128,
       "maxDuration": 15
+    },
+    "api/image.js": {
+      "memory": 128,
+      "maxDuration": 30
     }
   }
 }

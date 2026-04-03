@@ -1095,6 +1095,67 @@ body {
 }
 .chant-ov-actions button:hover { border-color: var(--border-gold); color: var(--gold); }
 .chant-ov-actions button.copied { border-color: var(--teal); color: var(--teal); }
+.chant-ov-actions button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.chant-ov-image {
+  display: none;
+  justify-content: center;
+  padding: 16px 0 8px;
+}
+.chant-ov-image.visible { display: flex; }
+.chant-ov-image-wrap {
+  position: relative;
+  max-width: 400px;
+  max-height: 400px;
+}
+.chant-ov-image-wrap::before {
+  content: '';
+  position: absolute;
+  top: -1px; left: -1px;
+  width: 12px; height: 12px;
+  border-top: 2px solid #C8A050;
+  border-left: 2px solid #C8A050;
+  z-index: 1;
+}
+.chant-ov-image-wrap::after {
+  content: '';
+  position: absolute;
+  bottom: -1px; right: -1px;
+  width: 12px; height: 12px;
+  border-bottom: 2px solid #C8A050;
+  border-right: 2px solid #C8A050;
+  z-index: 1;
+}
+.chant-ov-image-wrap img {
+  max-width: 400px;
+  max-height: 400px;
+  display: block;
+  border: 1px solid var(--border-gold);
+  opacity: 0;
+  transition: opacity 0.6s;
+}
+.chant-ov-image-wrap img.loaded { opacity: 1; }
+.chant-ov-image-dl {
+  text-align: center;
+  margin-top: 8px;
+}
+.chant-ov-image-dl button {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--fg-dim);
+  font-size: 11px;
+  padding: 4px 12px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+.chant-ov-image-dl button:hover { border-color: var(--border-gold); color: var(--gold); }
+.chant-ov-image-error {
+  font-size: 13px;
+  color: #7A3030;
+  text-align: center;
+  padding: 12px 0;
+}
 
 /* Chant overlay info displays */
 .ov-info-guide {
@@ -1338,9 +1399,11 @@ body {
     <hr class="chant-ov-divider" id="chantDivider">
     <div class="chant-ov-words" id="chantOvWords"></div>
     <div class="chant-ov-eval" id="chantOvEval"></div>
+    <div class="chant-ov-image" id="chantOvImage"></div>
     <div class="chant-ov-actions" id="chantOvActions">
       <button onclick="copyChantFromOverlay(this)">コピー</button>
       <button onclick="saveChantImageFromOverlay()">画像保存</button>
+      <button id="chantGenImageBtn" onclick="generateChantImage()">画像生成</button>
     </div>
   </div>
 </div>
@@ -2223,6 +2286,9 @@ function closeChantOverlay() {
     document.getElementById('chantDivider').classList.remove('visible');
     document.getElementById('chantOvWords').classList.remove('visible');
     document.getElementById('chantOvEval').classList.remove('visible');
+    const imgArea = document.getElementById('chantOvImage');
+    imgArea.innerHTML = '';
+    imgArea.classList.remove('visible');
     chantOverlayActive = false;
   }, 700);
 }
@@ -2249,6 +2315,69 @@ document.addEventListener('keydown', (e) => {
     closeChantOverlay();
   }
 });
+
+// ── DALL-E 3 画像生成 ──
+async function generateChantImage() {
+  if (!_lastChantOverlay) return;
+  const btn = document.getElementById('chantGenImageBtn');
+  const imageArea = document.getElementById('chantOvImage');
+
+  btn.disabled = true;
+  btn.textContent = '生成中...';
+  imageArea.innerHTML = '';
+  imageArea.classList.remove('visible');
+
+  try {
+    const { text, type, evaluation } = _lastChantOverlay;
+    const res = await fetch('/api/image', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chantText: text,
+        type: type || '召喚',
+        element: evaluation ? evaluation.element : null
+      })
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+
+    const wrap = document.createElement('div');
+    wrap.className = 'chant-ov-image-wrap';
+    const img = document.createElement('img');
+    img.src = data.url;
+    img.alt = '詠唱画像';
+    img.onload = () => img.classList.add('loaded');
+    wrap.appendChild(img);
+
+    const dlArea = document.createElement('div');
+    dlArea.className = 'chant-ov-image-dl';
+    const dlBtn = document.createElement('button');
+    dlBtn.textContent = '画像をDL';
+    dlBtn.onclick = () => downloadGeneratedImage(data.url, type);
+    dlArea.appendChild(dlBtn);
+
+    imageArea.innerHTML = '';
+    imageArea.appendChild(wrap);
+    imageArea.appendChild(dlArea);
+    imageArea.classList.add('visible');
+
+    btn.textContent = '画像生成';
+    btn.disabled = false;
+  } catch (e) {
+    imageArea.innerHTML = `<div class="chant-ov-image-error">${esc(e.message)}</div>`;
+    imageArea.classList.add('visible');
+    btn.textContent = '画像生成';
+    btn.disabled = false;
+  }
+}
+
+function downloadGeneratedImage(url, type) {
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `詠唱画像_${type || '召喚'}_${Date.now()}.png`;
+  a.target = '_blank';
+  a.click();
+}
 
 async function runCountdown(type) {
   const overlay = document.getElementById('countdownOverlay');
