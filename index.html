@@ -2014,7 +2014,7 @@ let currentOdai = null;
 function initOdaiPresets() {
   const container = document.getElementById('odaiPresets');
   container.innerHTML = ODAI_PRESETS.map((text, i) =>
-    `<button class="odai-preset-btn" data-index="${i}" onclick="adoptOdai(${i})">${text}</button>`
+    `<button class="odai-preset-btn" data-index="${i}" onclick="adoptOdai(${i})">${esc(text)}</button>`
   ).join('');
 }
 
@@ -2291,9 +2291,9 @@ function updateAuthUI() {
   if (!authState.loggedIn) {
     area.innerHTML = '<button class="auth-login-btn" onclick="twitchLogin()">使い魔と契約する</button><div class="auth-perk-hint">契約者には詠唱20回/刻・幻視召喚5回/日の力が与えられる</div>';
   } else if (authState.isSubscriber) {
-    area.innerHTML = `<span class="auth-user subscriber"><span class="star">⚔</span>${authState.userName}（契約者）</span><button class="auth-logout-btn" onclick="twitchLogout()">ログアウト</button>`;
+    area.innerHTML = `<span class="auth-user subscriber"><span class="star">⚔</span>${esc(authState.userName)}（契約者）</span><button class="auth-logout-btn" onclick="twitchLogout()">ログアウト</button>`;
   } else {
-    area.innerHTML = `<span class="auth-user">${authState.userName} として顕現中</span><button class="auth-logout-btn" onclick="twitchLogout()">ログアウト</button>`;
+    area.innerHTML = `<span class="auth-user">${esc(authState.userName)} として顕現中</span><button class="auth-logout-btn" onclick="twitchLogout()">ログアウト</button>`;
   }
   updateImageGenButton();
 }
@@ -2578,7 +2578,7 @@ function showChantOverlay(text, type, chantWords, evaluation, imageUrl) {
       const ec = ELEMENT_COLORS[evaluation.element] || '#888';
       const rc = RARITY_COLORS[evaluation.rarity] || '#888';
       const stars = '\u2605'.repeat(evaluation.power || 0) + '\u2606'.repeat(5 - (evaluation.power || 0));
-      evalEl.innerHTML = `<span class="chant-ov-eval-element" style="background:${ec}">${evaluation.element}</span><span class="chant-ov-eval-power">${stars}</span><span class="chant-ov-eval-rarity" style="color:${rc}">${evaluation.rarity}</span>`;
+      evalEl.innerHTML = `<span class="chant-ov-eval-element" style="background:${ec}">${esc(evaluation.element)}</span><span class="chant-ov-eval-power">${stars}</span><span class="chant-ov-eval-rarity" style="color:${rc}">${esc(evaluation.rarity)}</span>`;
       evalEl.classList.add('visible');
     }
     document.getElementById('chantOvActions').classList.add('visible');
@@ -2826,7 +2826,7 @@ function showEvaluation(evaluation) {
   const rarColor = RARITY_COLORS[evaluation.rarity] || '#888';
   const power = evaluation.power || 0;
   const stars = '★'.repeat(power) + '☆'.repeat(5 - power);
-  el.innerHTML = `<span class="eval-element" style="background:${elemColor};color:#fff;">${evaluation.element}</span><span class="eval-power">${stars}</span><span class="eval-rarity" style="color:${rarColor}">${evaluation.rarity}</span>`;
+  el.innerHTML = `<span class="eval-element" style="background:${elemColor};color:#fff;">${esc(evaluation.element)}</span><span class="eval-power">${stars}</span><span class="eval-rarity" style="color:${rarColor}">${esc(evaluation.rarity)}</span>`;
   el.classList.add('visible');
 }
 
@@ -2962,16 +2962,16 @@ async function saveChantImage(chantText, words, type, evaluation) {
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     font-family: 'Zen Kaku Gothic New', sans-serif;
   `;
-  const linesHtml = chantText.split(/\\n|\n/).map(s => s.trim()).filter(Boolean).join('<br>');
+  const linesHtml = chantText.split(/\\n|\n/).map(s => s.trim()).filter(Boolean).map(s => esc(s)).join('<br>');
   let evalHtml = '';
   if (evaluation) {
     const ec = ELEMENT_COLORS[evaluation.element] || '#888';
     const rc = RARITY_COLORS[evaluation.rarity] || '#888';
     const stars = '★'.repeat(evaluation.power || 0) + '☆'.repeat(5 - (evaluation.power || 0));
     evalHtml = `<div style="padding:8px 48px 16px;display:flex;align-items:center;justify-content:center;gap:16px;font-size:13px;">
-      <span style="background:${ec};color:#fff;padding:3px 10px;font-weight:700;letter-spacing:0.1em;">${evaluation.element}</span>
+      <span style="background:${ec};color:#fff;padding:3px 10px;font-weight:700;letter-spacing:0.1em;">${esc(evaluation.element)}</span>
       <span style="color:#C8A050;font-size:16px;letter-spacing:2px;">${stars}</span>
-      <span style="color:${rc};font-weight:600;letter-spacing:0.1em;">${evaluation.rarity}</span>
+      <span style="color:${rc};font-weight:600;letter-spacing:0.1em;">${esc(evaluation.rarity)}</span>
     </div>`;
   }
   canvasEl.innerHTML = `
@@ -2985,7 +2985,7 @@ async function saveChantImage(chantText, words, type, evaluation) {
       </div>
       <div style="padding:48px 48px 32px;font-family:'Yuji Syuku',serif;font-size:28px;line-height:2.2;color:#E8DFC8;text-align:center;letter-spacing:0.05em;">${linesHtml}</div>
       <div style="margin:0 48px;height:1px;background:rgba(160,120,48,0.2);"></div>
-      <div style="padding:16px 48px 8px;font-size:13px;color:rgba(160,120,48,0.6);text-align:center;letter-spacing:0.15em;">${words.join('　')}</div>
+      <div style="padding:16px 48px 8px;font-size:13px;color:rgba(160,120,48,0.6);text-align:center;letter-spacing:0.15em;">${words.map(w => esc(w)).join('　')}</div>
       ${evalHtml}
     </div>
     <div style="position:absolute;bottom:20px;right:24px;font-size:12px;color:rgba(160,120,48,0.4);letter-spacing:0.1em;">詠唱メーカー</div>
@@ -3109,7 +3109,7 @@ function renderHof() {
       const ec = ELEMENT_COLORS[entry.evaluation.element] || '#888';
       const rc = RARITY_COLORS[entry.evaluation.rarity] || '#888';
       const stars = '★'.repeat(entry.evaluation.power || 0) + '☆'.repeat(5 - (entry.evaluation.power || 0));
-      evalHtml = `<div class="hof-card-eval"><span class="elem" style="background:${ec}">${entry.evaluation.element}</span><span class="stars">${stars}</span><span class="rarity" style="color:${rc}">${entry.evaluation.rarity}</span></div>`;
+      evalHtml = `<div class="hof-card-eval"><span class="elem" style="background:${ec}">${esc(entry.evaluation.element)}</span><span class="stars">${stars}</span><span class="rarity" style="color:${rc}">${esc(entry.evaluation.rarity)}</span></div>`;
     }
     card.innerHTML = `<div class="hof-card-num">${String(i + 1).padStart(2, '0')}</div>${evalHtml}<div class="hof-card-text">${esc(entry.text)}</div>
       <div class="hof-card-actions">
