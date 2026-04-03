@@ -1196,7 +1196,7 @@ body {
 .chant-ov-image-wrap img {
   width: 100%;
   height: auto;
-  max-height: 40vh;
+  max-height: 30vh;
   object-fit: contain;
   display: block;
   border: 1px solid var(--border-gold);
@@ -1611,13 +1611,13 @@ footer a:hover { color: var(--gold); }
     <div class="chant-ov-eval" id="chantOvEval"></div>
     <div class="chant-ov-image" id="chantOvImage"></div>
     <div class="chant-ov-actions" id="chantOvActions">
-      <button onclick="copyChantFromOverlay(this)">複写</button>
-      <button onclick="saveChantImageFromOverlay()">刻印</button>
-      <button id="chantGenImageBtn" onclick="generateChantImage()">幻視召喚</button>
-      <button id="chantDlImageBtn" onclick="downloadLastGeneratedImage()" style="display:none">幻視を持ち帰る</button>
-      <button id="chantStampBtn" onclick="makeStamp()" style="display:none">紋章を刻む</button>
+      <button onclick="copyChantFromOverlay(this)">テキストをコピー</button>
+      <button onclick="saveChantImageFromOverlay()">スクショ保存</button>
+      <button id="chantGenImageBtn" onclick="generateChantImage()">AI画像を生成</button>
+      <button id="chantDlImageBtn" onclick="downloadLastGeneratedImage()" style="display:none">画像をダウンロード</button>
+      <button id="chantStampBtn" onclick="makeStamp()" style="display:none">スタンプを作る</button>
     </div>
-    <div class="chant-ov-stamp-hint" id="chantStampHint" style="display:none">幻視を紋章師に渡し、汝だけの刻印を生み出せ</div>
+    <div class="chant-ov-stamp-hint" id="chantStampHint" style="display:none">ダウンロードした画像をEmote Generatorにアップしてスタンプを作れます</div>
     <div class="rate-info-image" id="imageRateInfo"></div>
   </div>
 </div>
@@ -2291,12 +2291,12 @@ function updateImageGenButton() {
   const btn = document.getElementById('chantGenImageBtn');
   if (!btn) return;
   if (authState.isSubscriber) {
-    btn.textContent = '幻視召喚';
+    btn.textContent = 'AI画像を生成';
     btn.disabled = false;
     btn.onclick = generateChantImage;
     btn.classList.remove('locked');
   } else {
-    btn.textContent = '\uD83D\uDD12 幻視召喚は契約者のみに許された力';
+    btn.textContent = '\uD83D\uDD12 AI画像生成はサブスク限定';
     btn.onclick = twitchLogin;
     btn.classList.add('locked');
   }
@@ -2376,7 +2376,7 @@ function updateImageRateInfo() {
   const logs = getActiveImageRateLogs();
   const max = getImageRateMax();
   const remaining = Math.max(0, max - logs.length);
-  el.textContent = `幻視召喚 残り ${remaining} / ${max}`;
+  el.textContent = `AI画像生成 残り ${remaining} / ${max}`;
   el.className = 'rate-info-image' + (remaining <= 0 ? ' danger' : remaining <= 1 ? ' warning' : '');
 }
 updateRateInfo();
@@ -2629,9 +2629,9 @@ function copyChantFromOverlay(btn) {
   if (!_lastChantOverlay) return;
   sfx.uiConfirm();
   navigator.clipboard.writeText(_lastChantOverlay.text).then(() => {
-    btn.textContent = '複写済';
+    btn.textContent = 'コピー済';
     btn.classList.add('copied');
-    setTimeout(() => { btn.textContent = '複写'; btn.classList.remove('copied'); }, 1500);
+    setTimeout(() => { btn.textContent = 'テキストをコピー'; btn.classList.remove('copied'); }, 1500);
   });
 }
 
@@ -2664,8 +2664,8 @@ async function generateChantImage() {
   const imageArea = document.getElementById('chantOvImage');
 
   btn.disabled = true;
-  btn.textContent = '召喚中...';
-  imageArea.innerHTML = `<div class="chant-ov-image-loading"><div class="chant-ov-image-spinner"></div><p>幻視を召喚中...<br>暫し待たれよ（10〜30秒）</p></div>`;
+  btn.textContent = '生成中...';
+  imageArea.innerHTML = `<div class="chant-ov-image-loading"><div class="chant-ov-image-spinner"></div><p>AI画像を生成中...<br>少々お待ちください（10〜30秒）</p></div>`;
   imageArea.classList.add('visible');
 
   try {
@@ -2694,12 +2694,12 @@ async function generateChantImage() {
     if (_lastChantOverlay) _lastChantOverlay.imageUrl = data.url;
 
     addImageRateLog();
-    btn.textContent = '幻視召喚';
+    btn.textContent = 'AI画像を生成';
     btn.disabled = false;
   } catch (e) {
     imageArea.innerHTML = `<div class="chant-ov-image-error">${esc(e.message)}</div>`;
     imageArea.classList.add('visible');
-    btn.textContent = '幻視召喚';
+    btn.textContent = 'AI画像を生成';
     btn.disabled = false;
   }
 }
