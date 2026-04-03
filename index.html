@@ -1098,6 +1098,14 @@ body {
 .chant-ov-actions button:hover { border-color: var(--border-gold); color: var(--gold); }
 .chant-ov-actions button.copied { border-color: var(--teal); color: var(--teal); }
 .chant-ov-actions button:disabled { opacity: 0.4; cursor: not-allowed; }
+.chant-ov-stamp-hint {
+  text-align: center;
+  font-family: 'Zen Kaku Gothic New', sans-serif;
+  font-size: 12px;
+  color: var(--fg-dim);
+  padding: 2px 0 0;
+  opacity: 0.7;
+}
 
 .chant-ov-image {
   display: none;
@@ -1431,7 +1439,9 @@ body {
       <button onclick="saveChantImageFromOverlay()">画像保存</button>
       <button id="chantGenImageBtn" onclick="generateChantImage()">画像生成</button>
       <button id="chantDlImageBtn" onclick="downloadLastGeneratedImage()" style="display:none">画像をDL</button>
+      <button id="chantStampBtn" onclick="makeStamp()" style="display:none">スタンプを作る</button>
     </div>
+    <div class="chant-ov-stamp-hint" id="chantStampHint" style="display:none">ダウンロードした画像をEmote Generatorにアップしてスタンプを作れます</div>
   </div>
 </div>
 <div class="ov-info-odai" id="ovInfoOdai"></div>
@@ -2204,6 +2214,8 @@ function showChantOverlay(text, type, chantWords, evaluation, imageUrl) {
   imgArea.classList.remove('visible');
   const dlBtn = document.getElementById('chantDlImageBtn');
   dlBtn.style.display = 'none';
+  document.getElementById('chantStampBtn').style.display = 'none';
+  document.getElementById('chantStampHint').style.display = 'none';
   // 画像URL: 引数で渡された場合はセット、新規生成時はリセット
   if (imageUrl) {
     _lastGeneratedImageUrl = imageUrl;
@@ -2297,6 +2309,8 @@ function showChantOverlay(text, type, chantWords, evaluation, imageUrl) {
     if (imageUrl) {
       showGeneratedImage(document.getElementById('chantOvImage'), imageUrl);
       document.getElementById('chantDlImageBtn').style.display = '';
+      document.getElementById('chantStampBtn').style.display = '';
+      document.getElementById('chantStampHint').style.display = '';
     }
 
     // 現在の詠唱情報を保持（コピー・画像保存用）
@@ -2389,8 +2403,10 @@ async function generateChantImage() {
     _lastGeneratedImageUrl = data.url;
     showGeneratedImage(imageArea, data.url);
 
-    // フッターにDLボタン表示
+    // フッターにDLボタン・スタンプボタン表示
     document.getElementById('chantDlImageBtn').style.display = '';
+    document.getElementById('chantStampBtn').style.display = '';
+    document.getElementById('chantStampHint').style.display = '';
 
     // 履歴に画像URLを追記
     if (_lastChantOverlay) _lastChantOverlay.imageUrl = data.url;
@@ -2426,6 +2442,10 @@ function downloadLastGeneratedImage() {
   a.download = `詠唱画像_${type}_${Date.now()}.png`;
   a.target = '_blank';
   a.click();
+}
+function makeStamp() {
+  downloadLastGeneratedImage();
+  window.open('https://twitch-emote-generator.vercel.app/', '_blank');
 }
 
 async function runCountdown(type) {
