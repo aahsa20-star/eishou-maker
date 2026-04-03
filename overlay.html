@@ -333,6 +333,34 @@ body {
 .vote-ranking-item .rank { color: var(--gold); font-weight: 600; margin-right: 6px; }
 .vote-ranking-item .votes { color: var(--gold-bright); margin-left: 8px; font-size: 11px; }
 
+/* Odai Display */
+.odai-display {
+  position: fixed;
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.6s;
+  text-align: center;
+}
+.odai-display.visible { opacity: 1; }
+.odai-display-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--fg-dim);
+  letter-spacing: 0.2em;
+  margin-bottom: 4px;
+}
+.odai-display-text {
+  font-family: 'Yuji Syuku', serif;
+  font-size: 28px;
+  color: var(--gold-bright);
+  letter-spacing: 0.1em;
+  text-shadow: 0 0 12px rgba(200,160,80,0.3);
+}
+
 /* MVP Display */
 .mvp-display {
   position: fixed;
@@ -389,6 +417,7 @@ body {
   <div class="history-sidebar-title">詠唱記録</div>
 </div>
 
+<div class="odai-display" id="odaiDisplay"></div>
 <div class="vote-ranking" id="voteRanking"></div>
 <div class="mvp-display" id="mvpDisplay"></div>
 
@@ -540,6 +569,18 @@ function renderVoteRanking(ranking) {
   el.classList.add('visible');
 }
 
+// Odai Display
+function renderOdaiDisplay(data) {
+  const el = document.getElementById('odaiDisplay');
+  if (!data || !data.text) {
+    el.classList.remove('visible');
+    el.innerHTML = '';
+    return;
+  }
+  el.innerHTML = `<div class="odai-display-label">お題</div><div class="odai-display-text">${data.text}</div>`;
+  el.classList.add('visible');
+}
+
 // MVP Display
 function renderMvpDisplay(data) {
   const el = document.getElementById('mvpDisplay');
@@ -555,6 +596,7 @@ function renderMvpDisplay(data) {
 // 初期表示
 try { renderVoteRanking(JSON.parse(localStorage.getItem('vote_ranking') || '[]')); } catch {}
 try { renderMvpDisplay(JSON.parse(localStorage.getItem('mvp_data') || 'null')); } catch {}
+try { renderOdaiDisplay(JSON.parse(localStorage.getItem('odai_data') || 'null')); } catch {}
 
 const TYPE_CONFIG = {
   '召喚': { color: '#A07830' },
@@ -823,6 +865,12 @@ function handleOverlayMessage(key, value) {
       renderMvpDisplay(data);
     } catch {} return;
   }
+  if (key === 'odai_data') {
+    try {
+      const data = typeof value === 'object' ? value : JSON.parse(value);
+      renderOdaiDisplay(data);
+    } catch {} return;
+  }
   if (key === 'countdown_data') {
     try {
       const data = typeof value === 'object' ? value : JSON.parse(value);
@@ -854,6 +902,19 @@ const overlayChannel = new BroadcastChannel('eishou_overlay');
 overlayChannel.onmessage = (e) => {
   handleOverlayMessage(e.data.key, e.data.data);
 };
+
+// OBSブラウザソース向けポーリング（1秒ごと）
+let pollCache = {};
+setInterval(() => {
+  const keys = ['se_enabled', 'se_volume', 'show_guide', 'vote_ranking', 'mvp_data', 'odai_data'];
+  for (const key of keys) {
+    const val = localStorage.getItem(key);
+    if (val !== pollCache[key]) {
+      pollCache[key] = val;
+      if (val != null) handleOverlayMessage(key, val);
+    }
+  }
+}, 1000);
 </script>
 </body>
 </html>
