@@ -1430,6 +1430,7 @@ body {
       <button onclick="copyChantFromOverlay(this)">コピー</button>
       <button onclick="saveChantImageFromOverlay()">画像保存</button>
       <button id="chantGenImageBtn" onclick="generateChantImage()">画像生成</button>
+      <button id="chantDlImageBtn" onclick="downloadLastGeneratedImage()" style="display:none">画像をDL</button>
     </div>
   </div>
 </div>
@@ -2176,7 +2177,7 @@ function updateOverlayInfoDisplays() {
   }
 }
 
-function showChantOverlay(text, type, chantWords, evaluation) {
+function showChantOverlay(text, type, chantWords, evaluation, imageUrl) {
   // 前回の演出が残っていたら閉じる
   if (chantOverlayActive) closeChantOverlay();
 
@@ -2198,6 +2199,17 @@ function showChantOverlay(text, type, chantWords, evaluation) {
   wordsEl.classList.remove('visible');
   evalEl.classList.remove('visible');
   evalEl.innerHTML = '';
+  const imgArea = document.getElementById('chantOvImage');
+  imgArea.innerHTML = '';
+  imgArea.classList.remove('visible');
+  const dlBtn = document.getElementById('chantDlImageBtn');
+  dlBtn.style.display = 'none';
+  // 画像URL: 引数で渡された場合はセット、新規生成時はリセット
+  if (imageUrl) {
+    _lastGeneratedImageUrl = imageUrl;
+  } else {
+    _lastGeneratedImageUrl = null;
+  }
   typeEl.textContent = type || '召喚';
   typeEl.style.color = cfg.color;
 
@@ -2281,12 +2293,19 @@ function showChantOverlay(text, type, chantWords, evaluation) {
     document.getElementById('chantCloseBtn').classList.add('visible');
     sfx.chantComplete(type || '召喚');
 
+    // 画像URLがあれば復元
+    if (imageUrl) {
+      showGeneratedImage(document.getElementById('chantOvImage'), imageUrl);
+      document.getElementById('chantDlImageBtn').style.display = '';
+    }
+
     // 現在の詠唱情報を保持（コピー・画像保存用）
-    _lastChantOverlay = { text, type, words: chantWords, evaluation };
+    _lastChantOverlay = { text, type, words: chantWords, evaluation, imageUrl: imageUrl || null };
   }, totalLineTime);
 }
 
 let _lastChantOverlay = null;
+let _lastGeneratedImageUrl = null;
 
 function closeChantOverlay() {
   const win = document.getElementById('chantWindow');
@@ -2367,25 +2386,14 @@ async function generateChantImage() {
     const data = await res.json();
     if (data.error) throw new Error(data.error);
 
-    const wrap = document.createElement('div');
-    wrap.className = 'chant-ov-image-wrap';
-    const img = document.createElement('img');
-    img.src = data.url;
-    img.alt = '詠唱画像';
-    img.onload = () => img.classList.add('loaded');
-    wrap.appendChild(img);
+    _lastGeneratedImageUrl = data.url;
+    showGeneratedImage(imageArea, data.url);
 
-    const dlArea = document.createElement('div');
-    dlArea.className = 'chant-ov-image-dl';
-    const dlBtn = document.createElement('button');
-    dlBtn.textContent = '画像をDL';
-    dlBtn.onclick = () => downloadGeneratedImage(data.url, type);
-    dlArea.appendChild(dlBtn);
+    // フッターにDLボタン表示
+    document.getElementById('chantDlImageBtn').style.display = '';
 
-    imageArea.innerHTML = '';
-    imageArea.appendChild(wrap);
-    imageArea.appendChild(dlArea);
-    imageArea.classList.add('visible');
+    // 履歴に画像URLを追記
+    if (_lastChantOverlay) _lastChantOverlay.imageUrl = data.url;
 
     btn.textContent = '画像生成';
     btn.disabled = false;
@@ -2397,10 +2405,25 @@ async function generateChantImage() {
   }
 }
 
-function downloadGeneratedImage(url, type) {
+function showGeneratedImage(container, url) {
+  const wrap = document.createElement('div');
+  wrap.className = 'chant-ov-image-wrap';
+  const img = document.createElement('img');
+  img.src = url;
+  img.alt = '詠唱画像';
+  img.onload = () => img.classList.add('loaded');
+  wrap.appendChild(img);
+  container.innerHTML = '';
+  container.appendChild(wrap);
+  container.classList.add('visible');
+}
+
+function downloadLastGeneratedImage() {
+  if (!_lastGeneratedImageUrl) return;
+  const type = _lastChantOverlay ? _lastChantOverlay.type : '召喚';
   const a = document.createElement('a');
-  a.href = url;
-  a.download = `詠唱画像_${type || '召喚'}_${Date.now()}.png`;
+  a.href = _lastGeneratedImageUrl;
+  a.download = `詠唱画像_${type}_${Date.now()}.png`;
   a.target = '_blank';
   a.click();
 }
@@ -2542,7 +2565,7 @@ async function generate() {
     // 全画面演出オーバーレイ
     showChantOverlay(text, selectedType, [...selected], evaluation);
 
-    saveHistory({ text, words: [...selected], type: selectedType, timestamp: Date.now(), evaluation });
+    saveHistory({ text, words: [...selected], type: selectedType, timestamp: Date.now(), evaluation, imageUrl: _lastGeneratedImageUrl || null });
     addRateLog();
     applyChainAfterGenerate();
 
@@ -2653,7 +2676,7 @@ function deleteHistory(i) {
 function replayChant(i) {
   const entry = getHistory()[i];
   if (!entry) return;
-  showChantOverlay(entry.text, entry.type || '召喚', entry.words || [], entry.evaluation || null);
+  showChantOverlay(entry.text, entry.type || '召喚', entry.words || [], entry.evaluation || null, entry.imageUrl || null);
 }
 function renderHistory() {
   const list = document.getElementById('historyList');
@@ -2712,6 +2735,7 @@ function toggleHof(historyIndex) {
       words: entry.words || [],
       type: entry.type || '召喚',
       evaluation: entry.evaluation || null,
+      imageUrl: entry.imageUrl || null,
       registeredAt: Date.now()
     });
   }
@@ -2752,7 +2776,7 @@ function renderHof() {
 function replayHof(i) {
   const entry = getHof()[i];
   if (!entry) return;
-  showChantOverlay(entry.text, entry.type || '召喚', entry.words || [], entry.evaluation || null);
+  showChantOverlay(entry.text, entry.type || '召喚', entry.words || [], entry.evaluation || null, entry.imageUrl || null);
 }
 
 function copyHof(i, btn) {
