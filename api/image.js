@@ -22,15 +22,15 @@ export default async function handler(req, res) {
     }
   } catch {}
 
-  // サブスクライバー限定 — 一時的に解除
-  // if (!isSubscriber) {
-  //   return res.status(403).json({ error: 'サブスクライバー限定機能です' });
-  // }
+  // サブスクライバー限定
+  if (!isSubscriber) {
+    return res.status(403).json({ error: 'サブスクライバー限定機能です' });
+  }
 
-  // Rate limit — 一時的に制限解除
+  // Rate limit（サブスクライバーのみ到達）
   const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || 'unknown';
   const limitKey = `image_${ip}`;
-  const limit = 9999;
+  const limit = 5;
   const window = 86400000; // 24時間
   const now = Date.now();
   const entry = rateLimit.get(limitKey);
