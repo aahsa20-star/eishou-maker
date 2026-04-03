@@ -881,6 +881,19 @@ body {
   <span class="status" id="status">未接続</span>
 </div>
 
+<div class="odai-area">
+  <div class="odai-header">
+    <div class="panel-title gold">お題 <span style="font-size:12px;color:var(--fg-dim);font-weight:normal;margin-left:8px">任意 / overlayに表示</span></div>
+    <button class="odai-clear-btn" onclick="clearOdai()">お題をクリア</button>
+  </div>
+  <div class="odai-current" id="odaiCurrent"></div>
+  <div class="odai-presets" id="odaiPresets"></div>
+  <div class="odai-custom">
+    <input id="odaiCustomInput" placeholder="カスタムお題を入力..." onkeydown="if(event.key==='Enter')adoptCustomOdai()">
+    <button onclick="adoptCustomOdai()">採用</button>
+  </div>
+</div>
+
 <div class="main">
   <div class="panel">
     <div class="panel-header">
@@ -910,19 +923,6 @@ body {
   <div class="panel-title teal">選択済み単語（ドラッグで並び替え）</div>
   <div class="selected-words" id="selectedWords">
     <span class="placeholder-text">単語をクリックして追加...</span>
-  </div>
-</div>
-
-<div class="odai-area">
-  <div class="odai-header">
-    <div class="panel-title gold">お題</div>
-    <button class="odai-clear-btn" onclick="clearOdai()">お題をクリア</button>
-  </div>
-  <div class="odai-current" id="odaiCurrent"></div>
-  <div class="odai-presets" id="odaiPresets"></div>
-  <div class="odai-custom">
-    <input id="odaiCustomInput" placeholder="カスタムお題を入力..." onkeydown="if(event.key==='Enter')adoptCustomOdai()">
-    <button onclick="adoptCustomOdai()">採用</button>
   </div>
 </div>
 
