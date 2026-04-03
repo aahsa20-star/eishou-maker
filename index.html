@@ -2284,18 +2284,18 @@ async function generate() {
   btn.textContent = '準備中...';
   if (bgmEnabled) sfx.stopBGM();
 
-  // カウントダウン
-  await runCountdown(selectedType);
+  // カウントダウンとAPI呼び出しを並行開始
+  const apiPromise = fetch(API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ words: selected, type: selectedType })
+  }).then(r => r.json());
 
-  btn.textContent = '詠唱中...';
+  const countdownPromise = runCountdown(selectedType);
 
   try {
-    const res = await fetch(API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ words: selected, type: selectedType })
-    });
-    const data = await res.json();
+    // 両方完了を待つ
+    const [, data] = await Promise.all([countdownPromise, apiPromise]);
     if (data.error) throw new Error(data.error);
     const text = data.text;
     const evaluation = data.evaluation || null;
