@@ -2362,6 +2362,8 @@ function updateRateInfo() {
   if (remaining <= 0) {
     btn.disabled = true;
     el.textContent = `詠唱の刻 残り 0 / ${max} ― 力が尽きた。時を待て`;
+  } else if (!_generating) {
+    btn.disabled = false;
   }
 }
 function updateImageRateInfo() {
@@ -2394,6 +2396,7 @@ const CHANT_TYPE_CONFIG = {
 };
 
 let chantOverlayActive = false;
+let _generating = false;
 
 function updateOverlayInfoDisplays() {
   // ガイド
@@ -2837,6 +2840,7 @@ async function generate() {
   if (getActiveRateLogs().length >= getRateMax()) { updateRateInfo(); return; }
 
   const btn = document.getElementById('generateBtn');
+  _generating = true;
   btn.disabled = true;
   btn.textContent = '儀式準備中...';
   if (bgmEnabled) sfx.stopBGM();
@@ -2876,14 +2880,15 @@ async function generate() {
       utterance.rate = 0.75;
       utterance.pitch = 0.8;
       utterance.volume = 1.0;
-      utterance.onend = () => { btn.disabled = false; btn.textContent = '詠唱生成'; updateRateInfo(); if (bgmEnabled && sfx.enabled) sfx.startBGM(); };
-      utterance.onerror = () => { btn.disabled = false; btn.textContent = '詠唱生成'; updateRateInfo(); if (bgmEnabled && sfx.enabled) sfx.startBGM(); };
+      utterance.onend = () => { _generating = false; btn.disabled = false; btn.textContent = '詠唱生成'; updateRateInfo(); if (bgmEnabled && sfx.enabled) sfx.startBGM(); };
+      utterance.onerror = () => { _generating = false; btn.disabled = false; btn.textContent = '詠唱生成'; updateRateInfo(); if (bgmEnabled && sfx.enabled) sfx.startBGM(); };
       speechSynthesis.speak(utterance);
       return;
     }
   } catch (e) {
     alert('エラー: ' + e.message);
   }
+  _generating = false;
   btn.disabled = false;
   btn.textContent = '詠唱生成';
   if (bgmEnabled && sfx.enabled) sfx.startBGM();
