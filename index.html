@@ -2267,7 +2267,7 @@ async function twitchLogout() {
 }
 async function checkAuth() {
   try {
-    const res = await fetch('/api/auth/verify');
+    const res = await fetch('/api/auth/refresh');
     const data = await res.json();
     if (data.loggedIn) {
       authState = { loggedIn: true, userName: data.userName, isSubscriber: data.isSubscriber };

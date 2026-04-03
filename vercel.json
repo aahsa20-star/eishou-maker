@@ -19,6 +19,10 @@
     "api/auth/logout.js": {
       "memory": 128,
       "maxDuration": 5
+    },
+    "api/auth/refresh.js": {
+      "memory": 128,
+      "maxDuration": 10
     }
   }
 }

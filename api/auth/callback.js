@@ -65,10 +65,10 @@ export default async function handler(req, res) {
     const token = jwt.sign(
       { userId, userName, isSubscriber },
       JWT_SECRET,
-      { expiresIn: '30d' }
+      { expiresIn: '7d' }
     );
 
-    res.setHeader('Set-Cookie', `eishou_token=${token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${30 * 24 * 60 * 60}`);
+    res.setHeader('Set-Cookie', `eishou_token=${token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${7 * 24 * 60 * 60}`);
     res.redirect('/');
   } catch (e) {
     return res.status(500).send('認証処理に失敗しました');
