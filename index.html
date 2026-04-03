@@ -215,6 +215,11 @@ body {
 }
 .btn-sort-toggle:hover { border-color: var(--border-gold); color: var(--fg-base); }
 .btn-sort-toggle.active { border-color: var(--gold); color: var(--gold-bright); }
+.mvp-info {
+  font-size: 11px;
+  color: var(--gold);
+  letter-spacing: 0.05em;
+}
 .word-card .word-delete {
   position: absolute;
   top: 4px; right: 4px;
@@ -698,6 +703,8 @@ body {
   <div class="panel">
     <div class="panel-header">
       <div class="panel-title teal">投稿された単語</div>
+      <button class="btn-sort-toggle" id="mvpBtn" onclick="addMvpAsWord()" style="display:none">MVP を単語に追加</button>
+      <span class="mvp-info" id="mvpInfo" style="display:none"></span>
       <button class="btn-sort-toggle" id="sortToggle" onclick="toggleVoteSort()" style="display:none">人気順</button>
       <button class="btn-clear-words" id="clearWordsBtn" onclick="clearAllWords()" style="display:none">全削除</button>
     </div>
@@ -922,6 +929,8 @@ let wordOrder = [];       // 投稿順の単語リスト（番号付与用）
 let wordVotes = {};       // { word: vote数 }
 let userVotes = {};       // { username: word } 1人1票追跡
 let voteSortMode = false; // 人気順ソート
+let participants = {};    // { username: { wordCount, voteCount, messageCount } }
+let mvpUpdateTimer = null;
 let selected = [];
 let selectedType = '召喚';
 let speechEnabled = true;
@@ -959,16 +968,26 @@ function connect(channel) {
         st.textContent = '接続中: #' + channel;
         st.className = 'status connected';
         btn.textContent = '切断';
+        startMvpTimer();
       }
       const userMatch = line.match(/:(\w+)!/);
-      const username = userMatch ? userMatch[1].toLowerCase() : 'unknown';
+      const username = userMatch ? userMatch[1].toLowerCase() : null;
+      // 全PRIVMSGをカウント
+      if (username && line.includes('PRIVMSG')) {
+        if (!participants[username]) participants[username] = { wordCount: 0, voteCount: 0, messageCount: 0 };
+        participants[username].messageCount++;
+      }
       const wordMatch = line.match(/PRIVMSG\s+#\S+\s+:!word\s+(.+)/i);
       if (wordMatch) {
         const w = wordMatch[1].trim().substring(0, 20);
-        if (w) addWord(w);
+        if (w) {
+          addWord(w);
+          if (username && participants[username]) participants[username].wordCount++;
+        }
       }
       const voteMatch = line.match(/PRIVMSG\s+#\S+\s+:!vote\s+(\d+)\s*$/i);
       if (voteMatch) {
+        if (username && participants[username]) participants[username].voteCount++;
         const num = parseInt(voteMatch[1]);
         addVote(num, username);
       }
@@ -981,6 +1000,9 @@ function connect(channel) {
 function disconnect() {
   if (ws) { ws.close(); ws = null; }
   connected = false;
+  participants = {};
+  stopMvpTimer();
+  updateMvpDisplay();
   document.getElementById('status').textContent = '未接続';
   document.getElementById('status').className = 'status';
   document.getElementById('connectBtn').textContent = '接続';
@@ -1029,6 +1051,56 @@ function syncVoteRanking() {
     .slice(0, 3);
   localStorage.setItem('vote_ranking', JSON.stringify(ranking));
   overlayChannel.postMessage({ key: 'vote_ranking', data: ranking });
+}
+
+// ── MVP機能 ──
+function getMvp() {
+  let best = null;
+  let bestScore = 0;
+  for (const [username, data] of Object.entries(participants)) {
+    const score = (data.wordCount * 3) + (data.voteCount * 2) + (data.messageCount * 1);
+    if (score > bestScore) {
+      bestScore = score;
+      best = { username, score, ...data };
+    }
+  }
+  return best;
+}
+
+function updateMvpDisplay() {
+  const mvp = getMvp();
+  const infoEl = document.getElementById('mvpInfo');
+  const btnEl = document.getElementById('mvpBtn');
+  if (mvp) {
+    infoEl.textContent = `現在のMVP：${mvp.username}`;
+    infoEl.style.display = '';
+    btnEl.style.display = '';
+    // overlay同期
+    const mvpData = { username: mvp.username, score: mvp.score };
+    localStorage.setItem('mvp_data', JSON.stringify(mvpData));
+    overlayChannel.postMessage({ key: 'mvp_data', data: mvpData });
+  } else {
+    infoEl.style.display = 'none';
+    btnEl.style.display = 'none';
+    localStorage.removeItem('mvp_data');
+    overlayChannel.postMessage({ key: 'mvp_data', data: null });
+  }
+}
+
+function addMvpAsWord() {
+  const mvp = getMvp();
+  if (!mvp) return;
+  if (words[mvp.username]) return; // 既にカードにある
+  addWord(mvp.username);
+}
+
+function startMvpTimer() {
+  stopMvpTimer();
+  mvpUpdateTimer = setInterval(updateMvpDisplay, 10000);
+}
+
+function stopMvpTimer() {
+  if (mvpUpdateTimer) { clearInterval(mvpUpdateTimer); mvpUpdateTimer = null; }
 }
 
 function renderWords() {
@@ -1080,10 +1152,12 @@ function clearAllWords() {
   wordOrder = [];
   wordVotes = {};
   userVotes = {};
+  participants = {};
   selected = selected.filter(w => !removedWords.includes(w));
   renderSelected();
   renderWords();
   syncVoteRanking();
+  updateMvpDisplay();
 }
 
 function addManualWord() {

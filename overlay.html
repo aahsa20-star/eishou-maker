@@ -332,6 +332,30 @@ body {
 }
 .vote-ranking-item .rank { color: var(--gold); font-weight: 600; margin-right: 6px; }
 .vote-ranking-item .votes { color: var(--gold-bright); margin-left: 8px; font-size: 11px; }
+
+/* MVP Display */
+.mvp-display {
+  position: fixed;
+  left: 24px;
+  bottom: 120px;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.6s;
+}
+.mvp-display.visible { opacity: 1; }
+.mvp-display-title {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--fg-dim);
+  letter-spacing: 0.1em;
+  margin-bottom: 4px;
+}
+.mvp-display-name {
+  font-size: 13px;
+  color: rgba(200,160,80,0.6);
+  line-height: 1.8;
+}
 </style>
 </head>
 <body>
@@ -366,6 +390,7 @@ body {
 </div>
 
 <div class="vote-ranking" id="voteRanking"></div>
+<div class="mvp-display" id="mvpDisplay"></div>
 
 <div class="guide hidden" id="guide">
   <div class="guide-title">チャットで参加</div>
@@ -515,8 +540,21 @@ function renderVoteRanking(ranking) {
   el.classList.add('visible');
 }
 
+// MVP Display
+function renderMvpDisplay(data) {
+  const el = document.getElementById('mvpDisplay');
+  if (!data || !data.username) {
+    el.classList.remove('visible');
+    el.innerHTML = '';
+    return;
+  }
+  el.innerHTML = `<div class="mvp-display-title">MVP</div><div class="mvp-display-name">\u{1F451} ${data.username}</div>`;
+  el.classList.add('visible');
+}
+
 // 初期表示
 try { renderVoteRanking(JSON.parse(localStorage.getItem('vote_ranking') || '[]')); } catch {}
+try { renderMvpDisplay(JSON.parse(localStorage.getItem('mvp_data') || 'null')); } catch {}
 
 const TYPE_CONFIG = {
   '召喚': { color: '#A07830' },
@@ -777,6 +815,12 @@ function handleOverlayMessage(key, value) {
     try {
       const data = typeof value === 'object' ? value : JSON.parse(value);
       renderVoteRanking(Array.isArray(data) ? data : []);
+    } catch {} return;
+  }
+  if (key === 'mvp_data') {
+    try {
+      const data = typeof value === 'object' ? value : JSON.parse(value);
+      renderMvpDisplay(data);
     } catch {} return;
   }
   if (key === 'countdown_data') {
