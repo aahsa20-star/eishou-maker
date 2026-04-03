@@ -2592,6 +2592,7 @@ function showChantOverlay(text, type, chantWords, evaluation, imageUrl) {
 
 let _lastChantOverlay = null;
 let _lastGeneratedImageUrl = null;
+let _currentChantId = null;
 
 function closeChantOverlay() {
   const win = document.getElementById('chantWindow');
@@ -2689,8 +2690,23 @@ async function generateChantImage() {
     document.getElementById('chantStampBtn').style.display = '';
     document.getElementById('chantStampHint').style.display = '';
 
-    // 履歴に画像URLを追記
+    // オーバーレイ・履歴・殿堂に画像URLを反映
     if (_lastChantOverlay) _lastChantOverlay.imageUrl = data.url;
+    if (_currentChantId) {
+      const history = getHistory();
+      const hi = history.findIndex(e => e.id === _currentChantId);
+      if (hi !== -1) {
+        history[hi].imageUrl = data.url;
+        localStorage.setItem('chant_history', JSON.stringify(history));
+      }
+      const hof = getHof();
+      const hofi = hof.findIndex(e => e.id === _currentChantId || e.sourceId === _currentChantId);
+      if (hofi !== -1) {
+        hof[hofi].imageUrl = data.url;
+        saveHof(hof);
+      }
+      renderHistory();
+    }
 
     addImageRateLog();
     btn.textContent = 'AI画像を生成';
@@ -2913,6 +2929,8 @@ function getHistory() {
   try { return JSON.parse(localStorage.getItem('chant_history') || '[]'); } catch { return []; }
 }
 function saveHistory(entry) {
+  if (!entry.id) entry.id = `chant_${Date.now()}`;
+  _currentChantId = entry.id;
   const history = [entry, ...getHistory()].slice(0, 5);
   localStorage.setItem('chant_history', JSON.stringify(history));
   renderHistory();
@@ -3051,6 +3069,7 @@ function toggleHof(historyIndex) {
     if (hof.length >= HOF_MAX) hof.shift();
     hof.push({
       id: 'hof_' + Date.now(),
+      sourceId: entry.id || null,
       text: entry.text,
       words: entry.words || [],
       type: entry.type || '召喚',
