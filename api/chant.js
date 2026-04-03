@@ -26,8 +26,8 @@ export default async function handler(req, res) {
 
   // Rate limit
   const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || 'unknown';
-  const limit = isSubscriber ? 20 : 2;
-  const window = isSubscriber ? 3600000 : 86400000; // サブスク:1時間, 一般:24時間
+  const limit = 9999; // 一時的に制限解除
+  const window = 3600000;
   const now = Date.now();
   const entry = rateLimit.get(ip);
   if (entry && now < entry.resetAt) {

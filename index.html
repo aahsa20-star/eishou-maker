@@ -2290,24 +2290,19 @@ function updateAuthUI() {
 function updateImageGenButton() {
   const btn = document.getElementById('chantGenImageBtn');
   if (!btn) return;
-  if (authState.isSubscriber) {
-    btn.textContent = 'AI画像を生成';
-    btn.disabled = false;
-    btn.onclick = generateChantImage;
-    btn.classList.remove('locked');
-  } else {
-    btn.textContent = '\uD83D\uDD12 AI画像生成はサブスク限定';
-    btn.onclick = twitchLogin;
-    btn.classList.add('locked');
-  }
+  // 一時的に全員開放
+  btn.textContent = 'AI画像を生成';
+  btn.disabled = false;
+  btn.onclick = generateChantImage;
+  btn.classList.remove('locked');
 }
 checkAuth();
 
 // ── レート制限 ──
 function getRateWindow() { return authState.isSubscriber ? 3600000 : 86400000; } // サブスク:1時間, 一般:24時間
 function getImageRateWindow() { return 86400000; } // 画像は常に24時間ウィンドウ
-function getRateMax() { return authState.isSubscriber ? 20 : 2; }
-function getImageRateMax() { return 5; } // サブスク限定、常に5
+function getRateMax() { return 9999; } // 一時的に制限解除
+function getImageRateMax() { return 9999; } // 一時的に制限解除
 
 function getRateLogs() {
   try { return JSON.parse(localStorage.getItem('rate_limit_log') || '[]'); } catch { return []; }
@@ -2650,7 +2645,7 @@ document.addEventListener('keydown', (e) => {
 // ── DALL-E 3 画像生成 ──
 async function generateChantImage() {
   if (!_lastChantOverlay) return;
-  if (!authState.isSubscriber) { twitchLogin(); return; }
+  // if (!authState.isSubscriber) { twitchLogin(); return; } // 一時的に解除
 
   // 画像レート制限チェック
   if (getActiveImageRateLogs().length >= getImageRateMax()) {
