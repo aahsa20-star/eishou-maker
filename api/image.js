@@ -3,7 +3,7 @@ import { parse } from 'cookie';
 
 // Upstash Redis REST API helper
 async function redis(command) {
-  const url = process.env.REDIS_URL;
+  const url = process.env.KV_REST_API_URL;
   const token = process.env.KV_REST_API_TOKEN;
   const res = await fetch(`${url}/${command}`, {
     headers: { Authorization: `Bearer ${token}` }
