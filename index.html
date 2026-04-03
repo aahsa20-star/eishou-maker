@@ -1555,15 +1555,15 @@ body {
   <button class="type-btn" data-type="覚醒" onclick="selectType(this)">覚醒</button>
 </div>
 <div class="controls-row">
-  <button class="speech-toggle active" id="speechToggle" onclick="toggleSpeech()">詠唱音声</button>
-  <button class="speech-toggle active" id="guideToggle" onclick="toggleGuide()">石板を示す</button>
+  <button class="speech-toggle active" id="speechToggle" onclick="toggleSpeech()">読み上げ</button>
+  <button class="speech-toggle active" id="guideToggle" onclick="toggleGuide()">参加説明</button>
   <div class="se-controls">
-    <button class="speech-toggle active" id="seToggle" onclick="toggleSE()">霊音</button>
-    <button class="speech-toggle active" id="bgmToggle" onclick="toggleBGM()">霊楽</button>
+    <button class="speech-toggle active" id="seToggle" onclick="toggleSE()">効果音</button>
+    <button class="speech-toggle active" id="bgmToggle" onclick="toggleBGM()">BGM</button>
     <input type="range" class="se-volume" id="seVolume" min="0" max="100" value="50" oninput="setSEVolume(this.value)">
   </div>
-  <button class="speech-toggle" id="chainToggle" onclick="toggleChainChant()">連鎖詠唱</button>
-  <button class="btn-clear" onclick="clearSelected()">白紙に還す</button>
+  <button class="speech-toggle" id="chainToggle" onclick="toggleChainChant()">連続詠唱</button>
+  <button class="btn-clear" onclick="clearSelected()">クリア</button>
 </div>
 
 <div class="generate-area">
