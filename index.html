@@ -2160,8 +2160,9 @@ function updateAuthUI() {
 checkAuth();
 
 // ── レート制限 ──
-const RATE_WINDOW = 3600000;
-function getRateMax() { return authState.isSubscriber ? 50 : 5; }
+function getRateWindow() { return authState.isSubscriber ? 3600000 : 86400000; } // サブスク:1時間, 一般:24時間
+function getImageRateWindow() { return authState.isSubscriber ? 3600000 : 86400000; }
+function getRateMax() { return authState.isSubscriber ? 50 : 2; }
 function getImageRateMax() { return authState.isSubscriber ? 30 : 3; }
 
 function getRateLogs() {
@@ -2169,14 +2170,16 @@ function getRateLogs() {
 }
 function getActiveRateLogs() {
   const now = Date.now();
-  return getRateLogs().filter(t => now - t < RATE_WINDOW);
+  const w = getRateWindow();
+  return getRateLogs().filter(t => now - t < w);
 }
 function getImageRateLogs() {
   try { return JSON.parse(localStorage.getItem('image_rate_limit_log') || '[]'); } catch { return []; }
 }
 function getActiveImageRateLogs() {
   const now = Date.now();
-  return getImageRateLogs().filter(t => now - t < RATE_WINDOW);
+  const w = getImageRateWindow();
+  return getImageRateLogs().filter(t => now - t < w);
 }
 function addRateLog() {
   const logs = [...getActiveRateLogs(), Date.now()];
@@ -2188,21 +2191,30 @@ function addImageRateLog() {
   localStorage.setItem('image_rate_limit_log', JSON.stringify(logs));
   updateImageRateInfo();
 }
+function formatResetTime(minsLeft) {
+  if (minsLeft >= 60) {
+    const h = Math.floor(minsLeft / 60);
+    const m = minsLeft % 60;
+    return m > 0 ? `${h}時間${m}分後リセット` : `${h}時間後リセット`;
+  }
+  return `${minsLeft}分後リセット`;
+}
 function updateRateInfo() {
   const logs = getActiveRateLogs();
   const max = getRateMax();
+  const w = getRateWindow();
   const remaining = Math.max(0, max - logs.length);
   const el = document.getElementById('rateInfo');
   const btn = document.getElementById('generateBtn');
   let text = `残り ${remaining} / ${max} 回`;
   if (logs.length > 0 && remaining < max) {
     const oldest = Math.min(...logs);
-    const resetAt = oldest + RATE_WINDOW;
+    const resetAt = oldest + w;
     const minsLeft = Math.max(1, Math.ceil((resetAt - Date.now()) / 60000));
-    text += `（${minsLeft}分後リセット）`;
+    text += `（${formatResetTime(minsLeft)}）`;
   }
   el.textContent = text;
-  el.className = 'rate-info' + (remaining <= 0 ? ' danger' : remaining <= 2 ? ' warning' : '');
+  el.className = 'rate-info' + (remaining <= 0 ? ' danger' : remaining <= 1 ? ' warning' : '');
   if (remaining <= 0) {
     btn.disabled = true;
     el.textContent = `残り 0 / ${max} 回 ― しばらく時間をおいてください`;
