@@ -1,7 +1,31 @@
 import jwt from 'jsonwebtoken';
 import { parse } from 'cookie';
 
-const rateLimit = new Map(); // key -> { count, resetAt }
+// Upstash Redis REST API helper
+async function redis(command) {
+  const url = process.env.UPSTASH_REDIS_REST_URL;
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+  const res = await fetch(`${url}/${command}`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  return (await res.json()).result;
+}
+
+async function checkRateLimit(key, limit, windowSeconds) {
+  const current = parseInt(await redis(`get/${key}`)) || 0;
+
+  if (current >= limit) {
+    const ttl = await redis(`ttl/${key}`);
+    return { allowed: false, remaining: 0, resetIn: Math.max(ttl, 0) };
+  }
+
+  const newCount = await redis(`incr/${key}`);
+  if (newCount === 1) {
+    await redis(`expire/${key}/${windowSeconds}`);
+  }
+
+  return { allowed: true, remaining: limit - newCount, resetIn: windowSeconds };
+}
 
 export default async function handler(req, res) {
   // CORS
@@ -13,12 +37,14 @@ export default async function handler(req, res) {
 
   // JWT認証（サブスクライバー判定）
   let isSubscriber = false;
+  let userId = null;
   try {
     const cookies = parse(req.headers.cookie || '');
     const token = cookies.eishou_token;
     if (token && process.env.JWT_SECRET) {
       const payload = jwt.verify(token, process.env.JWT_SECRET);
       isSubscriber = !!payload.isSubscriber;
+      userId = payload.userId;
     }
   } catch {}
 
@@ -27,29 +53,20 @@ export default async function handler(req, res) {
     return res.status(403).json({ error: 'サブスクライバー限定機能です' });
   }
 
-  // Rate limit（サブスクライバーのみ到達）
-  const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || 'unknown';
-  const limitKey = `image_${ip}`;
+  // Rate limit（Upstash Redis）
+  const rateLimitKey = `image:user:${userId}`;
   const limit = 5;
-  const window = 86400000; // 24時間
-  const now = Date.now();
-  const entry = rateLimit.get(limitKey);
-  if (entry && now < entry.resetAt) {
-    if (entry.count >= limit) {
-      return res.status(429).json({
-        error: '画像生成のレート制限中です。1日に5回までです',
-        limit,
-        remaining: 0
-      });
-    }
-    entry.count++;
-  } else {
-    rateLimit.set(limitKey, { count: 1, resetAt: now + window });
-  }
+  const windowSeconds = 86400; // 24時間
 
-  // 残り回数を計算
-  const currentEntry = rateLimit.get(limitKey);
-  const remaining = Math.max(0, limit - (currentEntry ? currentEntry.count : 0));
+  const rl = await checkRateLimit(rateLimitKey, limit, windowSeconds);
+  if (!rl.allowed) {
+    return res.status(429).json({
+      error: `画像生成の上限に達しました。${Math.ceil(rl.resetIn / 3600)}時間後にリセットされます`,
+      limit,
+      remaining: 0,
+      resetIn: rl.resetIn
+    });
+  }
 
   const { chantText, type, element } = req.body || {};
   if (!chantText) {
@@ -119,8 +136,9 @@ export default async function handler(req, res) {
     return res.status(200).json({
       url: imageData.data[0].url,
       prompt: imagePrompt,
-      remaining,
-      limit
+      remaining: rl.remaining,
+      limit,
+      resetIn: rl.resetIn
     });
   } catch (e) {
     return res.status(500).json({ error: '画像生成に失敗しました' });

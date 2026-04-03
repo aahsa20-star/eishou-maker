@@ -1,7 +1,31 @@
 import jwt from 'jsonwebtoken';
 import { parse } from 'cookie';
 
-const rateLimit = new Map(); // key -> { count, resetAt }
+// Upstash Redis REST API helper
+async function redis(command) {
+  const url = process.env.UPSTASH_REDIS_REST_URL;
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+  const res = await fetch(`${url}/${command}`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  return (await res.json()).result;
+}
+
+async function checkRateLimit(key, limit, windowSeconds) {
+  const current = parseInt(await redis(`get/${key}`)) || 0;
+
+  if (current >= limit) {
+    const ttl = await redis(`ttl/${key}`);
+    return { allowed: false, remaining: 0, resetIn: Math.max(ttl, 0) };
+  }
+
+  const newCount = await redis(`incr/${key}`);
+  if (newCount === 1) {
+    await redis(`expire/${key}/${windowSeconds}`);
+  }
+
+  return { allowed: true, remaining: limit - newCount, resetIn: windowSeconds };
+}
 
 export default async function handler(req, res) {
   // CORS
@@ -13,41 +37,34 @@ export default async function handler(req, res) {
 
   // JWT認証（サブスクライバー判定）
   let isSubscriber = false;
-  let authUserName = null;
+  let userId = null;
   try {
     const cookies = parse(req.headers.cookie || '');
     const token = cookies.eishou_token;
     if (token && process.env.JWT_SECRET) {
       const payload = jwt.verify(token, process.env.JWT_SECRET);
       isSubscriber = !!payload.isSubscriber;
-      authUserName = payload.userName;
+      userId = payload.userId;
     }
   } catch {}
 
-  // Rate limit
+  // Rate limit（Upstash Redis）
   const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || 'unknown';
+  const rateLimitKey = userId ? `chant:user:${userId}` : `chant:ip:${ip}`;
   const limit = isSubscriber ? 20 : 2;
-  const window = isSubscriber ? 3600000 : 86400000; // サブスク:1時間, 一般:24時間
-  const now = Date.now();
-  const entry = rateLimit.get(ip);
-  if (entry && now < entry.resetAt) {
-    if (entry.count >= limit) {
-      return res.status(429).json({
-        error: isSubscriber
-          ? 'レート制限中です。1時間に20回までです'
-          : 'レート制限中です。1日に2回までです',
-        limit,
-        remaining: 0
-      });
-    }
-    entry.count++;
-  } else {
-    rateLimit.set(ip, { count: 1, resetAt: now + window });
-  }
+  const windowSeconds = isSubscriber ? 3600 : 86400;
 
-  // 残り回数を計算
-  const currentEntry = rateLimit.get(ip);
-  const remaining = Math.max(0, limit - (currentEntry ? currentEntry.count : 0));
+  const rl = await checkRateLimit(rateLimitKey, limit, windowSeconds);
+  if (!rl.allowed) {
+    return res.status(429).json({
+      error: isSubscriber
+        ? 'レート制限中です。1時間に20回までです'
+        : 'レート制限中です。1日に2回までです',
+      limit,
+      remaining: 0,
+      resetIn: rl.resetIn
+    });
+  }
 
   // Validate
   const { words, type } = req.body || {};
@@ -119,7 +136,13 @@ EVAL:以降はJSONのみ出力すること`,
     }
     // リテラル \n を実際の改行に変換
     chantText = chantText.replace(/\\n/g, '\n');
-    return res.status(200).json({ text: chantText, evaluation, remaining, limit });
+    return res.status(200).json({
+      text: chantText,
+      evaluation,
+      remaining: rl.remaining,
+      limit,
+      resetIn: rl.resetIn
+    });
   } catch (e) {
     return res.status(500).json({ error: '詠唱の生成に失敗しました' });
   }
