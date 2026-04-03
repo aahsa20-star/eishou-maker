@@ -2362,7 +2362,7 @@ function updateRateInfo() {
   if (remaining <= 0) {
     btn.disabled = true;
     el.textContent = `詠唱の刻 残り 0 / ${max} ― 力が尽きた。時を待て`;
-  } else if (!_generating) {
+  } else if (btn.textContent === '詠唱生成') {
     btn.disabled = false;
   }
 }
@@ -2396,7 +2396,6 @@ const CHANT_TYPE_CONFIG = {
 };
 
 let chantOverlayActive = false;
-let _generating = false;
 
 function updateOverlayInfoDisplays() {
   // ガイド
@@ -2840,14 +2839,21 @@ function showResultWithTyping(text) {
 }
 
 async function generate() {
+  console.log('[generate] called. selected:', selected.length, 'rateLogs:', getActiveRateLogs().length, '/', getRateMax());
   if (selected.length === 0) { alert('単語を選択してください'); return; }
   if (getActiveRateLogs().length >= getRateMax()) { updateRateInfo(); return; }
 
   const btn = document.getElementById('generateBtn');
-  _generating = true;
   btn.disabled = true;
   btn.textContent = '儀式準備中...';
   if (bgmEnabled) sfx.stopBGM();
+
+  function resetBtn() {
+    btn.disabled = false;
+    btn.textContent = '詠唱生成';
+    updateRateInfo();
+    if (bgmEnabled && sfx.enabled) sfx.startBGM();
+  }
 
   // カウントダウンとAPI呼び出しを並行開始
   const apiPromise = fetch(API_URL, {
@@ -2884,18 +2890,18 @@ async function generate() {
       utterance.rate = 0.75;
       utterance.pitch = 0.8;
       utterance.volume = 1.0;
-      utterance.onend = () => { _generating = false; btn.disabled = false; btn.textContent = '詠唱生成'; updateRateInfo(); if (bgmEnabled && sfx.enabled) sfx.startBGM(); };
-      utterance.onerror = () => { _generating = false; btn.disabled = false; btn.textContent = '詠唱生成'; updateRateInfo(); if (bgmEnabled && sfx.enabled) sfx.startBGM(); };
+      utterance.onend = resetBtn;
+      utterance.onerror = resetBtn;
       speechSynthesis.speak(utterance);
+      // 安全弁：30秒後にspeechが終わらなかったら強制リセット
+      setTimeout(() => { if (btn.disabled) resetBtn(); }, 30000);
       return;
     }
   } catch (e) {
+    console.error('[generate] error:', e);
     alert('エラー: ' + e.message);
   }
-  _generating = false;
-  btn.disabled = false;
-  btn.textContent = '詠唱生成';
-  if (bgmEnabled && sfx.enabled) sfx.startBGM();
+  resetBtn();
 }
 
 function getHistory() {
