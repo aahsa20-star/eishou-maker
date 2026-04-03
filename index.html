@@ -35,7 +35,7 @@ body {
 /* 3-Column Altar Layout */
 .altar-layout {
   display: grid;
-  grid-template-columns: minmax(280px, 20%) 1fr minmax(280px, 20%);
+  grid-template-columns: minmax(240px, 20%) 1fr minmax(240px, 20%);
   gap: 0;
   min-height: 0;
 }
@@ -211,15 +211,16 @@ body {
 }
 .panel-title {
   font-family: 'Zen Kaku Gothic New', sans-serif;
-  font-size: 17px;
+  font-size: 13px;
   font-weight: 600;
   color: #D4A84B;
-  margin-bottom: 12px;
-  letter-spacing: 0.15em;
-  padding: 4px 12px;
+  margin-bottom: 8px;
+  letter-spacing: 0.05em;
+  padding: 3px 10px;
   background: rgba(160,120,48,0.1);
   border-left: 3px solid var(--gold);
   text-shadow: 0 0 10px rgba(160,120,48,0.3);
+  white-space: nowrap;
 }
 .panel-title.teal { color: #7AB8B0; text-shadow: 0 0 10px rgba(90,138,128,0.3); border-left-color: #5A8A80; background: rgba(90,138,128,0.1); }
 .panel-title.purple { color: #9A8AB0; text-shadow: 0 0 10px rgba(106,90,138,0.3); border-left-color: #6A5A8A; background: rgba(106,90,138,0.1); }
@@ -237,7 +238,7 @@ body {
   background: rgba(160,120,48,0.06);
   border: 1px solid var(--border);
   border-radius: 0;
-  padding: 6px 12px;
+  padding: 6px 8px;
   cursor: pointer;
   transition: all 0.2s;
   position: relative;
@@ -248,7 +249,7 @@ body {
   background: rgba(160,120,48,0.12);
 }
 .word-card .word-text {
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 500;
   color: var(--fg-base);
   text-shadow: 0 1px 3px rgba(0,0,0,0.5);
@@ -289,8 +290,8 @@ body {
   background: transparent;
   border: 1px solid var(--border);
   color: var(--fg-dim);
-  font-size: 12px;
-  padding: 4px 10px;
+  font-size: 11px;
+  padding: 3px 6px;
   cursor: pointer;
   font-family: inherit;
   transition: all 0.2s;
@@ -750,7 +751,7 @@ body {
   margin-top: 10px;
 }
 .hof-card {
-  padding: 14px 18px 10px;
+  padding: 10px 12px 8px;
   border: 1px solid rgba(160,120,48,0.3);
   border-left: 3px solid var(--gold-bright);
   position: relative;
@@ -778,9 +779,9 @@ body {
 .hof-card-eval .rarity { font-weight: 600; }
 .hof-card-text {
   font-family: 'Yuji Syuku', serif;
-  font-size: 16px;
+  font-size: 13px;
   color: var(--fg-base);
-  line-height: 1.8;
+  line-height: 1.6;
   white-space: pre-wrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -790,8 +791,9 @@ body {
 }
 .hof-card-actions {
   display: flex;
-  gap: 8px;
-  margin-top: 8px;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 6px;
 }
 .hof-card-actions button {
   background: transparent;
@@ -935,16 +937,16 @@ body {
   background: var(--bg-panel);
   border: 1px solid var(--border);
   border-radius: 0;
-  padding: 14px 18px;
+  padding: 10px 12px;
   transition: border-color 0.2s;
 }
 .history-card:hover { border-color: var(--border-gold); }
 .history-chant {
   font-family: 'Yuji Syuku', serif;
-  font-size: 18px;
+  font-size: 13px;
   font-weight: 400;
   color: var(--fg-base);
-  line-height: 1.9;
+  line-height: 1.7;
   white-space: pre-wrap;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -953,10 +955,9 @@ body {
 }
 .history-meta {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 8px;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 6px;
 }
 .history-tag {
   background: rgba(160,120,48,0.08);
@@ -972,12 +973,14 @@ body {
 }
 .history-actions {
   display: flex;
-  gap: 6px;
-  margin-left: 8px;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 6px;
+  margin-left: 0;
 }
 .history-btn {
   font-size: 11px;
-  padding: 3px 10px;
+  padding: 3px 8px;
   border-radius: 0;
   border: 1px solid var(--border);
   background: transparent;
