@@ -1494,8 +1494,8 @@ body {
 <div class="header">
   <div class="header-title">詠唱メーカー</div>
   <input class="channel-input" id="channel" placeholder="Twitchチャンネル名">
-  <button id="connectBtn" onclick="toggleConnect()">降霊</button>
-  <span class="status" id="status">降霊待ち</span>
+  <button id="connectBtn" onclick="toggleConnect()">接続</button>
+  <span class="status" id="status">未接続</span>
   <div class="auth-area" id="authArea">
     <button class="auth-login-btn" id="authLoginBtn" onclick="twitchLogin()">Twitchでログイン</button>
   </div>
@@ -1849,7 +1849,7 @@ function toggleConnect() {
 function connect(channel) {
   const st = document.getElementById('status');
   const btn = document.getElementById('connectBtn');
-  st.textContent = '降霊中...';
+  st.textContent = '接続中...';
   st.className = 'status';
 
   ws = new WebSocket('wss://irc-ws.chat.twitch.tv');
@@ -1863,7 +1863,7 @@ function connect(channel) {
       if (line.startsWith('PING')) { ws.send('PONG :tmi.twitch.tv'); continue; }
       if (line.includes('366')) {
         connected = true;
-        st.textContent = '降霊完了: #' + channel;
+        st.textContent = '接続済み: #' + channel;
         st.className = 'status connected';
         btn.textContent = '切断';
         startMvpTimer();
@@ -1908,9 +1908,9 @@ function disconnect() {
   updateMvpDisplay();
   chainedWord = null;
   resetChain();
-  document.getElementById('status').textContent = '降霊待ち';
+  document.getElementById('status').textContent = '未接続';
   document.getElementById('status').className = 'status';
-  document.getElementById('connectBtn').textContent = '降霊';
+  document.getElementById('connectBtn').textContent = '接続';
 }
 
 function addWord(w) {
