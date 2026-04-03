@@ -1386,15 +1386,116 @@ body {
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border); }
+
+/* Ritual Guide Modal */
+.ritual-modal-bg {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(4,3,2,0.92);
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.5s, visibility 0.5s;
+}
+.ritual-modal-bg.visible { opacity: 1; visibility: visible; }
+.ritual-modal {
+  position: relative;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-gold);
+  padding: 48px 56px;
+  max-width: 520px;
+  width: 90vw;
+  box-shadow: 0 0 60px rgba(160,120,48,0.15), 0 0 120px rgba(160,120,48,0.06);
+}
+.ritual-modal::before,
+.ritual-modal::after {
+  content: '';
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  border-color: var(--gold);
+  border-style: solid;
+}
+.ritual-modal::before { top: 8px; left: 8px; border-width: 1px 0 0 1px; }
+.ritual-modal::after { bottom: 8px; right: 8px; border-width: 0 1px 1px 0; }
+.ritual-modal-title {
+  text-align: center;
+  font-family: 'Yuji Syuku', serif;
+  font-size: 22px;
+  color: var(--gold-bright);
+  letter-spacing: 0.15em;
+  margin-bottom: 28px;
+  text-shadow: 0 0 12px rgba(200,160,80,0.3);
+}
+.ritual-modal-body {
+  font-family: 'Zen Kaku Gothic New', sans-serif;
+  font-size: 15px;
+  color: var(--fg-base);
+  line-height: 2.2;
+  letter-spacing: 0.04em;
+}
+.ritual-modal-body .ritual-step {
+  color: var(--fg-dim);
+  padding-left: 8px;
+}
+.ritual-modal-body .ritual-step .num {
+  color: var(--gold);
+  margin-right: 8px;
+  font-family: 'Yuji Syuku', serif;
+}
+.ritual-modal-body .ritual-sub {
+  color: var(--gold);
+  margin-top: 12px;
+  font-size: 14px;
+  line-height: 1.9;
+}
+.ritual-modal-btn {
+  display: block;
+  margin: 32px auto 0;
+  background: transparent;
+  border: 1px solid var(--gold);
+  color: var(--gold-bright);
+  font-family: 'Yuji Syuku', serif;
+  font-size: 17px;
+  padding: 12px 40px;
+  cursor: pointer;
+  letter-spacing: 0.15em;
+  transition: all 0.3s;
+}
+.ritual-modal-btn:hover {
+  background: rgba(160,120,48,0.1);
+  box-shadow: 0 0 20px rgba(200,160,80,0.2);
+}
 </style>
 </head>
 <body>
 
+<!-- 儀式の手引きモーダル -->
+<div class="ritual-modal-bg" id="ritualModalBg">
+  <div class="ritual-modal">
+    <div class="ritual-modal-title">── 儀式の手引き ──</div>
+    <div class="ritual-modal-body">
+      <div style="text-align:center;margin-bottom:16px;color:var(--fg-base);">言霊を集め、詠唱を紡ぎ、<br>この世ならざる力を呼び覚ませ。</div>
+      <div class="ritual-step"><span class="num">一</span>チャットに !word 言霊 を刻め</div>
+      <div class="ritual-step"><span class="num">二</span>言霊を選び、順を定めよ</div>
+      <div class="ritual-step"><span class="num">三</span>タイプを選び、儀式を起動せよ</div>
+      <div class="ritual-step"><span class="num">四</span>詠唱は汝の魂に刻まれる</div>
+      <div class="ritual-sub">★ 契約者よ、汝には更なる力が与えられる。<br>　　幻視召喚・詠唱回数の解放——</div>
+    </div>
+    <button class="ritual-modal-btn" onclick="closeRitualGuideModal()">儀式を始める</button>
+  </div>
+</div>
+
 <div class="header">
   <div class="header-title">詠唱メーカー</div>
   <input class="channel-input" id="channel" placeholder="Twitchチャンネル名">
-  <button id="connectBtn" onclick="toggleConnect()">接続</button>
-  <span class="status" id="status">未接続</span>
+  <button id="connectBtn" onclick="toggleConnect()">降霊</button>
+  <span class="status" id="status">降霊待ち</span>
   <div class="auth-area" id="authArea">
     <button class="auth-login-btn" id="authLoginBtn" onclick="twitchLogin()">Twitchでログイン</button>
   </div>
@@ -1402,47 +1503,47 @@ body {
 
 <div class="odai-area">
   <div class="odai-header">
-    <div class="panel-title gold">お題 <span style="font-size:12px;color:var(--fg-dim);font-weight:normal;margin-left:8px">任意 / 演出中に表示 / !odai で視聴者から募集可</span></div>
-    <button class="odai-clear-btn" onclick="clearOdai()">お題をクリア</button>
+    <div class="panel-title gold">儀式のテーマ <span style="font-size:12px;color:var(--fg-dim);font-weight:normal;margin-left:8px">定めずとも儀式は行える / 演出中に顕現 / !odai で言霊を募れ</span></div>
+    <button class="odai-clear-btn" onclick="clearOdai()">テーマを消滅させる</button>
   </div>
   <div class="odai-current" id="odaiCurrent"></div>
   <div class="odai-presets" id="odaiPresets"></div>
   <div class="odai-chat-candidates" id="odaiChatCandidates"></div>
   <div class="odai-custom">
-    <input id="odaiCustomInput" placeholder="カスタムお題を入力..." onkeydown="if(event.key==='Enter')adoptCustomOdai()">
-    <button onclick="adoptCustomOdai()">採用</button>
+    <input id="odaiCustomInput" placeholder="汝のテーマを刻め..." onkeydown="if(event.key==='Enter')adoptCustomOdai()">
+    <button onclick="adoptCustomOdai()">降臨</button>
   </div>
 </div>
 
 <div class="main">
   <div class="panel">
     <div class="panel-header">
-      <div class="panel-title teal">投稿された単語</div>
-      <button class="btn-sort-toggle" id="mvpBtn" onclick="addMvpAsWord()" style="display:none">MVP を単語に追加</button>
+      <div class="panel-title teal">集いし言霊</div>
+      <button class="btn-sort-toggle" id="mvpBtn" onclick="addMvpAsWord()" style="display:none">最強の使い魔を召喚</button>
       <span class="mvp-info" id="mvpInfo" style="display:none"></span>
-      <button class="btn-sort-toggle" id="sortToggle" onclick="toggleVoteSort()" style="display:none">人気順</button>
-      <button class="btn-clear-words" id="clearWordsBtn" onclick="clearAllWords()" style="display:none">全削除</button>
+      <button class="btn-sort-toggle" id="sortToggle" onclick="toggleVoteSort()" style="display:none">力ある順</button>
+      <button class="btn-clear-words" id="clearWordsBtn" onclick="clearAllWords()" style="display:none">言霊を散らす</button>
     </div>
     <div class="word-grid" id="wordGrid"></div>
   </div>
   <div class="panel">
-    <div class="panel-title gold">手動追加</div>
+    <div class="panel-title gold">言霊を刻む</div>
     <div class="manual-input">
-      <input id="manualWord" placeholder="単語を入力..." onkeydown="if(event.key==='Enter')addManualWord()">
-      <button onclick="addManualWord()">追加</button>
+      <input id="manualWord" placeholder="汝の言霊を..." onkeydown="if(event.key==='Enter')addManualWord()">
+      <button onclick="addManualWord()">刻む</button>
     </div>
-    <div class="panel-title gold" style="margin-top:16px">ヒント</div>
+    <div class="panel-title gold" style="margin-top:16px">古の教え</div>
     <p style="color:var(--fg-dim);font-size:15px;line-height:1.8">
-      チャットに <code style="color:var(--teal)">!word 単語</code> で投稿された単語が左に表示されます。<br>
-      クリックで選択 → 下の並び替えエリアへ → 詠唱生成
+      チャットに <code style="color:var(--teal)">!word 言霊</code> を刻めば、左の石板に顕現する。<br>
+      言霊を選びし後、順を定め——儀式を起動せよ。
     </p>
   </div>
 </div>
 
 <div class="selected-area">
-  <div class="panel-title teal">選択済み単語（ドラッグで並び替え）</div>
+  <div class="panel-title teal">選ばれし言霊（並びを定めよ）</div>
   <div class="selected-words" id="selectedWords">
-    <span class="placeholder-text">単語をクリックして追加...</span>
+    <span class="placeholder-text">言霊よ、集え...</span>
   </div>
 </div>
 
@@ -1454,15 +1555,15 @@ body {
   <button class="type-btn" data-type="覚醒" onclick="selectType(this)">覚醒</button>
 </div>
 <div class="controls-row">
-  <button class="speech-toggle active" id="speechToggle" onclick="toggleSpeech()">読み上げ</button>
-  <button class="speech-toggle active" id="guideToggle" onclick="toggleGuide()">参加説明</button>
+  <button class="speech-toggle active" id="speechToggle" onclick="toggleSpeech()">詠唱音声</button>
+  <button class="speech-toggle active" id="guideToggle" onclick="toggleGuide()">石板を示す</button>
   <div class="se-controls">
-    <button class="speech-toggle active" id="seToggle" onclick="toggleSE()">効果音</button>
-    <button class="speech-toggle active" id="bgmToggle" onclick="toggleBGM()">BGM</button>
+    <button class="speech-toggle active" id="seToggle" onclick="toggleSE()">霊音</button>
+    <button class="speech-toggle active" id="bgmToggle" onclick="toggleBGM()">霊楽</button>
     <input type="range" class="se-volume" id="seVolume" min="0" max="100" value="50" oninput="setSEVolume(this.value)">
   </div>
-  <button class="speech-toggle" id="chainToggle" onclick="toggleChainChant()">連続詠唱</button>
-  <button class="btn-clear" onclick="clearSelected()">クリア</button>
+  <button class="speech-toggle" id="chainToggle" onclick="toggleChainChant()">連鎖詠唱</button>
+  <button class="btn-clear" onclick="clearSelected()">白紙に還す</button>
 </div>
 
 <div class="generate-area">
@@ -1484,7 +1585,7 @@ body {
 <div class="chant-window" id="chantWindow">
   <button class="chant-close-btn" id="chantCloseBtn" onclick="closeChantOverlay()">&times;</button>
   <div class="chant-header">
-    <span class="chant-header-label">詠唱システム</span>
+    <span class="chant-header-label">詠唱の間</span>
     <span class="chant-header-line"></span>
     <span class="chant-header-type" id="chantWindowType">召喚</span>
   </div>
@@ -1495,13 +1596,13 @@ body {
     <div class="chant-ov-eval" id="chantOvEval"></div>
     <div class="chant-ov-image" id="chantOvImage"></div>
     <div class="chant-ov-actions" id="chantOvActions">
-      <button onclick="copyChantFromOverlay(this)">コピー</button>
-      <button onclick="saveChantImageFromOverlay()">画像保存</button>
-      <button id="chantGenImageBtn" onclick="generateChantImage()">画像生成</button>
-      <button id="chantDlImageBtn" onclick="downloadLastGeneratedImage()" style="display:none">画像をDL</button>
-      <button id="chantStampBtn" onclick="makeStamp()" style="display:none">スタンプを作る</button>
+      <button onclick="copyChantFromOverlay(this)">複写</button>
+      <button onclick="saveChantImageFromOverlay()">刻印</button>
+      <button id="chantGenImageBtn" onclick="generateChantImage()">幻視召喚</button>
+      <button id="chantDlImageBtn" onclick="downloadLastGeneratedImage()" style="display:none">幻視を持ち帰る</button>
+      <button id="chantStampBtn" onclick="makeStamp()" style="display:none">紋章を刻む</button>
     </div>
-    <div class="chant-ov-stamp-hint" id="chantStampHint" style="display:none">ダウンロードした画像をEmote Generatorにアップしてスタンプを作れます</div>
+    <div class="chant-ov-stamp-hint" id="chantStampHint" style="display:none">幻視を紋章師に渡し、汝だけの刻印を生み出せ</div>
     <div class="rate-info-image" id="imageRateInfo"></div>
   </div>
 </div>
@@ -1510,8 +1611,8 @@ body {
 <div class="ov-info-vote" id="ovInfoVote"></div>
 <div class="ov-info-mvp" id="ovInfoMvp"></div>
 <div class="ov-info-guide" id="ovInfoGuide">
-  <div class="ov-info-guide-title">チャットで参加</div>
-  <div class="ov-info-guide-text"><span class="cmd">!word 単語</span> を送ってね<br>例）<span class="cmd">!word 闇</span>　<span class="cmd">!word 覇</span>　<span class="cmd">!word 混沌</span></div>
+  <div class="ov-info-guide-title">言霊を刻め</div>
+  <div class="ov-info-guide-text"><span class="cmd">!word 言霊</span> を刻め<br>例）<span class="cmd">!word 闇</span>　<span class="cmd">!word 覇</span>　<span class="cmd">!word 混沌</span></div>
 </div>
 <div class="rate-info" id="rateInfo"></div>
 
@@ -1519,20 +1620,20 @@ body {
   <div class="result-text" id="resultText"></div>
   <div class="eval-area" id="evalArea"></div>
   <div class="result-actions">
-    <button class="btn-copy" id="copyBtn" onclick="copyChant()">コピー</button>
-    <button class="btn-copy" onclick="saveCurrentChantImage()">画像保存</button>
+    <button class="btn-copy" id="copyBtn" onclick="copyChant()">複写</button>
+    <button class="btn-copy" onclick="saveCurrentChantImage()">刻印</button>
   </div>
 </div>
 
 <div class="history-area">
-  <div class="panel-title purple">詠唱履歴</div>
+  <div class="panel-title purple">詠唱の記録</div>
   <div class="history-list" id="historyList"></div>
 </div>
 
 <div class="hof-area" id="hofArea">
   <div class="panel-header">
-    <div class="panel-title gold">殿堂入り</div>
-    <button class="btn-clear-words" id="hofClearBtn" onclick="clearHof()" style="display:none">全削除</button>
+    <div class="panel-title gold">封印された詠唱</div>
+    <button class="btn-clear-words" id="hofClearBtn" onclick="clearHof()" style="display:none">封印を解く</button>
   </div>
   <div class="hof-list" id="hofList"></div>
 </div>
@@ -1748,7 +1849,7 @@ function toggleConnect() {
 function connect(channel) {
   const st = document.getElementById('status');
   const btn = document.getElementById('connectBtn');
-  st.textContent = '接続中...';
+  st.textContent = '降霊中...';
   st.className = 'status';
 
   ws = new WebSocket('wss://irc-ws.chat.twitch.tv');
@@ -1762,7 +1863,7 @@ function connect(channel) {
       if (line.startsWith('PING')) { ws.send('PONG :tmi.twitch.tv'); continue; }
       if (line.includes('366')) {
         connected = true;
-        st.textContent = '接続中: #' + channel;
+        st.textContent = '降霊完了: #' + channel;
         st.className = 'status connected';
         btn.textContent = '切断';
         startMvpTimer();
@@ -1807,9 +1908,9 @@ function disconnect() {
   updateMvpDisplay();
   chainedWord = null;
   resetChain();
-  document.getElementById('status').textContent = '未接続';
+  document.getElementById('status').textContent = '降霊待ち';
   document.getElementById('status').className = 'status';
-  document.getElementById('connectBtn').textContent = '接続';
+  document.getElementById('connectBtn').textContent = '降霊';
 }
 
 function addWord(w) {
@@ -1994,7 +2095,7 @@ function updateMvpDisplay() {
   const infoEl = document.getElementById('mvpInfo');
   const btnEl = document.getElementById('mvpBtn');
   if (mvp) {
-    infoEl.textContent = `現在のMVP：${mvp.username}`;
+    infoEl.textContent = `最強の使い魔：${mvp.username}`;
     infoEl.style.display = '';
     btnEl.style.display = '';
   } else {
@@ -2110,7 +2211,7 @@ let dragIdx = null;
 function renderSelected() {
   const container = document.getElementById('selectedWords');
   if (selected.length === 0) {
-    container.innerHTML = '<span class="placeholder-text">単語をクリックして追加...</span>';
+    container.innerHTML = '<span class="placeholder-text">言霊よ、集え...</span>';
     return;
   }
   container.innerHTML = '';
@@ -2163,11 +2264,11 @@ async function checkAuth() {
 function updateAuthUI() {
   const area = document.getElementById('authArea');
   if (!authState.loggedIn) {
-    area.innerHTML = '<button class="auth-login-btn" onclick="twitchLogin()">Twitchでログイン</button><div class="auth-perk-hint">サブスクライバーは詠唱20回/時・画像生成5回/日</div>';
+    area.innerHTML = '<button class="auth-login-btn" onclick="twitchLogin()">使い魔と契約する</button><div class="auth-perk-hint">契約者には詠唱20回/刻・幻視召喚5回/日の力が与えられる</div>';
   } else if (authState.isSubscriber) {
-    area.innerHTML = `<span class="auth-user subscriber"><span class="star">★</span>${authState.userName}（サブスクライバー）</span><button class="auth-logout-btn" onclick="twitchLogout()">ログアウト</button>`;
+    area.innerHTML = `<span class="auth-user subscriber"><span class="star">⚔</span>${authState.userName}（契約者）</span><button class="auth-logout-btn" onclick="twitchLogout()">ログアウト</button>`;
   } else {
-    area.innerHTML = `<span class="auth-user">${authState.userName} でログイン中</span><button class="auth-logout-btn" onclick="twitchLogout()">ログアウト</button>`;
+    area.innerHTML = `<span class="auth-user">${authState.userName} として顕現中</span><button class="auth-logout-btn" onclick="twitchLogout()">ログアウト</button>`;
   }
   updateImageGenButton();
 }
@@ -2175,12 +2276,12 @@ function updateImageGenButton() {
   const btn = document.getElementById('chantGenImageBtn');
   if (!btn) return;
   if (authState.isSubscriber) {
-    btn.textContent = '画像生成';
+    btn.textContent = '幻視召喚';
     btn.disabled = false;
     btn.onclick = generateChantImage;
     btn.classList.remove('locked');
   } else {
-    btn.textContent = '\uD83D\uDD12 画像生成はサブスクライバー限定';
+    btn.textContent = '\uD83D\uDD12 幻視召喚は契約者のみに許された力';
     btn.onclick = twitchLogin;
     btn.classList.add('locked');
   }
@@ -2234,18 +2335,18 @@ function updateRateInfo() {
   const remaining = Math.max(0, max - logs.length);
   const el = document.getElementById('rateInfo');
   const btn = document.getElementById('generateBtn');
-  let text = `残り ${remaining} / ${max} 回`;
+  let text = `詠唱の刻 残り ${remaining} / ${max}`;
   if (logs.length > 0 && remaining < max) {
     const oldest = Math.min(...logs);
     const resetAt = oldest + w;
     const minsLeft = Math.max(1, Math.ceil((resetAt - Date.now()) / 60000));
-    text += `（${formatResetTime(minsLeft)}）`;
+    text += `（${formatResetTime(minsLeft)}に解放）`;
   }
   el.textContent = text;
   el.className = 'rate-info' + (remaining <= 0 ? ' danger' : remaining <= 1 ? ' warning' : '');
   if (remaining <= 0) {
     btn.disabled = true;
-    el.textContent = `残り 0 / ${max} 回 ― しばらく時間をおいてください`;
+    el.textContent = `詠唱の刻 残り 0 / ${max} ― 力が尽きた。時を待て`;
   }
 }
 function updateImageRateInfo() {
@@ -2258,7 +2359,7 @@ function updateImageRateInfo() {
   const logs = getActiveImageRateLogs();
   const max = getImageRateMax();
   const remaining = Math.max(0, max - logs.length);
-  el.textContent = `画像生成 残り ${remaining} / ${max} 回`;
+  el.textContent = `幻視召喚 残り ${remaining} / ${max}`;
   el.className = 'rate-info-image' + (remaining <= 0 ? ' danger' : remaining <= 1 ? ' warning' : '');
 }
 updateRateInfo();
@@ -2510,9 +2611,9 @@ function copyChantFromOverlay(btn) {
   if (!_lastChantOverlay) return;
   sfx.uiConfirm();
   navigator.clipboard.writeText(_lastChantOverlay.text).then(() => {
-    btn.textContent = 'コピー済';
+    btn.textContent = '複写済';
     btn.classList.add('copied');
-    setTimeout(() => { btn.textContent = 'コピー'; btn.classList.remove('copied'); }, 1500);
+    setTimeout(() => { btn.textContent = '複写'; btn.classList.remove('copied'); }, 1500);
   });
 }
 
@@ -2545,8 +2646,8 @@ async function generateChantImage() {
   const imageArea = document.getElementById('chantOvImage');
 
   btn.disabled = true;
-  btn.textContent = '生成中...';
-  imageArea.innerHTML = `<div class="chant-ov-image-loading"><div class="chant-ov-image-spinner"></div><p>画像を生成中...<br>少々お待ちください（10〜30秒）</p></div>`;
+  btn.textContent = '召喚中...';
+  imageArea.innerHTML = `<div class="chant-ov-image-loading"><div class="chant-ov-image-spinner"></div><p>幻視を召喚中...<br>暫し待たれよ（10〜30秒）</p></div>`;
   imageArea.classList.add('visible');
 
   try {
@@ -2575,12 +2676,12 @@ async function generateChantImage() {
     if (_lastChantOverlay) _lastChantOverlay.imageUrl = data.url;
 
     addImageRateLog();
-    btn.textContent = '画像生成';
+    btn.textContent = '幻視召喚';
     btn.disabled = false;
   } catch (e) {
     imageArea.innerHTML = `<div class="chant-ov-image-error">${esc(e.message)}</div>`;
     imageArea.classList.add('visible');
-    btn.textContent = '画像生成';
+    btn.textContent = '幻視召喚';
     btn.disabled = false;
   }
 }
@@ -2722,7 +2823,7 @@ async function generate() {
 
   const btn = document.getElementById('generateBtn');
   btn.disabled = true;
-  btn.textContent = '準備中...';
+  btn.textContent = '儀式準備中...';
   if (bgmEnabled) sfx.stopBGM();
 
   // カウントダウンとAPI呼び出しを並行開始
@@ -2866,7 +2967,7 @@ function renderHistory() {
   const list = document.getElementById('historyList');
   const history = getHistory();
   const hof = getHof();
-  if (history.length === 0) { list.innerHTML = '<span class="placeholder-text">まだ履歴がありません</span>'; return; }
+  if (history.length === 0) { list.innerHTML = '<span class="placeholder-text">記録は白紙——儀式を始めよ</span>'; return; }
   list.innerHTML = '';
   history.forEach((entry, i) => {
     const card = document.createElement('div');
@@ -2879,12 +2980,12 @@ function renderHistory() {
     const tags = (entry.words || []).map(w => `<span class="history-tag">${esc(w)}</span>`).join('');
     const isHof = hof.some(h => h.text === entry.text && h.type === entry.type);
     const hofBtn = isHof
-      ? `<button class="history-btn replay" style="color:var(--gold-bright);border-color:var(--gold);" onclick="toggleHof(${i})">\u{1F451} 殿堂入り済</button>`
-      : `<button class="history-btn replay" onclick="toggleHof(${i})">殿堂入り</button>`;
+      ? `<button class="history-btn replay" style="color:var(--gold-bright);border-color:var(--gold);" onclick="toggleHof(${i})">\u{1F451} 封印済</button>`
+      : `<button class="history-btn replay" onclick="toggleHof(${i})">封印する</button>`;
     const crownMark = isHof ? '\u{1F451} ' : '';
     card.innerHTML = `<div class="history-chant">${crownMark}${esc(entry.text)}</div>
       <div class="history-meta">${tags}<span class="history-time">${hh}:${mm}</span>
-      <div class="history-actions"><button class="history-btn replay" onclick="copyHistoryChant(${i}, this)">コピー</button><button class="history-btn replay" onclick="replayChant(${i})">再表示</button><button class="history-btn replay" onclick="saveHistoryChantImage(${i})">画像保存</button>${hofBtn}<button class="history-btn delete" onclick="deleteHistory(${i})">削除</button></div></div>`;
+      <div class="history-actions"><button class="history-btn replay" onclick="copyHistoryChant(${i}, this)">複写</button><button class="history-btn replay" onclick="replayChant(${i})">再召喚</button><button class="history-btn replay" onclick="saveHistoryChantImage(${i})">刻印</button>${hofBtn}<button class="history-btn delete" onclick="deleteHistory(${i})">抹消</button></div></div>`;
     list.appendChild(card);
   });
 }
@@ -2932,7 +3033,7 @@ function renderHof() {
   const list = document.getElementById('hofList');
   const hof = getHof();
   document.getElementById('hofClearBtn').style.display = hof.length > 0 ? '' : 'none';
-  if (hof.length === 0) { list.innerHTML = '<span class="placeholder-text" style="color:var(--fg-dim);font-size:14px;">まだ殿堂入りはありません</span>'; return; }
+  if (hof.length === 0) { list.innerHTML = '<span class="placeholder-text" style="color:var(--fg-dim);font-size:14px;">封印された詠唱はない</span>'; return; }
   list.innerHTML = '';
   hof.forEach((entry, i) => {
     const card = document.createElement('div');
@@ -2948,10 +3049,10 @@ function renderHof() {
     }
     card.innerHTML = `<div class="hof-card-num">${String(i + 1).padStart(2, '0')}</div>${evalHtml}<div class="hof-card-text">${esc(entry.text)}</div>
       <div class="hof-card-actions">
-        <button onclick="replayHof(${i})">再表示</button>
-        <button onclick="copyHof(${i}, this)">コピー</button>
-        <button onclick="saveHofImage(${i})">画像</button>
-        <button class="hof-remove" onclick="removeHof(${i})">解除</button>
+        <button onclick="replayHof(${i})">再召喚</button>
+        <button onclick="copyHof(${i}, this)">複写</button>
+        <button onclick="saveHofImage(${i})">刻印</button>
+        <button class="hof-remove" onclick="removeHof(${i})">封印解除</button>
       </div>`;
     list.appendChild(card);
   });
@@ -2968,7 +3069,7 @@ function copyHof(i, btn) {
   if (!entry) return;
   navigator.clipboard.writeText(entry.text).then(() => {
     const orig = btn.textContent;
-    btn.textContent = 'コピー済';
+    btn.textContent = '複写済';
     setTimeout(() => { btn.textContent = orig; }, 1000);
   });
 }
@@ -3087,6 +3188,17 @@ function esc(s) {
   const d = document.createElement('div');
   d.textContent = s;
   return d.innerHTML;
+}
+
+// ── 儀式の手引きモーダル ──
+if (!localStorage.getItem('ritual_initiated')) {
+  setTimeout(() => {
+    document.getElementById('ritualModalBg').classList.add('visible');
+  }, 300);
+}
+function closeRitualGuideModal() {
+  localStorage.setItem('ritual_initiated', '1');
+  document.getElementById('ritualModalBg').classList.remove('visible');
 }
 </script>
 </body>
