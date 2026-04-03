@@ -306,6 +306,32 @@ body {
   color: var(--teal);
   font-weight: 700;
 }
+
+/* Vote Ranking */
+.vote-ranking {
+  position: fixed;
+  left: 24px;
+  bottom: 160px;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.6s;
+}
+.vote-ranking.visible { opacity: 1; }
+.vote-ranking-title {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--fg-dim);
+  letter-spacing: 0.1em;
+  margin-bottom: 6px;
+}
+.vote-ranking-item {
+  font-size: 13px;
+  color: rgba(160,144,112,0.5);
+  line-height: 1.8;
+}
+.vote-ranking-item .rank { color: var(--gold); font-weight: 600; margin-right: 6px; }
+.vote-ranking-item .votes { color: var(--gold-bright); margin-left: 8px; font-size: 11px; }
 </style>
 </head>
 <body>
@@ -338,6 +364,8 @@ body {
 <div class="history-sidebar" id="historySidebar">
   <div class="history-sidebar-title">詠唱記録</div>
 </div>
+
+<div class="vote-ranking" id="voteRanking"></div>
 
 <div class="guide hidden" id="guide">
   <div class="guide-title">チャットで参加</div>
@@ -472,6 +500,23 @@ class SoundEngine {
   }
 }
 const sfx = new SoundEngine();
+
+// Vote Ranking
+function renderVoteRanking(ranking) {
+  const el = document.getElementById('voteRanking');
+  if (!ranking || ranking.length === 0) {
+    el.classList.remove('visible');
+    el.innerHTML = '';
+    return;
+  }
+  const rankLabels = ['1位', '2位', '3位'];
+  el.innerHTML = `<div class="vote-ranking-title">人気単語</div>` +
+    ranking.map((r, i) => `<div class="vote-ranking-item"><span class="rank">${rankLabels[i]}</span>${r.word}<span class="votes">▲${r.votes}</span></div>`).join('');
+  el.classList.add('visible');
+}
+
+// 初期表示
+try { renderVoteRanking(JSON.parse(localStorage.getItem('vote_ranking') || '[]')); } catch {}
 
 const TYPE_CONFIG = {
   '召喚': { color: '#A07830' },
@@ -728,6 +773,12 @@ function handleOverlayMessage(key, value) {
   if (key === 'se_volume') { sfx.setVolume(parseFloat(value || '0.5')); return; }
   if (key === 'show_guide') { guideEnabled = value !== 'false' && value !== false; updateGuide(); return; }
   if (key === 'chant_history') { renderOverlayHistory(); return; }
+  if (key === 'vote_ranking') {
+    try {
+      const data = typeof value === 'object' ? value : JSON.parse(value);
+      renderVoteRanking(Array.isArray(data) ? data : []);
+    } catch {} return;
+  }
   if (key === 'countdown_data') {
     try {
       const data = typeof value === 'object' ? value : JSON.parse(value);

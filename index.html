@@ -184,6 +184,37 @@ body {
 .word-card.hot .word-text {
   text-shadow: 0 0 8px rgba(200,160,80,0.4), 0 1px 3px rgba(0,0,0,0.5);
 }
+.word-card .word-num {
+  position: absolute;
+  top: 2px; left: 6px;
+  font-size: 11px;
+  color: var(--gold);
+  opacity: 0.6;
+}
+.word-card .word-votes {
+  position: absolute;
+  top: 2px; right: 22px;
+  font-size: 11px;
+  color: var(--gold-bright);
+  font-weight: 600;
+}
+.word-card.vote-hot {
+  border-color: var(--gold);
+  background: rgba(160,120,48,0.12);
+  box-shadow: 0 0 16px rgba(160,120,48,0.3);
+}
+.btn-sort-toggle {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--fg-dim);
+  font-size: 12px;
+  padding: 4px 10px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+.btn-sort-toggle:hover { border-color: var(--border-gold); color: var(--fg-base); }
+.btn-sort-toggle.active { border-color: var(--gold); color: var(--gold-bright); }
 .word-card .word-delete {
   position: absolute;
   top: 4px; right: 4px;
@@ -667,6 +698,7 @@ body {
   <div class="panel">
     <div class="panel-header">
       <div class="panel-title teal">投稿された単語</div>
+      <button class="btn-sort-toggle" id="sortToggle" onclick="toggleVoteSort()" style="display:none">人気順</button>
       <button class="btn-clear-words" id="clearWordsBtn" onclick="clearAllWords()" style="display:none">全削除</button>
     </div>
     <div class="word-grid" id="wordGrid"></div>
@@ -886,6 +918,10 @@ class SoundEngine {
 const sfx = new SoundEngine();
 
 let words = {};
+let wordOrder = [];       // 投稿順の単語リスト（番号付与用）
+let wordVotes = {};       // { word: vote数 }
+let userVotes = {};       // { username: word } 1人1票追跡
+let voteSortMode = false; // 人気順ソート
 let selected = [];
 let selectedType = '召喚';
 let speechEnabled = true;
@@ -924,10 +960,17 @@ function connect(channel) {
         st.className = 'status connected';
         btn.textContent = '切断';
       }
-      const match = line.match(/PRIVMSG\s+#\S+\s+:!word\s+(.+)/i);
-      if (match) {
-        const w = match[1].trim().substring(0, 20);
+      const userMatch = line.match(/:(\w+)!/);
+      const username = userMatch ? userMatch[1].toLowerCase() : 'unknown';
+      const wordMatch = line.match(/PRIVMSG\s+#\S+\s+:!word\s+(.+)/i);
+      if (wordMatch) {
+        const w = wordMatch[1].trim().substring(0, 20);
         if (w) addWord(w);
+      }
+      const voteMatch = line.match(/PRIVMSG\s+#\S+\s+:!vote\s+(\d+)\s*$/i);
+      if (voteMatch) {
+        const num = parseInt(voteMatch[1]);
+        addVote(num, username);
       }
     }
   };
@@ -946,18 +989,70 @@ function disconnect() {
 function addWord(w) {
   sfx.wordReceived();
   words[w] = (words[w] || 0) + 1;
+  if (!wordOrder.includes(w)) {
+    wordOrder.push(w);
+    wordVotes[w] = 0;
+  }
   renderWords();
+}
+
+function addVote(num, username) {
+  if (num < 1 || num > wordOrder.length) return;
+  const targetWord = wordOrder[num - 1];
+  if (!targetWord || !words[targetWord]) return;
+  // 前の投票を取り消し
+  const prevWord = userVotes[username];
+  if (prevWord === targetWord) return; // 同じ単語には再投票不可
+  if (prevWord && wordVotes[prevWord] !== undefined) {
+    wordVotes[prevWord] = Math.max(0, wordVotes[prevWord] - 1);
+  }
+  userVotes[username] = targetWord;
+  wordVotes[targetWord] = (wordVotes[targetWord] || 0) + 1;
+  sfx.wordReceived();
+  renderWords();
+  syncVoteRanking();
+}
+
+function toggleVoteSort() {
+  voteSortMode = !voteSortMode;
+  const btn = document.getElementById('sortToggle');
+  btn.classList.toggle('active', voteSortMode);
+  btn.textContent = voteSortMode ? '投稿順' : '人気順';
+  renderWords();
+}
+
+function syncVoteRanking() {
+  const ranking = wordOrder
+    .filter(w => words[w] && wordVotes[w] > 0)
+    .map(w => ({ word: w, votes: wordVotes[w] }))
+    .sort((a, b) => b.votes - a.votes)
+    .slice(0, 3);
+  localStorage.setItem('vote_ranking', JSON.stringify(ranking));
+  overlayChannel.postMessage({ key: 'vote_ranking', data: ranking });
 }
 
 function renderWords() {
   const grid = document.getElementById('wordGrid');
-  const sorted = Object.entries(words).sort((a, b) => b[1] - a[1]);
+  let entries = Object.entries(words);
+  if (voteSortMode) {
+    entries.sort((a, b) => (wordVotes[b[0]] || 0) - (wordVotes[a[0]] || 0));
+  } else {
+    entries.sort((a, b) => b[1] - a[1]);
+  }
   grid.innerHTML = '';
-  document.getElementById('clearWordsBtn').style.display = sorted.length > 0 ? '' : 'none';
-  for (const [w, count] of sorted) {
+  const hasWords = entries.length > 0;
+  document.getElementById('clearWordsBtn').style.display = hasWords ? '' : 'none';
+  document.getElementById('sortToggle').style.display = hasWords ? '' : 'none';
+  for (const [w, count] of entries) {
+    const num = wordOrder.indexOf(w) + 1;
+    const votes = wordVotes[w] || 0;
     const card = document.createElement('div');
-    card.className = 'word-card' + (count >= 3 ? ' hot' : '');
-    card.innerHTML = `<div class="word-text">${esc(w)}</div><div class="word-count">${count}票</div><button class="word-delete" onclick="event.stopPropagation();deleteWord('${esc(w).replace(/'/g, "\\'")}', this)">&times;</button>`;
+    let cls = 'word-card';
+    if (count >= 3) cls += ' hot';
+    if (votes >= 5) cls += ' vote-hot';
+    card.className = cls;
+    const voteBadge = votes > 0 ? `<span class="word-votes" style="${votes >= 3 ? 'color:#C8A050;' : ''}">▲${votes}</span>` : '';
+    card.innerHTML = `<span class="word-num">${num}</span><div class="word-text">${esc(w)}</div><div class="word-count">${count}回投稿</div>${voteBadge}<button class="word-delete" onclick="event.stopPropagation();deleteWord('${esc(w).replace(/'/g, "\\'")}', this)">&times;</button>`;
     card.onclick = () => selectWord(w);
     grid.appendChild(card);
   }
@@ -969,9 +1064,12 @@ function deleteWord(w, btn) {
   card.classList.add('removing');
   setTimeout(() => {
     delete words[w];
+    delete wordVotes[w];
+    // wordOrderは番号を維持するため削除しない（仕様通り）
     const idx = selected.indexOf(w);
     if (idx !== -1) { selected.splice(idx, 1); renderSelected(); }
     renderWords();
+    syncVoteRanking();
   }, 150);
 }
 
@@ -979,9 +1077,13 @@ function clearAllWords() {
   sfx.wordRemoved();
   const removedWords = Object.keys(words);
   words = {};
+  wordOrder = [];
+  wordVotes = {};
+  userVotes = {};
   selected = selected.filter(w => !removedWords.includes(w));
   renderSelected();
   renderWords();
+  syncVoteRanking();
 }
 
 function addManualWord() {
