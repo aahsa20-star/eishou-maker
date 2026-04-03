@@ -2730,8 +2730,13 @@ function downloadLastGeneratedImage() {
   a.click();
 }
 function makeStamp() {
+  // window.openをユーザー操作の同期コールスタック内で先に呼ぶ（ポップアップブロック回避）
+  const win = window.open('https://twitch-emote-generator.vercel.app/', '_blank');
+  if (!win) {
+    // ブロックされた場合はリンクで案内
+    alert('ポップアップがブロックされました。ブラウザの設定で許可してください。');
+  }
   downloadLastGeneratedImage();
-  window.open('https://twitch-emote-generator.vercel.app/', '_blank');
 }
 
 async function runCountdown(type) {
