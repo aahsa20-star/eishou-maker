@@ -932,6 +932,8 @@ body {
   box-shadow: 0 0 60px rgba(0,0,0,0.9), 0 0 30px rgba(160,120,48,0.08);
   padding: 0;
   z-index: 1001;
+  max-height: 90vh;
+  overflow-y: auto;
   clip-path: inset(0 0 100% 0);
   visibility: hidden;
   transition: clip-path 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -1099,14 +1101,15 @@ body {
 
 .chant-ov-image {
   display: none;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
   padding: 16px 0 8px;
 }
 .chant-ov-image.visible { display: flex; }
 .chant-ov-image-wrap {
   position: relative;
-  max-width: 400px;
-  max-height: 400px;
+  max-width: min(400px, 80vw);
+  max-height: 40vh;
 }
 .chant-ov-image-wrap::before {
   content: '';
@@ -1127,8 +1130,9 @@ body {
   z-index: 1;
 }
 .chant-ov-image-wrap img {
-  max-width: 400px;
-  max-height: 400px;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
   display: block;
   border: 1px solid var(--border-gold);
   opacity: 0;
@@ -1155,6 +1159,28 @@ body {
   color: #7A3030;
   text-align: center;
   padding: 12px 0;
+}
+.chant-ov-image-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 32px;
+  color: var(--fg-dim);
+  font-size: 14px;
+  text-align: center;
+  line-height: 1.8;
+}
+.chant-ov-image-spinner {
+  width: 40px;
+  height: 40px;
+  border: 2px solid rgba(160,120,48,0.3);
+  border-top-color: #C8A050;
+  border-radius: 50%;
+  animation: chant-spin 1s linear infinite;
+}
+@keyframes chant-spin {
+  to { transform: rotate(360deg); }
 }
 
 /* Chant overlay info displays */
@@ -2324,8 +2350,8 @@ async function generateChantImage() {
 
   btn.disabled = true;
   btn.textContent = '生成中...';
-  imageArea.innerHTML = '';
-  imageArea.classList.remove('visible');
+  imageArea.innerHTML = `<div class="chant-ov-image-loading"><div class="chant-ov-image-spinner"></div><p>画像を生成中...<br>少々お待ちください（10〜30秒）</p></div>`;
+  imageArea.classList.add('visible');
 
   try {
     const { text, type, evaluation } = _lastChantOverlay;
