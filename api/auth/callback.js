@@ -1,7 +1,14 @@
 import jwt from 'jsonwebtoken';
 
 export default async function handler(req, res) {
-  const { code } = req.query;
+  const { code, state } = req.query;
+
+  // stateパラメータの形式チェック（CSRF対策）
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  if (!state || !uuidRegex.test(state)) {
+    return res.status(400).send('Invalid state parameter');
+  }
+
   if (!code) {
     return res.status(400).send('認証コードがありません');
   }

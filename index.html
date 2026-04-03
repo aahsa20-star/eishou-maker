@@ -2254,10 +2254,20 @@ function renderSelected() {
 
 // ── 認証 ──
 let authState = { loggedIn: false, userName: null, isSubscriber: false };
-const TWITCH_AUTH_URL = 'https://id.twitch.tv/oauth2/authorize?client_id=wo0r7r7n2oru29gkjewg6jz2lzohhk&redirect_uri=https://eishou-maker.vercel.app/api/auth/callback&response_type=code&scope=user:read:subscriptions';
+function getTwitchLoginUrl() {
+  const state = crypto.randomUUID();
+  sessionStorage.setItem('oauth_state', state);
+  return 'https://id.twitch.tv/oauth2/authorize?' + new URLSearchParams({
+    client_id: 'wo0r7r7n2oru29gkjewg6jz2lzohhk',
+    redirect_uri: 'https://eishou-maker.vercel.app/api/auth/callback',
+    response_type: 'code',
+    scope: 'user:read:subscriptions',
+    state: state
+  });
+}
 
 function twitchLogin() {
-  window.location.href = TWITCH_AUTH_URL;
+  window.location.href = getTwitchLoginUrl();
 }
 async function twitchLogout() {
   await fetch('/api/auth/logout');
