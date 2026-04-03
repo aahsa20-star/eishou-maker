@@ -32,57 +32,91 @@ body {
   min-height: 100vh;
 }
 
+/* 3-Column Altar Layout */
+.altar-layout {
+  display: grid;
+  grid-template-columns: minmax(280px, 20%) 1fr minmax(280px, 20%);
+  gap: 0;
+  min-height: 0;
+}
+.altar-col {
+  overflow-y: auto;
+  max-height: calc(100vh - 72px);
+  padding: 12px 16px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-gold) transparent;
+}
+.altar-col::-webkit-scrollbar { width: 4px; }
+.altar-col::-webkit-scrollbar-thumb { background: var(--border-gold); border-radius: 2px; }
+.altar-left { border-right: 1px solid var(--border); }
+.altar-right { border-left: 1px solid var(--border); }
+.altar-center { padding: 12px 24px; }
+.altar-placeholder {
+  text-align: center;
+  padding: 32px 24px;
+  color: var(--fg-dim);
+  font-size: 14px;
+  font-style: italic;
+  opacity: 0.5;
+}
+
 /* Header */
 .header {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 20px 32px;
+  padding: 8px 24px;
+  height: 48px;
   background: rgba(14,12,9,0.95);
   border-bottom: 1px solid var(--border);
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
 .header-title {
   margin-right: 0;
-  font-size: 28px;
+  font-size: 20px;
   font-weight: 700;
   background: linear-gradient(135deg, #C8A050 0%, #7AB8B0 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   letter-spacing: 0.05em;
   filter: drop-shadow(0 0 8px rgba(200,160,80,0.4));
+  flex-shrink: 0;
 }
-.header-line {
-  width: 100%;
-  height: 1px;
-  background: var(--border-gold);
-  order: 99;
-}
+.header-line { display: none; }
 .header input {
   background: var(--bg-input);
   border: 1px solid rgba(160,120,48,0.4);
   color: var(--fg-base);
-  padding: 10px 14px;
+  padding: 6px 10px;
   border-radius: 0;
-  font-size: 16px;
+  font-size: 14px;
   font-family: inherit;
   outline: none;
   transition: border-color 0.2s;
 }
 .header input:focus { border-color: #C8A050; box-shadow: 0 0 8px rgba(160,120,48,0.2); }
-.header input.channel-input { width: 180px; }
+.header input.channel-input { width: 140px; }
 .header button {
   background: transparent;
   color: var(--gold);
   border: 1px solid var(--border);
-  padding: 10px 18px;
+  padding: 6px 14px;
   border-radius: 0;
-  font-size: 16px;
+  font-size: 13px;
   font-family: 'Zen Kaku Gothic New', sans-serif;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
   letter-spacing: 0.1em;
+}
+.header .rate-info {
+  margin-left: auto;
+  padding: 0;
+  font-size: 12px;
+  flex-shrink: 0;
 }
 .header button:hover { border-color: var(--gold); }
 .status {
@@ -142,12 +176,11 @@ body {
   border-style: dashed;
 }
 
-/* Main Layout */
+/* Main Layout (now inside altar columns) */
 .main {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
-  padding: 20px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .panel {
@@ -155,7 +188,7 @@ body {
   border: 1px solid rgba(160,120,48,0.5);
   box-shadow: 0 0 0 1px rgba(160,120,48,0.1), inset 0 1px 0 rgba(255,255,255,0.03);
   border-radius: 0;
-  padding: 20px;
+  padding: 14px;
   display: flex;
   flex-direction: column;
   position: relative;
@@ -195,16 +228,16 @@ body {
 .word-grid {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 8px;
   overflow-y: auto;
-  max-height: 45vh;
+  max-height: 35vh;
   align-content: flex-start;
 }
 .word-card {
   background: rgba(160,120,48,0.06);
   border: 1px solid var(--border);
   border-radius: 0;
-  padding: 10px 16px;
+  padding: 6px 12px;
   cursor: pointer;
   transition: all 0.2s;
   position: relative;
@@ -215,7 +248,7 @@ body {
   background: rgba(160,120,48,0.12);
 }
 .word-card .word-text {
-  font-size: 18px;
+  font-size: 15px;
   font-weight: 500;
   color: var(--fg-base);
   text-shadow: 0 1px 3px rgba(0,0,0,0.5);
@@ -350,9 +383,9 @@ body {
   border: 1px solid rgba(160,120,48,0.5);
   box-shadow: 0 0 0 1px rgba(160,120,48,0.1), inset 0 1px 0 rgba(255,255,255,0.03);
   border-radius: 0;
-  padding: 20px 24px;
-  margin: 20px 32px;
-  min-height: 80px;
+  padding: 12px 16px;
+  margin: 0 0 8px 0;
+  min-height: 56px;
   position: relative;
 }
 .selected-area::before {
@@ -430,11 +463,11 @@ body {
   background: linear-gradient(135deg, rgba(160,120,48,0.2) 0%, rgba(90,138,128,0.1) 100%);
   color: #E8DFC8;
   border: 2px solid #C8A050;
-  padding: 20px 48px;
+  height: 56px;
   width: 100%;
   border-radius: 0;
   font-family: 'Zen Kaku Gothic New', sans-serif;
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 800;
   cursor: pointer;
   letter-spacing: 0.4em;
@@ -456,8 +489,8 @@ body {
 /* Type Selector & Toggles */
 .type-selector {
   display: flex;
-  gap: 8px;
-  padding: 0 32px 12px;
+  gap: 6px;
+  padding: 0 0 8px 0;
   align-items: center;
   flex-wrap: wrap;
 }
@@ -466,10 +499,10 @@ body {
   background: transparent;
   color: rgba(232,223,200,0.6);
   border: 1px solid rgba(160,120,48,0.35);
-  padding: 12px 0;
+  padding: 10px 0;
   border-radius: 0;
   font-family: 'Zen Kaku Gothic New', sans-serif;
-  font-size: 18px;
+  font-size: 16px;
   text-shadow: 0 0 8px rgba(160,120,48,0.2);
   font-weight: 600;
   cursor: pointer;
@@ -499,9 +532,11 @@ body {
 .type-btn.active[data-type="覚醒"] { border: 2px solid #5A7A5A; color: #7A9A7A; background: rgba(90,122,90,0.12); text-shadow: 0 0 10px rgba(90,122,90,0.5); box-shadow: 0 0 12px rgba(90,122,90,0.25), inset 0 0 15px rgba(90,122,90,0.05); }
 .controls-row {
   display: flex;
-  gap: 8px;
-  padding: 0 32px 16px;
+  gap: 6px;
+  padding: 0;
   align-items: center;
+  flex-wrap: wrap;
+  margin-top: 8px;
 }
 .controls-row .btn-clear {
   margin-left: auto;
@@ -511,9 +546,9 @@ body {
   background: transparent;
   color: rgba(232,223,200,0.7);
   border: 1px solid rgba(160,120,48,0.4);
-  padding: 12px 16px;
+  padding: 6px 10px;
   border-radius: 0;
-  font-size: 15px;
+  font-size: 12px;
   font-weight: 500;
   font-family: inherit;
   cursor: pointer;
@@ -578,12 +613,12 @@ body {
 
 /* Generate Area */
 .generate-area {
-  padding: 0 32px 8px;
+  padding: 0 0 8px 0;
 }
 .rate-info {
   text-align: right;
-  padding: 0 32px 20px;
-  font-size: 15px;
+  padding: 0;
+  font-size: 12px;
   color: var(--fg-dim);
 }
 .rate-info.warning { color: var(--gold); }
@@ -599,10 +634,28 @@ body {
 
 /* Odai */
 .odai-area {
-  margin: 0 32px 20px;
-  padding: 16px 20px;
+  margin: 0 0 12px 0;
+  padding: 12px;
   background: var(--bg-panel);
   border: 1px solid var(--border);
+}
+.odai-collapse-toggle { cursor: pointer; user-select: none; }
+.odai-collapse-toggle::after {
+  content: ' ▶';
+  font-size: 10px;
+  transition: transform 0.2s;
+  display: inline-block;
+}
+.odai-area.expanded .odai-collapse-toggle::after {
+  content: ' ▼';
+}
+.odai-collapsible {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+.odai-area.expanded .odai-collapsible {
+  max-height: 600px;
 }
 .odai-header {
   display: flex;
@@ -688,7 +741,7 @@ body {
 
 /* Hall of Fame */
 .hof-area {
-  margin: 0 32px 20px;
+  margin: 0 0 12px 0;
 }
 .hof-list {
   display: flex;
@@ -788,8 +841,8 @@ body {
 
 /* Result Preview */
 .result-preview {
-  margin: 0 32px 20px;
-  padding: 20px;
+  margin: 0 0 8px 0;
+  padding: 16px;
   background: var(--bg-panel);
   border: 1px solid rgba(160,120,48,0.5);
   box-shadow: 0 0 0 1px rgba(160,120,48,0.1), inset 0 1px 0 rgba(255,255,255,0.03);
@@ -872,7 +925,7 @@ body {
 .btn-copy.copied { border-color: var(--teal); color: var(--teal); }
 
 /* History */
-.history-area { margin: 0 32px 20px; }
+.history-area { margin: 0 0 12px 0; }
 .history-list {
   display: flex;
   flex-direction: column;
@@ -1390,11 +1443,11 @@ body {
 /* Footer */
 footer {
   text-align: center;
-  padding: 24px;
-  font-size: 12px;
+  padding: 8px;
+  font-size: 11px;
   color: var(--fg-dim);
   border-top: 1px solid var(--border);
-  margin-top: 40px;
+  margin-top: 0;
 }
 footer a {
   color: var(--fg-dim);
@@ -1511,86 +1564,134 @@ footer a:hover { color: var(--gold); }
   <input class="channel-input" id="channel" placeholder="Twitchチャンネル名">
   <button id="connectBtn" onclick="toggleConnect()">接続</button>
   <span class="status" id="status">未接続</span>
+  <div class="rate-info" id="rateInfo"></div>
   <div class="auth-area" id="authArea">
     <button class="auth-login-btn" id="authLoginBtn" onclick="twitchLogin()">Twitchでログイン</button>
   </div>
 </div>
 
-<div class="odai-area">
-  <div class="odai-header">
-    <div class="panel-title gold">儀式のテーマ <span style="font-size:12px;color:var(--fg-dim);font-weight:normal;margin-left:8px">定めずとも儀式は行える / 演出中に顕現 / !odai で言霊を募れ</span></div>
-    <button class="odai-clear-btn" onclick="clearOdai()">テーマを消滅させる</button>
-  </div>
-  <div class="odai-current" id="odaiCurrent"></div>
-  <div class="odai-presets" id="odaiPresets"></div>
-  <div class="odai-chat-candidates" id="odaiChatCandidates"></div>
-  <div class="odai-custom">
-    <input id="odaiCustomInput" placeholder="汝のテーマを刻め..." onkeydown="if(event.key==='Enter')adoptCustomOdai()">
-    <button onclick="adoptCustomOdai()">降臨</button>
-  </div>
-</div>
+<div class="altar-layout">
 
-<div class="main">
+<!-- ═══ 左カラム：供物の間 ═══ -->
+<div class="altar-col altar-left">
+
   <div class="panel">
     <div class="panel-header">
       <div class="panel-title teal">集いし言霊</div>
-      <button class="btn-sort-toggle" id="mvpBtn" onclick="addMvpAsWord()" style="display:none">最強の使い魔を召喚</button>
-      <span class="mvp-info" id="mvpInfo" style="display:none"></span>
       <button class="btn-sort-toggle" id="sortToggle" onclick="toggleVoteSort()" style="display:none">力ある順</button>
       <button class="btn-clear-words" id="clearWordsBtn" onclick="clearAllWords()" style="display:none">言霊を散らす</button>
     </div>
     <div class="word-grid" id="wordGrid"></div>
+    <div style="margin-top:8px;">
+      <button class="btn-sort-toggle" id="mvpBtn" onclick="addMvpAsWord()" style="display:none">最強の使い魔を召喚</button>
+      <span class="mvp-info" id="mvpInfo" style="display:none"></span>
+    </div>
   </div>
-  <div class="panel">
+
+  <div class="panel" style="margin-top:12px;">
     <div class="panel-title gold">言霊を刻む</div>
     <div class="manual-input">
       <input id="manualWord" placeholder="汝の言霊を..." onkeydown="if(event.key==='Enter')addManualWord()">
       <button onclick="addManualWord()">刻む</button>
     </div>
-    <div class="panel-title gold" style="margin-top:16px">古の教え</div>
-    <p style="color:var(--fg-dim);font-size:15px;line-height:1.8">
-      チャットに <code style="color:#C8A050">!word 単語</code> を送ると左に表示されます。<br>
+  </div>
+
+  <div class="odai-area" id="odaiArea">
+    <div class="odai-header">
+      <div class="panel-title gold odai-collapse-toggle" onclick="toggleOdaiCollapse()">儀式のテーマ</div>
+      <button class="odai-clear-btn" onclick="clearOdai()">消滅</button>
+    </div>
+    <div class="odai-current" id="odaiCurrent"></div>
+    <div class="odai-custom">
+      <input id="odaiCustomInput" placeholder="汝のテーマを刻め..." onkeydown="if(event.key==='Enter')adoptCustomOdai()">
+      <button onclick="adoptCustomOdai()">降臨</button>
+    </div>
+    <div class="odai-collapsible">
+      <div class="odai-presets" id="odaiPresets"></div>
+      <div class="odai-chat-candidates" id="odaiChatCandidates"></div>
+    </div>
+  </div>
+
+  <div style="margin-top:8px;">
+    <div class="panel-title gold" style="font-size:13px;">古の教え</div>
+    <p style="color:var(--fg-dim);font-size:13px;line-height:1.6">
+      チャットに <code style="color:#C8A050">!word 単語</code> を送ると表示されます。<br>
       クリックで選択 → 並び替え → 詠唱生成
     </p>
   </div>
+
 </div>
 
-<div class="selected-area">
-  <div class="panel-title teal">選ばれし言霊（並びを定めよ）</div>
-  <div class="selected-words" id="selectedWords">
-    <span class="placeholder-text">言霊よ、集え...</span>
+<!-- ═══ 中央カラム：儀式祭壇 ═══ -->
+<div class="altar-col altar-center">
+
+  <div class="type-selector">
+    <button class="type-btn active" data-type="召喚" onclick="selectType(this)">召喚</button>
+    <button class="type-btn" data-type="解放" onclick="selectType(this)">解放</button>
+    <button class="type-btn" data-type="封印" onclick="selectType(this)">封印</button>
+    <button class="type-btn" data-type="滅亡" onclick="selectType(this)">滅亡</button>
+    <button class="type-btn" data-type="覚醒" onclick="selectType(this)">覚醒</button>
   </div>
-</div>
 
-<div class="type-selector">
-  <button class="type-btn active" data-type="召喚" onclick="selectType(this)">召喚</button>
-  <button class="type-btn" data-type="解放" onclick="selectType(this)">解放</button>
-  <button class="type-btn" data-type="封印" onclick="selectType(this)">封印</button>
-  <button class="type-btn" data-type="滅亡" onclick="selectType(this)">滅亡</button>
-  <button class="type-btn" data-type="覚醒" onclick="selectType(this)">覚醒</button>
-</div>
-<div class="controls-row">
-  <button class="speech-toggle active" id="speechToggle" onclick="toggleSpeech()">読み上げ</button>
-  <button class="speech-toggle active" id="guideToggle" onclick="toggleGuide()">参加説明</button>
-  <div class="se-controls">
-    <button class="speech-toggle active" id="seToggle" onclick="toggleSE()">効果音</button>
-    <button class="speech-toggle active" id="bgmToggle" onclick="toggleBGM()">BGM</button>
-    <input type="range" class="se-volume" id="seVolume" min="0" max="100" value="50" oninput="setSEVolume(this.value)">
+  <div class="selected-area">
+    <div class="panel-title teal" style="font-size:14px;">選ばれし言霊（並びを定めよ）</div>
+    <div class="selected-words" id="selectedWords">
+      <span class="placeholder-text">言霊よ、集え...</span>
+    </div>
   </div>
-  <button class="speech-toggle" id="chainToggle" onclick="toggleChainChant()">連続詠唱</button>
-  <button class="btn-clear" onclick="clearSelected()">クリア</button>
+
+  <div class="generate-area">
+    <button class="btn-generate" id="generateBtn" onclick="generate()">詠唱生成</button>
+  </div>
+
+  <div class="result-preview" id="resultPreview">
+    <div class="result-text" id="resultText"></div>
+    <div class="eval-area" id="evalArea"></div>
+    <div class="result-actions">
+      <button class="btn-copy" id="copyBtn" onclick="copyChant()">複写</button>
+      <button class="btn-copy" onclick="saveCurrentChantImage()">刻印</button>
+    </div>
+  </div>
+
+  <div class="controls-row">
+    <button class="speech-toggle active" id="speechToggle" onclick="toggleSpeech()">読み上げ</button>
+    <button class="speech-toggle active" id="guideToggle" onclick="toggleGuide()">参加説明</button>
+    <div class="se-controls">
+      <button class="speech-toggle active" id="seToggle" onclick="toggleSE()">効果音</button>
+      <button class="speech-toggle active" id="bgmToggle" onclick="toggleBGM()">BGM</button>
+      <input type="range" class="se-volume" id="seVolume" min="0" max="100" value="50" oninput="setSEVolume(this.value)">
+    </div>
+    <button class="speech-toggle" id="chainToggle" onclick="toggleChainChant()">連続詠唱</button>
+    <button class="btn-clear" onclick="clearSelected()">クリア</button>
+  </div>
+
 </div>
 
-<div class="generate-area">
-  <button class="btn-generate" id="generateBtn" onclick="generate()">詠唱生成</button>
+<!-- ═══ 右カラム：記録の間 ═══ -->
+<div class="altar-col altar-right">
+
+  <div class="history-area">
+    <div class="panel-title purple">詠唱の記録</div>
+    <div class="history-list" id="historyList"></div>
+  </div>
+
+  <div class="hof-area" id="hofArea">
+    <div class="panel-header">
+      <div class="panel-title gold">封印された詠唱</div>
+      <button class="btn-clear-words" id="hofClearBtn" onclick="clearHof()" style="display:none">封印を解く</button>
+    </div>
+    <div class="hof-list" id="hofList"></div>
+  </div>
+
 </div>
 
+</div><!-- end altar-layout -->
+
+<!-- ═══ 固定位置オーバーレイ（グリッド外） ═══ -->
 <div class="countdown-overlay" id="countdownOverlay">
   <div class="countdown-number" id="countdownNumber"></div>
   <div class="countdown-label" id="countdownLabel">——詠唱——</div>
 </div>
-
-<!-- 詠唱演出オーバーレイ -->
 <div class="chant-overlay-bg" id="chantOverlayBg"></div>
 <div class="chant-deco-line" id="chantDecoLine">
   <span class="chant-deco-line-bar"></span>
@@ -1628,29 +1729,6 @@ footer a:hover { color: var(--gold); }
 <div class="ov-info-guide" id="ovInfoGuide">
   <div class="ov-info-guide-title">言霊を刻め</div>
   <div class="ov-info-guide-text"><span class="cmd">!word 言霊</span> を刻め<br>例）<span class="cmd">!word 闇</span>　<span class="cmd">!word 覇</span>　<span class="cmd">!word 混沌</span></div>
-</div>
-<div class="rate-info" id="rateInfo"></div>
-
-<div class="result-preview" id="resultPreview">
-  <div class="result-text" id="resultText"></div>
-  <div class="eval-area" id="evalArea"></div>
-  <div class="result-actions">
-    <button class="btn-copy" id="copyBtn" onclick="copyChant()">複写</button>
-    <button class="btn-copy" onclick="saveCurrentChantImage()">刻印</button>
-  </div>
-</div>
-
-<div class="history-area">
-  <div class="panel-title purple">詠唱の記録</div>
-  <div class="history-list" id="historyList"></div>
-</div>
-
-<div class="hof-area" id="hofArea">
-  <div class="panel-header">
-    <div class="panel-title gold">封印された詠唱</div>
-    <button class="btn-clear-words" id="hofClearBtn" onclick="clearHof()" style="display:none">封印を解く</button>
-  </div>
-  <div class="hof-list" id="hofList"></div>
 </div>
 
 <script>
@@ -2043,6 +2121,11 @@ function adoptCustomOdai() {
   syncOdai();
 }
 
+function toggleOdaiCollapse() {
+  const area = document.getElementById('odaiArea');
+  area.classList.toggle('expanded');
+  localStorage.setItem('odai_collapsed', area.classList.contains('expanded') ? 'false' : 'true');
+}
 function clearOdai() {
   currentOdai = null;
   document.getElementById('odaiCurrent').textContent = '';
@@ -2058,6 +2141,12 @@ function syncOdai() {
 }
 
 initOdaiPresets();
+// お題折りたたみの初期状態
+if (localStorage.getItem('odai_collapsed') !== 'false') {
+  // デフォルトは折りたたみ
+} else {
+  document.getElementById('odaiArea').classList.add('expanded');
+}
 
 // ── お題チャット募集 ──
 let odaiChatCandidates = []; // { text, username }
