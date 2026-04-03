@@ -389,6 +389,32 @@ body {
   text-shadow: 0 0 12px rgba(200,160,80,0.3);
 }
 
+/* Chain Counter */
+.chain-counter {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.6s;
+  text-align: right;
+}
+.chain-counter.visible { opacity: 1; }
+.chain-counter-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--fg-dim);
+  letter-spacing: 0.1em;
+  margin-bottom: 2px;
+}
+.chain-counter-num {
+  font-size: 22px;
+  color: var(--gold-bright);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
 /* MVP Display */
 .mvp-display {
   position: fixed;
@@ -447,6 +473,7 @@ body {
 </div>
 
 <div class="odai-display" id="odaiDisplay"></div>
+<div class="chain-counter" id="chainCounter"></div>
 <div class="vote-ranking" id="voteRanking"></div>
 <div class="mvp-display" id="mvpDisplay"></div>
 
@@ -598,6 +625,27 @@ function renderVoteRanking(ranking) {
   el.classList.add('visible');
 }
 
+// Chain Counter
+function renderChainCounter(data) {
+  const el = document.getElementById('chainCounter');
+  if (!data || !data.chainCount || data.chainCount < 2) {
+    el.classList.remove('visible');
+    el.innerHTML = '';
+    return;
+  }
+  el.innerHTML = `<div class="chain-counter-label">連続詠唱</div><div class="chain-counter-num">\u{1F517} \u00D7 ${data.chainCount}</div>`;
+  el.classList.add('visible');
+  // アニメーション
+  const numEl = el.querySelector('.chain-counter-num');
+  if (numEl) {
+    numEl.animate([
+      { transform: 'scale(1)' },
+      { transform: 'scale(1.3)' },
+      { transform: 'scale(1)' }
+    ], { duration: 400, easing: 'ease-out' });
+  }
+}
+
 // Odai Display
 function renderOdaiDisplay(data) {
   const el = document.getElementById('odaiDisplay');
@@ -626,6 +674,7 @@ function renderMvpDisplay(data) {
 try { renderVoteRanking(JSON.parse(localStorage.getItem('vote_ranking') || '[]')); } catch {}
 try { renderMvpDisplay(JSON.parse(localStorage.getItem('mvp_data') || 'null')); } catch {}
 try { renderOdaiDisplay(JSON.parse(localStorage.getItem('odai_data') || 'null')); } catch {}
+try { renderChainCounter(JSON.parse(localStorage.getItem('chain_data') || 'null')); } catch {}
 
 const TYPE_CONFIG = {
   '召喚': { color: '#A07830' },
@@ -919,6 +968,12 @@ function handleOverlayMessage(key, value) {
       renderOdaiDisplay(data);
     } catch {} return;
   }
+  if (key === 'chain_data') {
+    try {
+      const data = typeof value === 'object' ? value : JSON.parse(value);
+      renderChainCounter(data);
+    } catch {} return;
+  }
   if (key === 'countdown_data') {
     try {
       const data = typeof value === 'object' ? value : JSON.parse(value);
@@ -954,7 +1009,7 @@ overlayChannel.onmessage = (e) => {
 // OBSブラウザソース向けポーリング（1秒ごと）
 let pollCache = {};
 setInterval(() => {
-  const keys = ['se_enabled', 'se_volume', 'show_guide', 'vote_ranking', 'mvp_data', 'odai_data'];
+  const keys = ['se_enabled', 'se_volume', 'show_guide', 'vote_ranking', 'mvp_data', 'odai_data', 'chain_data'];
   for (const key of keys) {
     const val = localStorage.getItem(key);
     if (val !== pollCache[key]) {

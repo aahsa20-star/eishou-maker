@@ -358,6 +358,18 @@ body {
 .selected-word.drag-over {
   border-color: var(--gold);
 }
+.selected-word.chained {
+  border-left: 3px solid var(--gold-bright);
+  background: rgba(200,160,80,0.12);
+}
+.selected-word .chain-badge {
+  font-size: 10px;
+  color: var(--gold);
+  border: 1px solid var(--gold);
+  padding: 0 4px;
+  line-height: 1.4;
+  flex-shrink: 0;
+}
 .placeholder-text {
   color: #3A3428;
   font-size: 14px;
@@ -929,6 +941,7 @@ body {
     <button class="speech-toggle active" id="bgmToggle" onclick="toggleBGM()">BGM</button>
     <input type="range" class="se-volume" id="seVolume" min="0" max="100" value="50" oninput="setSEVolume(this.value)">
   </div>
+  <button class="speech-toggle" id="chainToggle" onclick="toggleChainChant()">連続詠唱</button>
   <button class="btn-clear" onclick="clearSelected()">クリア</button>
 </div>
 
@@ -1123,6 +1136,9 @@ let userVotes = {};       // { username: word } 1人1票追跡
 let voteSortMode = false; // 人気順ソート
 let participants = {};    // { username: { wordCount, voteCount, messageCount } }
 let mvpUpdateTimer = null;
+let chainChantEnabled = localStorage.getItem('chain_chant') === 'true';
+let chainCount = 0;
+let chainedWord = null; // 引き継ぎ単語
 let selected = [];
 let selectedType = '召喚';
 let speechEnabled = true;
@@ -1195,6 +1211,8 @@ function disconnect() {
   participants = {};
   stopMvpTimer();
   updateMvpDisplay();
+  chainedWord = null;
+  resetChain();
   document.getElementById('status').textContent = '未接続';
   document.getElementById('status').className = 'status';
   document.getElementById('connectBtn').textContent = '接続';
@@ -1244,6 +1262,47 @@ function syncVoteRanking() {
   localStorage.setItem('vote_ranking', JSON.stringify(ranking));
   overlayChannel.postMessage({ key: 'vote_ranking', data: ranking });
 }
+
+// ── 連続詠唱機能 ──
+function toggleChainChant() {
+  chainChantEnabled = !chainChantEnabled;
+  localStorage.setItem('chain_chant', chainChantEnabled);
+  const btn = document.getElementById('chainToggle');
+  btn.classList.toggle('active', chainChantEnabled);
+  if (!chainChantEnabled) {
+    chainedWord = null;
+    resetChain();
+    renderSelected();
+  }
+}
+
+function resetChain() {
+  chainCount = 0;
+  localStorage.removeItem('chain_data');
+  overlayChannel.postMessage({ key: 'chain_data', data: null });
+}
+
+function applyChainAfterGenerate() {
+  if (!chainChantEnabled || selected.length === 0) return;
+  const lastWord = selected[selected.length - 1];
+  chainCount++;
+  chainedWord = lastWord;
+  // overlay通知
+  const chainData = { word: lastWord, chainCount, timestamp: Date.now() };
+  localStorage.setItem('chain_data', JSON.stringify(chainData));
+  overlayChannel.postMessage({ key: 'chain_data', data: chainData });
+  // 2秒後に選択をクリアして引き継ぎ単語を設定
+  setTimeout(() => {
+    selected = [lastWord];
+    renderSelected();
+  }, 2000);
+}
+
+// 初期化
+(function initChainToggle() {
+  const btn = document.getElementById('chainToggle');
+  if (btn) btn.classList.toggle('active', chainChantEnabled);
+})();
 
 // ── お題機能 ──
 const ODAI_PRESETS = [
@@ -1435,6 +1494,8 @@ function removeSelected(i) {
 
 function clearSelected() {
   selected = [];
+  chainedWord = null;
+  resetChain();
   renderSelected();
   document.getElementById('resultPreview').classList.remove('visible');
 }
@@ -1449,9 +1510,10 @@ function renderSelected() {
   container.innerHTML = '';
   selected.forEach((w, i) => {
     const el = document.createElement('div');
-    el.className = 'selected-word';
+    const isChained = (i === 0 && w === chainedWord && chainChantEnabled);
+    el.className = 'selected-word' + (isChained ? ' chained' : '');
     el.draggable = true;
-    el.innerHTML = `<span>${esc(w)}</span><span class="remove" onclick="event.stopPropagation();removeSelected(${i})">&times;</span>`;
+    el.innerHTML = `${isChained ? '<span class="chain-badge">引継</span>' : ''}<span>${esc(w)}</span><span class="remove" onclick="event.stopPropagation();removeSelected(${i})">&times;</span>`;
     el.addEventListener('dragstart', () => { dragIdx = i; el.style.opacity = '0.4'; });
     el.addEventListener('dragend', () => { el.style.opacity = '1'; });
     el.addEventListener('dragover', (e) => { e.preventDefault(); el.classList.add('drag-over'); });
@@ -1650,6 +1712,7 @@ async function generate() {
     overlayChannel.postMessage({ key: 'chant_data', data: chantMsg });
     saveHistory({ text, words: [...selected], type: selectedType, timestamp: ts, evaluation });
     addRateLog();
+    applyChainAfterGenerate();
 
     if (speechEnabled && 'speechSynthesis' in window) {
       speechSynthesis.cancel();
