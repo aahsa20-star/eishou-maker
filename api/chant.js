@@ -26,7 +26,7 @@ export default async function handler(req, res) {
 
   // Rate limit
   const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || 'unknown';
-  const limit = isSubscriber ? 50 : 2;
+  const limit = isSubscriber ? 20 : 2;
   const window = isSubscriber ? 3600000 : 86400000; // サブスク:1時間, 一般:24時間
   const now = Date.now();
   const entry = rateLimit.get(ip);
@@ -34,7 +34,7 @@ export default async function handler(req, res) {
     if (entry.count >= limit) {
       return res.status(429).json({
         error: isSubscriber
-          ? 'レート制限中です。1時間に50回までです'
+          ? 'レート制限中です。1時間に20回までです'
           : 'レート制限中です。1日に2回までです',
         limit,
         remaining: 0

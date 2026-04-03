@@ -128,6 +128,19 @@ body {
   font-family: inherit;
 }
 .auth-logout-btn:hover { color: var(--fg-base); }
+.auth-perk-hint {
+  font-size: 11px;
+  color: var(--fg-dim);
+  opacity: 0.7;
+  white-space: nowrap;
+}
+.chant-ov-actions button.locked {
+  font-size: 11px;
+  color: var(--fg-dim);
+  opacity: 0.6;
+  cursor: pointer;
+  border-style: dashed;
+}
 
 /* Main Layout */
 .main {
@@ -2150,20 +2163,35 @@ async function checkAuth() {
 function updateAuthUI() {
   const area = document.getElementById('authArea');
   if (!authState.loggedIn) {
-    area.innerHTML = '<button class="auth-login-btn" onclick="twitchLogin()">Twitchでログイン</button>';
+    area.innerHTML = '<button class="auth-login-btn" onclick="twitchLogin()">Twitchでログイン</button><div class="auth-perk-hint">サブスクライバーは詠唱20回/時・画像生成5回/日</div>';
   } else if (authState.isSubscriber) {
     area.innerHTML = `<span class="auth-user subscriber"><span class="star">★</span>${authState.userName}（サブスクライバー）</span><button class="auth-logout-btn" onclick="twitchLogout()">ログアウト</button>`;
   } else {
     area.innerHTML = `<span class="auth-user">${authState.userName} でログイン中</span><button class="auth-logout-btn" onclick="twitchLogout()">ログアウト</button>`;
+  }
+  updateImageGenButton();
+}
+function updateImageGenButton() {
+  const btn = document.getElementById('chantGenImageBtn');
+  if (!btn) return;
+  if (authState.isSubscriber) {
+    btn.textContent = '画像生成';
+    btn.disabled = false;
+    btn.onclick = generateChantImage;
+    btn.classList.remove('locked');
+  } else {
+    btn.textContent = '\uD83D\uDD12 画像生成はサブスクライバー限定';
+    btn.onclick = twitchLogin;
+    btn.classList.add('locked');
   }
 }
 checkAuth();
 
 // ── レート制限 ──
 function getRateWindow() { return authState.isSubscriber ? 3600000 : 86400000; } // サブスク:1時間, 一般:24時間
-function getImageRateWindow() { return authState.isSubscriber ? 3600000 : 86400000; }
-function getRateMax() { return authState.isSubscriber ? 50 : 2; }
-function getImageRateMax() { return authState.isSubscriber ? 30 : 3; }
+function getImageRateWindow() { return 86400000; } // 画像は常に24時間ウィンドウ
+function getRateMax() { return authState.isSubscriber ? 20 : 2; }
+function getImageRateMax() { return 5; } // サブスク限定、常に5
 
 function getRateLogs() {
   try { return JSON.parse(localStorage.getItem('rate_limit_log') || '[]'); } catch { return []; }
@@ -2223,6 +2251,10 @@ function updateRateInfo() {
 function updateImageRateInfo() {
   const el = document.getElementById('imageRateInfo');
   if (!el) return;
+  if (!authState.isSubscriber) {
+    el.textContent = '';
+    return;
+  }
   const logs = getActiveImageRateLogs();
   const max = getImageRateMax();
   const remaining = Math.max(0, max - logs.length);
@@ -2423,6 +2455,7 @@ function showChantOverlay(text, type, chantWords, evaluation, imageUrl) {
     }
     document.getElementById('chantOvActions').classList.add('visible');
     document.getElementById('chantCloseBtn').classList.add('visible');
+    updateImageGenButton();
     updateImageRateInfo();
     sfx.chantComplete(type || '召喚');
 
@@ -2499,6 +2532,7 @@ document.addEventListener('keydown', (e) => {
 // ── DALL-E 3 画像生成 ──
 async function generateChantImage() {
   if (!_lastChantOverlay) return;
+  if (!authState.isSubscriber) { twitchLogin(); return; }
 
   // 画像レート制限チェック
   if (getActiveImageRateLogs().length >= getImageRateMax()) {

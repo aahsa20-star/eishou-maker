@@ -22,25 +22,29 @@ export default async function handler(req, res) {
     }
   } catch {}
 
-  // Rate limit
+  // サブスクライバー限定
+  if (!isSubscriber) {
+    return res.status(403).json({ error: 'サブスクライバー限定機能です' });
+  }
+
+  // Rate limit（サブスクライバーのみ到達）
   const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || 'unknown';
   const limitKey = `image_${ip}`;
-  const limit = isSubscriber ? 30 : 3;
+  const limit = 5;
+  const window = 86400000; // 24時間
   const now = Date.now();
   const entry = rateLimit.get(limitKey);
   if (entry && now < entry.resetAt) {
     if (entry.count >= limit) {
       return res.status(429).json({
-        error: isSubscriber
-          ? '画像生成のレート制限中です。1時間に30回までです'
-          : '画像生成のレート制限中です。1時間に3回までです',
+        error: '画像生成のレート制限中です。1日に5回までです',
         limit,
         remaining: 0
       });
     }
     entry.count++;
   } else {
-    rateLimit.set(limitKey, { count: 1, resetAt: now + 3600000 });
+    rateLimit.set(limitKey, { count: 1, resetAt: now + window });
   }
 
   // 残り回数を計算
