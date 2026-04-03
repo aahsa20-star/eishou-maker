@@ -63,7 +63,13 @@ ${({
 - 「——」や「！」「よ」「せよ」など詠唱らしい語尾を使う
 - 単語の意味より語感・リズムを優先してよい
 - 日本語のみ
-- 余計な説明は一切不要。詠唱文のみ出力すること`,
+- 余計な説明は一切不要
+- 詠唱文を生成した後、改行して以下の形式で評価も出力すること：
+EVAL:{"element":"闇","power":4,"rarity":"レア"}
+elementは次から1つ：闇・光・炎・氷・雷・風・土・無・混沌・神聖
+powerは1〜5の整数（詠唱の力強さ・厨二度）
+rarityは次から1つ：コモン・アンコモン・レア・スーパーレア・レジェンド
+EVAL:以降はJSONのみ出力すること`,
         messages: [{ role: 'user', content: `以下の単語を使って詠唱を生成してください：\n${sanitized.join('、')}` }]
       })
     });
@@ -73,7 +79,15 @@ ${({
       return res.status(502).json({ error: data.error.message || 'Anthropic APIエラー' });
     }
 
-    return res.status(200).json({ text: data.content[0].text });
+    const raw = data.content[0].text;
+    const evalMatch = raw.match(/EVAL:(\{.+\})/);
+    let chantText = raw;
+    let evaluation = null;
+    if (evalMatch) {
+      chantText = raw.split('\nEVAL:')[0].trim();
+      try { evaluation = JSON.parse(evalMatch[1]); } catch {}
+    }
+    return res.status(200).json({ text: chantText, evaluation });
   } catch (e) {
     return res.status(500).json({ error: '詠唱の生成に失敗しました' });
   }

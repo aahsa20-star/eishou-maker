@@ -665,6 +665,34 @@ body {
 }
 .result-preview.visible { display: block; }
 
+/* Evaluation */
+.eval-area {
+  display: none;
+  margin-top: 16px;
+  padding: 12px 16px;
+  background: rgba(14,12,9,0.6);
+  border: 1px solid var(--border);
+  text-align: center;
+}
+.eval-area.visible { display: flex; align-items: center; justify-content: center; gap: 20px; }
+.eval-element {
+  font-size: 16px;
+  font-weight: 700;
+  padding: 4px 14px;
+  border-radius: 2px;
+  letter-spacing: 0.1em;
+}
+.eval-power {
+  font-size: 18px;
+  letter-spacing: 2px;
+  color: var(--gold-bright);
+}
+.eval-rarity {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+}
+
 .result-text {
   font-family: 'Yuji Syuku', serif;
   font-size: 22px;
@@ -849,6 +877,7 @@ body {
 
 <div class="result-preview" id="resultPreview">
   <div class="result-text" id="resultText"></div>
+  <div class="eval-area" id="evalArea"></div>
   <div class="result-actions">
     <button class="btn-copy" id="copyBtn" onclick="copyChant()">コピー</button>
     <button class="btn-copy" onclick="saveCurrentChantImage()">画像保存</button>
@@ -1446,6 +1475,29 @@ async function runCountdown(type) {
   labelEl.style.opacity = '0';
 }
 
+const ELEMENT_COLORS = {
+  '闇': '#6A3A8A', '光': '#C8A050', '炎': '#C84B4B', '氷': '#4B8AC8', '雷': '#C8C04B',
+  '風': '#4BC8A0', '土': '#8A6A3A', '無': '#888888', '混沌': '#8A3A6A', '神聖': '#C8B87A'
+};
+const RARITY_COLORS = {
+  'コモン': '#888888', 'アンコモン': '#4B8A4B', 'レア': '#4B6AC8',
+  'スーパーレア': '#8A4BC8', 'レジェンド': '#C8A050'
+};
+
+let currentEvaluation = null;
+
+function showEvaluation(evaluation) {
+  const el = document.getElementById('evalArea');
+  currentEvaluation = evaluation;
+  if (!evaluation) { el.classList.remove('visible'); el.innerHTML = ''; return; }
+  const elemColor = ELEMENT_COLORS[evaluation.element] || '#888';
+  const rarColor = RARITY_COLORS[evaluation.rarity] || '#888';
+  const power = evaluation.power || 0;
+  const stars = '★'.repeat(power) + '☆'.repeat(5 - power);
+  el.innerHTML = `<span class="eval-element" style="background:${elemColor};color:#fff;">${evaluation.element}</span><span class="eval-power">${stars}</span><span class="eval-rarity" style="color:${rarColor}">${evaluation.rarity}</span>`;
+  el.classList.add('visible');
+}
+
 function showResultWithTyping(text) {
   const container = document.getElementById('resultText');
   container.innerHTML = '';
@@ -1511,15 +1563,17 @@ async function generate() {
     const data = await res.json();
     if (data.error) throw new Error(data.error);
     const text = data.text;
+    const evaluation = data.evaluation || null;
 
     showResultWithTyping(text);
+    showEvaluation(evaluation);
     document.getElementById('resultPreview').classList.add('visible');
 
     const ts = Date.now();
-    const chantMsg = { text, timestamp: ts, type: selectedType, words: [...selected] };
+    const chantMsg = { text, timestamp: ts, type: selectedType, words: [...selected], evaluation };
     localStorage.setItem('chant_data', JSON.stringify(chantMsg));
     overlayChannel.postMessage({ key: 'chant_data', data: chantMsg });
-    saveHistory({ text, words: [...selected], type: selectedType, timestamp: ts });
+    saveHistory({ text, words: [...selected], type: selectedType, timestamp: ts, evaluation });
     addRateLog();
 
     if (speechEnabled && 'speechSynthesis' in window) {
@@ -1556,7 +1610,7 @@ const IMAGE_TYPE_COLORS = {
   '滅亡': '#C84B4B', '覚醒': '#7AB87A'
 };
 
-async function saveChantImage(chantText, words, type) {
+async function saveChantImage(chantText, words, type, evaluation) {
   const typeColor = IMAGE_TYPE_COLORS[type] || '#C8A050';
   const canvasEl = document.createElement('div');
   canvasEl.style.cssText = `
@@ -1568,6 +1622,17 @@ async function saveChantImage(chantText, words, type) {
     font-family: 'Zen Kaku Gothic New', sans-serif;
   `;
   const linesHtml = chantText.split(/(?<=[。！\n])/).map(s => s.trim()).filter(Boolean).join('<br>');
+  let evalHtml = '';
+  if (evaluation) {
+    const ec = ELEMENT_COLORS[evaluation.element] || '#888';
+    const rc = RARITY_COLORS[evaluation.rarity] || '#888';
+    const stars = '★'.repeat(evaluation.power || 0) + '☆'.repeat(5 - (evaluation.power || 0));
+    evalHtml = `<div style="padding:8px 48px 16px;display:flex;align-items:center;justify-content:center;gap:16px;font-size:13px;">
+      <span style="background:${ec};color:#fff;padding:3px 10px;font-weight:700;letter-spacing:0.1em;">${evaluation.element}</span>
+      <span style="color:#C8A050;font-size:16px;letter-spacing:2px;">${stars}</span>
+      <span style="color:${rc};font-weight:600;letter-spacing:0.1em;">${evaluation.rarity}</span>
+    </div>`;
+  }
   canvasEl.innerHTML = `
     <div style="width:800px;border:1px solid rgba(160,120,48,0.6);background:rgba(19,17,13,0.98);position:relative;">
       <div style="position:absolute;top:-1px;left:-1px;width:20px;height:20px;border-top:2px solid #C8A050;border-left:2px solid #C8A050;"></div>
@@ -1579,7 +1644,8 @@ async function saveChantImage(chantText, words, type) {
       </div>
       <div style="padding:48px 48px 32px;font-family:'Yuji Syuku',serif;font-size:28px;line-height:2.2;color:#E8DFC8;text-align:center;letter-spacing:0.05em;">${linesHtml}</div>
       <div style="margin:0 48px;height:1px;background:rgba(160,120,48,0.2);"></div>
-      <div style="padding:16px 48px 24px;font-size:13px;color:rgba(160,120,48,0.6);text-align:center;letter-spacing:0.15em;">${words.join('　')}</div>
+      <div style="padding:16px 48px 8px;font-size:13px;color:rgba(160,120,48,0.6);text-align:center;letter-spacing:0.15em;">${words.join('　')}</div>
+      ${evalHtml}
     </div>
     <div style="position:absolute;bottom:20px;right:24px;font-size:12px;color:rgba(160,120,48,0.4);letter-spacing:0.1em;">詠唱メーカー</div>
   `;
@@ -1599,13 +1665,13 @@ async function saveChantImage(chantText, words, type) {
 function saveCurrentChantImage() {
   const text = document.getElementById('resultText').textContent;
   if (!text) return;
-  saveChantImage(text, [...selected], selectedType);
+  saveChantImage(text, [...selected], selectedType, currentEvaluation);
 }
 
 function saveHistoryChantImage(i) {
   const entry = getHistory()[i];
   if (!entry) return;
-  saveChantImage(entry.text, entry.words || [], entry.type || '召喚');
+  saveChantImage(entry.text, entry.words || [], entry.type || '召喚', entry.evaluation || null);
 }
 
 function deleteHistory(i) {

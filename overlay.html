@@ -184,6 +184,34 @@ body {
   transition: opacity 0.4s;
 }
 .chant-words.visible { opacity: 1; }
+
+.chant-eval {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 8px 0 4px;
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+.chant-eval.visible { opacity: 1; }
+.chant-eval-element {
+  font-size: 14px;
+  font-weight: 700;
+  padding: 2px 10px;
+  color: #fff;
+  letter-spacing: 0.1em;
+}
+.chant-eval-power {
+  font-size: 16px;
+  color: var(--gold-bright);
+  letter-spacing: 2px;
+}
+.chant-eval-rarity {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+}
 .chant-words span { margin: 0 6px; }
 
 /* History Sidebar */
@@ -410,6 +438,7 @@ body {
     <div class="chant-body" id="chantBody"></div>
     <hr class="chant-divider" id="chantDivider">
     <div class="chant-words" id="chantWords"></div>
+    <div class="chant-eval" id="chantEval"></div>
   </div>
 </div>
 
@@ -625,7 +654,16 @@ setTimeout(updateGuide, 300);
 // Chant display
 let chantTimeout = null;
 
-function showChant(text, type, words) {
+const OV_ELEMENT_COLORS = {
+  '闇': '#6A3A8A', '光': '#C8A050', '炎': '#C84B4B', '氷': '#4B8AC8', '雷': '#C8C04B',
+  '風': '#4BC8A0', '土': '#8A6A3A', '無': '#888888', '混沌': '#8A3A6A', '神聖': '#C8B87A'
+};
+const OV_RARITY_COLORS = {
+  'コモン': '#888888', 'アンコモン': '#4B8A4B', 'レア': '#4B6AC8',
+  'スーパーレア': '#8A4BC8', 'レジェンド': '#C8A050'
+};
+
+function showChant(text, type, words, evaluation) {
   if (chantTimeout) { clearTimeout(chantTimeout); chantTimeout = null; }
 
   chantActive = true;
@@ -641,11 +679,14 @@ function showChant(text, type, words) {
   const typeEl = document.getElementById('chantType');
   const divider = document.getElementById('chantDivider');
   const wordsEl = document.getElementById('chantWords');
+  const evalEl = document.getElementById('chantEval');
 
   // Reset
   body.innerHTML = '';
   divider.classList.remove('visible');
   wordsEl.classList.remove('visible');
+  evalEl.classList.remove('visible');
+  evalEl.innerHTML = '';
   typeEl.textContent = type || '召喚';
   typeEl.style.color = cfg.color;
 
@@ -722,6 +763,13 @@ function showChant(text, type, words) {
   setTimeout(() => {
     divider.classList.add('visible');
     wordsEl.classList.add('visible');
+    if (evaluation) {
+      const ec = OV_ELEMENT_COLORS[evaluation.element] || '#888';
+      const rc = OV_RARITY_COLORS[evaluation.rarity] || '#888';
+      const stars = '★'.repeat(evaluation.power || 0) + '☆'.repeat(5 - (evaluation.power || 0));
+      evalEl.innerHTML = `<span class="chant-eval-element" style="background:${ec}">${evaluation.element}</span><span class="chant-eval-power">${stars}</span><span class="chant-eval-rarity" style="color:${rc}">${evaluation.rarity}</span>`;
+      evalEl.classList.add('visible');
+    }
     sfx.chantComplete(type || '召喚');
   }, totalLineTime);
 
@@ -886,7 +934,7 @@ function handleOverlayMessage(key, value) {
       const data = typeof value === 'object' ? value : JSON.parse(value);
       if (data.text && data.timestamp !== lastChantTs) {
         lastChantTs = data.timestamp;
-        showChant(data.text, data.type, data.words);
+        showChant(data.text, data.type, data.words, data.evaluation);
       }
     } catch (err) { console.error('chant_data処理エラー:', err); }
   }
