@@ -14,9 +14,10 @@ Twitch配信向けの厨二病詠唱テキスト生成ツール。
 
 ```
 index.html      - コントロールパネル（配信者が操作する画面）
-overlay.html    - OBSブラウザソース用オーバーレイ（1920x1080）
 api/chant.js    - Vercel Serverless Function（Claude API呼び出し）
-vercel.json     - Vercel設定（メモリ128MB、タイムアウト15秒）
+api/image.js    - Vercel Serverless Function（DALL-E 3画像生成）
+api/auth/       - Twitch OAuth認証（callback.js / verify.js / logout.js）
+vercel.json     - Vercel設定
 ```
 
 ## 技術スタック
@@ -43,24 +44,19 @@ vercel.json     - Vercel設定（メモリ128MB、タイムアウト15秒）
 - 効果音ON/OFF + ボリュームスライダー
 - レート制限表示（5回/時間）
 
-### overlay.html（OBSオーバーレイ）
-- 詠唱ウィンドウ（筆走りclip-pathアニメーション）
-- タイプラベルズーム演出
-- 各行の筆走り出現 + 光のトレイル
-- 履歴サイドバー（最新5件）
-- 参加ガイド表示（トグル可能）
-- 効果音（localStorage経由でindex.htmlと同期）
-
 ### api/chant.js（サーバーサイド）
-- IPベースのレート制限（5回/時間）
+- Upstash Redisによるレート制限（一般2回/日、サブスク20回/時）
 - タイプ別システムプロンプト（トーン指定）
 - 単語サニタイズ（20文字制限、最大20個）
+
+### api/image.js（サーバーサイド）
+- サブスクライバー限定（5回/日）
+- Claude APIで詠唱文→英語プロンプト変換 → DALL-E 3で画像生成
 
 ## 効果音（Web Audio API）
 
 外部ファイルなし、全てオシレーター合成。
 
-### index.html側
 | トリガー | 音 |
 |---|---|
 | `!word`受信 | 高音きらめき（ランダムピッチ） |
@@ -68,16 +64,6 @@ vercel.json     - Vercel設定（メモリ128MB、タイムアウト15秒）
 | 単語削除 | 下降トーン |
 | 詠唱生成 | 低音ドローン上昇（タイプ別音程） |
 | コピー | 確認音（2トーン） |
-
-### overlay.html側
-| トリガー | 音 |
-|---|---|
-| ウィンドウ出現 | 低音ドローン上昇 |
-| 行テキスト出現 | 段階チャイム（ピッチ上昇） |
-| 全行表示完了 | 衝撃波ブーム |
-| フェードアウト | 溶解音 |
-
-BGMは未実装。
 
 ## デザイン経緯
 
@@ -107,6 +93,4 @@ BGMは未実装。
 
 - Vercelツールバーは`vercel.json`設定では消せない → CSSで`display:none`
 - `vercel.json`の`toolbar`プロパティはスキーマエラーになる
-- overlay↔index間の通信はlocalStorage + storageイベントのみ
-- レート制限はサーバー側（api/chant.js）とクライアント側（index.html）の両方で管理
-- OBSブラウザソースではAudioContext自動再生制限なし
+- レート制限はサーバー側（Upstash Redis）とクライアント側（index.html）の両方で管理
