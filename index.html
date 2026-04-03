@@ -889,9 +889,10 @@ body {
   pointer-events: none;
   z-index: 1000;
   opacity: 0;
-  transition: opacity 0.6s;
+  visibility: hidden;
+  transition: opacity 0.6s, visibility 0.6s;
 }
-.chant-overlay-bg.visible { opacity: 1; }
+.chant-overlay-bg.visible { opacity: 1; visibility: visible; }
 
 .chant-deco-line {
   position: fixed;
@@ -903,9 +904,10 @@ body {
   align-items: center;
   gap: 16px;
   opacity: 0;
-  transition: opacity 0.8s;
+  visibility: hidden;
+  transition: opacity 0.8s, visibility 0.8s;
 }
-.chant-deco-line.visible { opacity: 1; }
+.chant-deco-line.visible { opacity: 1; visibility: visible; }
 .chant-deco-line-bar {
   width: 120px;
   height: 1px;
@@ -932,9 +934,10 @@ body {
   padding: 0;
   z-index: 1001;
   clip-path: inset(0 0 100% 0);
+  visibility: hidden;
   transition: clip-path 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
-.chant-window.visible { clip-path: inset(0 0 0% 0); }
+.chant-window.visible { clip-path: inset(0 0 0% 0); visibility: visible; }
 .chant-window::before {
   content: '';
   position: absolute;
@@ -1061,10 +1064,11 @@ body {
   z-index: 1002;
   pointer-events: none;
   opacity: 0;
-  transition: opacity 0.6s, transform 0.6s;
+  visibility: hidden;
+  transition: opacity 0.6s, transform 0.6s, visibility 0.6s;
   transform: translateY(12px);
 }
-.ov-info-guide.visible { opacity: 1; transform: translateY(0); }
+.ov-info-guide.visible { opacity: 1; visibility: visible; transform: translateY(0); }
 .ov-info-guide-title {
   font-size: 12px;
   font-weight: 500;
@@ -1089,9 +1093,10 @@ body {
   z-index: 1002;
   pointer-events: none;
   opacity: 0;
-  transition: opacity 0.6s;
+  visibility: hidden;
+  transition: opacity 0.6s, visibility 0.6s;
 }
-.ov-info-vote.visible { opacity: 1; }
+.ov-info-vote.visible { opacity: 1; visibility: visible; }
 .ov-info-vote-title {
   font-size: 12px;
   font-weight: 500;
@@ -1115,10 +1120,11 @@ body {
   z-index: 1002;
   pointer-events: none;
   opacity: 0;
-  transition: opacity 0.6s;
+  visibility: hidden;
+  transition: opacity 0.6s, visibility 0.6s;
   text-align: center;
 }
-.ov-info-odai.visible { opacity: 1; }
+.ov-info-odai.visible { opacity: 1; visibility: visible; }
 .ov-info-odai-label {
   font-size: 12px;
   font-weight: 500;
@@ -1141,10 +1147,11 @@ body {
   z-index: 1002;
   pointer-events: none;
   opacity: 0;
-  transition: opacity 0.6s;
+  visibility: hidden;
+  transition: opacity 0.6s, visibility 0.6s;
   text-align: right;
 }
-.ov-info-chain.visible { opacity: 1; }
+.ov-info-chain.visible { opacity: 1; visibility: visible; }
 .ov-info-chain-label {
   font-size: 12px;
   font-weight: 500;
@@ -1166,9 +1173,10 @@ body {
   z-index: 1002;
   pointer-events: none;
   opacity: 0;
-  transition: opacity 0.6s;
+  visibility: hidden;
+  transition: opacity 0.6s, visibility 0.6s;
 }
-.ov-info-mvp.visible { opacity: 1; }
+.ov-info-mvp.visible { opacity: 1; visibility: visible; }
 .ov-info-mvp-title {
   font-size: 12px;
   font-weight: 500;
