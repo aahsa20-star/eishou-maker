@@ -61,7 +61,7 @@ ${({
 以下のルールを守ること：
 - 3〜5文程度
 - 1文は40文字以内を目安にすること
-- 各文の末尾には必ず改行（\\n）を入れること
+- 各文は改行で区切ること（1行に1文）
 - 「——」や「！」「よ」「せよ」など詠唱らしい語尾を使う
 - 単語の意味より語感・リズムを優先してよい
 - 日本語のみ
@@ -89,6 +89,8 @@ EVAL:以降はJSONのみ出力すること`,
       chantText = raw.split('\nEVAL:')[0].trim();
       try { evaluation = JSON.parse(evalMatch[1]); } catch {}
     }
+    // リテラル \n を実際の改行に変換
+    chantText = chantText.replace(/\\n/g, '\n');
     return res.status(200).json({ text: chantText, evaluation });
   } catch (e) {
     return res.status(500).json({ error: '詠唱の生成に失敗しました' });

@@ -2118,7 +2118,7 @@ function showChantOverlay(text, type, chantWords, evaluation) {
     { fontSize: '16px', opacity: 1, offset: 1 }
   ], { duration: 400, easing: 'ease-in', fill: 'forwards', delay: 300 });
 
-  const lines = text.split('\n').map(s => s.trim()).filter(Boolean);
+  const lines = text.split(/\\n|\n/).map(s => s.trim()).filter(Boolean);
   const lineEls = lines.map(line => {
     const el = document.createElement('div');
     el.className = 'chant-line';
@@ -2318,7 +2318,7 @@ function showEvaluation(evaluation) {
 function showResultWithTyping(text) {
   const container = document.getElementById('resultText');
   container.innerHTML = '';
-  const lines = text.split('\n').map(s => s.trim()).filter(Boolean);
+  const lines = text.split(/\\n|\n/).map(s => s.trim()).filter(Boolean);
   const charDelay = 50;
   let cumulativeStart = 0;
 
@@ -2436,7 +2436,7 @@ async function saveChantImage(chantText, words, type, evaluation) {
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     font-family: 'Zen Kaku Gothic New', sans-serif;
   `;
-  const linesHtml = chantText.split('\n').map(s => s.trim()).filter(Boolean).join('<br>');
+  const linesHtml = chantText.split(/\\n|\n/).map(s => s.trim()).filter(Boolean).join('<br>');
   let evalHtml = '';
   if (evaluation) {
     const ec = ELEMENT_COLORS[evaluation.element] || '#888';
