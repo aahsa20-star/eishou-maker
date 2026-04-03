@@ -614,6 +614,20 @@ body {
   margin-left: auto;
 }
 .odai-clear-btn:hover { border-color: #7A3030; color: #7A3030; }
+.odai-chat-candidates { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.odai-chat-candidates:empty { display: none; }
+.odai-chat-btn {
+  background: rgba(90,138,128,0.10);
+  border: 1px solid var(--border);
+  color: var(--fg-dim);
+  font-size: 13px;
+  padding: 4px 12px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+.odai-chat-btn:hover { border-color: var(--teal); color: var(--teal); }
+.odai-chat-btn .odai-chat-user { font-size: 10px; color: var(--fg-dim); opacity: 0.6; margin-left: 4px; }
 
 /* Hall of Fame */
 .hof-area {
@@ -883,11 +897,12 @@ body {
 
 <div class="odai-area">
   <div class="odai-header">
-    <div class="panel-title gold">お題 <span style="font-size:12px;color:var(--fg-dim);font-weight:normal;margin-left:8px">任意 / overlayに表示</span></div>
+    <div class="panel-title gold">お題 <span style="font-size:12px;color:var(--fg-dim);font-weight:normal;margin-left:8px">任意 / overlayに表示 / !odai で視聴者から募集可</span></div>
     <button class="odai-clear-btn" onclick="clearOdai()">お題をクリア</button>
   </div>
   <div class="odai-current" id="odaiCurrent"></div>
   <div class="odai-presets" id="odaiPresets"></div>
+  <div class="odai-chat-candidates" id="odaiChatCandidates"></div>
   <div class="odai-custom">
     <input id="odaiCustomInput" placeholder="カスタムお題を入力..." onkeydown="if(event.key==='Enter')adoptCustomOdai()">
     <button onclick="adoptCustomOdai()">採用</button>
@@ -1199,6 +1214,11 @@ function connect(channel) {
         const num = parseInt(voteMatch[1]);
         addVote(num, username);
       }
+      const odaiMatch = line.match(/PRIVMSG\s+#\S+\s+:!odai\s+(.+)/i);
+      if (odaiMatch) {
+        const text = odaiMatch[1].trim().slice(0, 20);
+        if (text) addOdaiFromChat(text, username);
+      }
     }
   };
   ws.onclose = () => { disconnect(); };
@@ -1362,6 +1382,38 @@ function syncOdai() {
 }
 
 initOdaiPresets();
+
+// ── お題チャット募集 ──
+let odaiChatCandidates = []; // { text, username }
+
+function addOdaiFromChat(text, username) {
+  // 重複チェック（同じテキスト）
+  if (odaiChatCandidates.some(c => c.text === text)) return;
+  odaiChatCandidates.push({ text, username });
+  if (odaiChatCandidates.length > 20) odaiChatCandidates.shift();
+  renderOdaiChatCandidates();
+  sfx.wordReceived();
+}
+
+function renderOdaiChatCandidates() {
+  const container = document.getElementById('odaiChatCandidates');
+  container.innerHTML = odaiChatCandidates.map((c, i) =>
+    `<button class="odai-chat-btn" onclick="adoptChatOdai(${i})">${esc(c.text)}<span class="odai-chat-user">@${esc(c.username)}</span></button>`
+  ).join('');
+}
+
+function adoptChatOdai(index) {
+  const candidate = odaiChatCandidates[index];
+  if (!candidate) return;
+  currentOdai = candidate.text;
+  document.getElementById('odaiCurrent').textContent = currentOdai;
+  // プリセットの採用中マーク解除
+  document.querySelectorAll('.odai-preset-btn').forEach((btn, i) => {
+    btn.classList.remove('adopted');
+    btn.textContent = ODAI_PRESETS[i];
+  });
+  syncOdai();
+}
 
 // ── MVP機能 ──
 function getMvp() {
@@ -1587,6 +1639,7 @@ async function runCountdown(type) {
   await sleep(500);
   for (const num of ['3', '2', '1']) {
     numEl.textContent = num;
+    sfx.wordSelected();
     numEl.animate([
       { clipPath: 'inset(0 0 100% 0)', opacity: 0.8 },
       { clipPath: 'inset(0 0 0% 0)', opacity: 1 }
@@ -1598,6 +1651,7 @@ async function runCountdown(type) {
     ], { duration: 300, fill: 'forwards' });
     await sleep(300);
   }
+  sfx.ritualStart(type);
   labelEl.animate([
     { clipPath: 'inset(0 100% 0 0)', opacity: 0.8 },
     { clipPath: 'inset(0 0% 0 0)', opacity: 1 }
