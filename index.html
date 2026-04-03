@@ -1056,6 +1056,46 @@ body {
   letter-spacing: 0.1em;
 }
 
+.chant-close-btn {
+  position: absolute;
+  top: 8px; right: 12px;
+  background: none;
+  border: none;
+  color: var(--fg-dim);
+  font-size: 22px;
+  cursor: pointer;
+  z-index: 10;
+  padding: 4px 8px;
+  line-height: 1;
+  font-family: inherit;
+  opacity: 0;
+  transition: opacity 0.4s, color 0.2s;
+}
+.chant-close-btn.visible { opacity: 1; }
+.chant-close-btn:hover { color: var(--fg-base); }
+
+.chant-ov-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  padding: 12px 0 4px;
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+.chant-ov-actions.visible { opacity: 1; }
+.chant-ov-actions button {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--fg-dim);
+  font-size: 12px;
+  padding: 5px 14px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+.chant-ov-actions button:hover { border-color: var(--border-gold); color: var(--gold); }
+.chant-ov-actions button.copied { border-color: var(--teal); color: var(--teal); }
+
 /* Chant overlay info displays */
 .ov-info-guide {
   position: fixed;
@@ -1287,6 +1327,7 @@ body {
   <span class="chant-deco-line-bar"></span>
 </div>
 <div class="chant-window" id="chantWindow">
+  <button class="chant-close-btn" id="chantCloseBtn" onclick="closeChantOverlay()">&times;</button>
   <div class="chant-header">
     <span class="chant-header-label">詠唱システム</span>
     <span class="chant-header-line"></span>
@@ -1297,6 +1338,10 @@ body {
     <hr class="chant-ov-divider" id="chantDivider">
     <div class="chant-ov-words" id="chantOvWords"></div>
     <div class="chant-ov-eval" id="chantOvEval"></div>
+    <div class="chant-ov-actions" id="chantOvActions">
+      <button onclick="copyChantFromOverlay(this)">コピー</button>
+      <button onclick="saveChantImageFromOverlay()">画像保存</button>
+    </div>
   </div>
 </div>
 <div class="ov-info-odai" id="ovInfoOdai"></div>
@@ -1980,7 +2025,6 @@ const CHANT_TYPE_CONFIG = {
   '覚醒': { color: '#5A7A5A' },
 };
 
-let chantOverlayTimeout = null;
 let chantOverlayActive = false;
 
 function updateOverlayInfoDisplays() {
@@ -2044,7 +2088,8 @@ function updateOverlayInfoDisplays() {
 }
 
 function showChantOverlay(text, type, chantWords, evaluation) {
-  if (chantOverlayTimeout) { clearTimeout(chantOverlayTimeout); chantOverlayTimeout = null; }
+  // 前回の演出が残っていたら閉じる
+  if (chantOverlayActive) closeChantOverlay();
 
   chantOverlayActive = true;
   const cfg = CHANT_TYPE_CONFIG[type] || CHANT_TYPE_CONFIG['召喚'];
@@ -2132,6 +2177,7 @@ function showChantOverlay(text, type, chantWords, evaluation) {
   // 全行の表示完了時間を計算
   const totalLineTime = cumulativeStart + 800;
 
+  // 全行表示完了後にフッター・×ボタン・アクションを表示
   setTimeout(() => {
     divider.classList.add('visible');
     wordsEl.classList.add('visible');
@@ -2142,34 +2188,67 @@ function showChantOverlay(text, type, chantWords, evaluation) {
       evalEl.innerHTML = `<span class="chant-ov-eval-element" style="background:${ec}">${evaluation.element}</span><span class="chant-ov-eval-power">${stars}</span><span class="chant-ov-eval-rarity" style="color:${rc}">${evaluation.rarity}</span>`;
       evalEl.classList.add('visible');
     }
+    document.getElementById('chantOvActions').classList.add('visible');
+    document.getElementById('chantCloseBtn').classList.add('visible');
     sfx.chantComplete(type || '召喚');
+
+    // 現在の詠唱情報を保持（コピー・画像保存用）
+    _lastChantOverlay = { text, type, words: chantWords, evaluation };
   }, totalLineTime);
-
-  // Hold then fade out
-  const holdTime = totalLineTime + 5000;
-  chantOverlayTimeout = setTimeout(() => {
-    win.classList.remove('visible');
-    deco.classList.remove('visible');
-    bg.classList.remove('visible');
-    sfx.chantFade();
-
-    // Hide info displays
-    document.getElementById('ovInfoGuide').classList.remove('visible');
-    document.getElementById('ovInfoOdai').classList.remove('visible');
-    document.getElementById('ovInfoVote').classList.remove('visible');
-    document.getElementById('ovInfoMvp').classList.remove('visible');
-    document.getElementById('ovInfoChain').classList.remove('visible');
-
-    chantOverlayTimeout = setTimeout(() => {
-      body.innerHTML = '';
-      divider.classList.remove('visible');
-      wordsEl.classList.remove('visible');
-      lineEls.forEach(el => { el.style.opacity = '0'; });
-      chantOverlayActive = false;
-      chantOverlayTimeout = null;
-    }, 700);
-  }, holdTime);
 }
+
+let _lastChantOverlay = null;
+
+function closeChantOverlay() {
+  const win = document.getElementById('chantWindow');
+  const deco = document.getElementById('chantDecoLine');
+  const bg = document.getElementById('chantOverlayBg');
+
+  win.classList.remove('visible');
+  deco.classList.remove('visible');
+  bg.classList.remove('visible');
+  document.getElementById('chantCloseBtn').classList.remove('visible');
+  document.getElementById('chantOvActions').classList.remove('visible');
+  sfx.chantFade();
+
+  // Hide info displays
+  document.getElementById('ovInfoGuide').classList.remove('visible');
+  document.getElementById('ovInfoOdai').classList.remove('visible');
+  document.getElementById('ovInfoVote').classList.remove('visible');
+  document.getElementById('ovInfoMvp').classList.remove('visible');
+  document.getElementById('ovInfoChain').classList.remove('visible');
+
+  setTimeout(() => {
+    document.getElementById('chantBody').innerHTML = '';
+    document.getElementById('chantDivider').classList.remove('visible');
+    document.getElementById('chantOvWords').classList.remove('visible');
+    document.getElementById('chantOvEval').classList.remove('visible');
+    chantOverlayActive = false;
+  }, 700);
+}
+
+function copyChantFromOverlay(btn) {
+  if (!_lastChantOverlay) return;
+  sfx.uiConfirm();
+  navigator.clipboard.writeText(_lastChantOverlay.text).then(() => {
+    btn.textContent = 'コピー済';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'コピー'; btn.classList.remove('copied'); }, 1500);
+  });
+}
+
+function saveChantImageFromOverlay() {
+  if (!_lastChantOverlay) return;
+  const { text, type, words, evaluation } = _lastChantOverlay;
+  saveChantImage(text, words || [], type || '召喚', evaluation || null);
+}
+
+// ESCキーで閉じる
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && chantOverlayActive) {
+    closeChantOverlay();
+  }
+});
 
 async function runCountdown(type) {
   const overlay = document.getElementById('countdownOverlay');
