@@ -555,6 +555,7 @@ body {
 .type-btn[data-type="封印"] { border-color: rgba(106,90,138,0.3); }
 .type-btn[data-type="滅亡"] { border-color: rgba(122,48,48,0.3); }
 .type-btn[data-type="覚醒"] { border-color: rgba(90,122,90,0.3); }
+.type-btn[data-type="自己紹介"] { border-color: rgba(180,140,200,0.3); }
 .type-btn.active {
   background: rgba(160,120,48,0.2);
   border: 2px solid #C8A050;
@@ -566,6 +567,35 @@ body {
 .type-btn.active[data-type="封印"] { border: 2px solid #6A5A8A; color: #8A7AA0; background: rgba(106,90,138,0.12); text-shadow: 0 0 10px rgba(106,90,138,0.5); box-shadow: 0 0 12px rgba(106,90,138,0.25), inset 0 0 15px rgba(106,90,138,0.05); }
 .type-btn.active[data-type="滅亡"] { border: 2px solid #7A3030; color: #A05050; background: rgba(122,48,48,0.12); text-shadow: 0 0 10px rgba(122,48,48,0.5); box-shadow: 0 0 12px rgba(122,48,48,0.25), inset 0 0 15px rgba(122,48,48,0.05); }
 .type-btn.active[data-type="覚醒"] { border: 2px solid #5A7A5A; color: #7A9A7A; background: rgba(90,122,90,0.12); text-shadow: 0 0 10px rgba(90,122,90,0.5); box-shadow: 0 0 12px rgba(90,122,90,0.25), inset 0 0 15px rgba(90,122,90,0.05); }
+.type-btn.active[data-type="自己紹介"] { border: 2px solid #B48CC8; color: #B48CC8; background: rgba(180,140,200,0.12); text-shadow: 0 0 10px rgba(180,140,200,0.5); box-shadow: 0 0 12px rgba(180,140,200,0.25), inset 0 0 15px rgba(180,140,200,0.05); }
+#profileForm {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.profile-field label {
+  display: block;
+  font-size: 13px;
+  color: var(--fg-dim);
+  margin-bottom: 4px;
+  letter-spacing: 0.05em;
+}
+.profile-field input {
+  width: 100%;
+  background: var(--bg-input);
+  border: 1px solid rgba(180,140,200,0.4);
+  color: var(--fg-base);
+  padding: 8px 10px;
+  border-radius: 0;
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.profile-field input:focus {
+  border-color: #B48CC8;
+  box-shadow: 0 0 8px rgba(180,140,200,0.2);
+}
 .controls-row {
   display: flex;
   gap: 6px;
@@ -1676,9 +1706,29 @@ footer a:hover { color: var(--gold); }
     <button class="type-btn" data-type="封印" onclick="selectType(this)">封印</button>
     <button class="type-btn" data-type="滅亡" onclick="selectType(this)">滅亡</button>
     <button class="type-btn" data-type="覚醒" onclick="selectType(this)">覚醒</button>
+    <button class="type-btn" data-type="自己紹介" onclick="selectType(this)">自己紹介</button>
   </div>
 
-  <div class="selected-area">
+  <div id="profileForm" style="display:none;">
+    <div class="profile-field">
+      <label>名前・活動名</label>
+      <input type="text" id="profileName" placeholder="例）脱皿アキ" maxlength="30">
+    </div>
+    <div class="profile-field">
+      <label>活動内容</label>
+      <input type="text" id="profileActivity" placeholder="例）Twitch配信、ゲーム実況" maxlength="60">
+    </div>
+    <div class="profile-field">
+      <label>得意なこと・強み</label>
+      <input type="text" id="profileStrength" placeholder="例）筋トレ、株投資、ゲーム音楽制作" maxlength="60">
+    </div>
+    <div class="profile-field">
+      <label>好きなもの・キーワード</label>
+      <input type="text" id="profileKeywords" placeholder="例）SF6、マリサ、爆走ランデブー" maxlength="60">
+    </div>
+  </div>
+
+  <div class="selected-area" id="selectedArea">
     <div class="panel-title teal" style="font-size:14px;">選ばれし言霊（並びを定めよ）</div>
     <div class="selected-words" id="selectedWords">
       <span class="placeholder-text">言霊よ、集え...</span>
@@ -2914,7 +2964,7 @@ async function runCountdown(type) {
   const labelEl = document.getElementById('countdownLabel');
   const typeColors = {
     '召喚': '#C8A050', '解放': '#7AB8B0', '封印': '#8A7AA0',
-    '滅亡': '#A05050', '覚醒': '#7A9A7A'
+    '滅亡': '#A05050', '覚醒': '#7A9A7A', '自己紹介': '#B48CC8'
   };
   const color = typeColors[type] || '#C8A050';
   numEl.style.color = color;
@@ -3013,8 +3063,15 @@ function showResultWithTyping(text) {
 }
 
 async function generate() {
-  console.log('[generate] called. selected:', selected.length, 'rateLogs:', getActiveRateLogs().length, '/', getRateMax());
-  if (selected.length === 0) { alert('単語を選択してください'); return; }
+  const isIntro = selectedType === '自己紹介';
+  console.log('[generate] called. selected:', selected.length, 'type:', selectedType, 'rateLogs:', getActiveRateLogs().length, '/', getRateMax());
+
+  if (isIntro) {
+    const pName = document.getElementById('profileName').value.trim();
+    if (!pName) { alert('名前を入力してください'); return; }
+  } else {
+    if (selected.length === 0) { alert('単語を選択してください'); return; }
+  }
   if (getActiveRateLogs().length >= getRateMax()) { updateRateInfo(); return; }
 
   const btn = document.getElementById('generateBtn');
@@ -3033,11 +3090,24 @@ async function generate() {
   dimSideColumns();
   document.getElementById('altarArea').style.display = 'none';
 
+  // リクエストbody構築
+  const requestBody = isIntro
+    ? {
+        type: '自己紹介',
+        profile: {
+          name: document.getElementById('profileName').value.trim(),
+          activity: document.getElementById('profileActivity').value.trim(),
+          strength: document.getElementById('profileStrength').value.trim(),
+          keywords: document.getElementById('profileKeywords').value.trim()
+        }
+      }
+    : { words: selected, type: selectedType };
+
   // カウントダウンとAPI呼び出しを並行開始
   const apiPromise = fetch(API_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ words: selected, type: selectedType })
+    body: JSON.stringify(requestBody)
   }).then(r => r.json());
 
   const countdownPromise = runCountdown(selectedType);
@@ -3056,9 +3126,12 @@ async function generate() {
     document.getElementById('altarPlaceholder').style.display = 'none';
 
     // 全画面演出オーバーレイ
-    showChantOverlay(text, selectedType, [...selected], evaluation);
+    const historyWords = isIntro
+      ? [document.getElementById('profileName').value.trim()].filter(Boolean)
+      : [...selected];
+    showChantOverlay(text, selectedType, historyWords, evaluation);
 
-    saveHistory({ text, words: [...selected], type: selectedType, timestamp: Date.now(), evaluation, imageUrl: _lastGeneratedImageUrl || null });
+    saveHistory({ text, words: historyWords, type: selectedType, timestamp: Date.now(), evaluation, imageUrl: _lastGeneratedImageUrl || null });
     addRateLog();
     applyChainAfterGenerate();
 
@@ -3099,7 +3172,7 @@ function saveHistory(entry) {
 // ── スクリーンショット機能 ──
 const IMAGE_TYPE_COLORS = {
   '召喚': '#C8A050', '解放': '#5ABAB4', '封印': '#9B7EC8',
-  '滅亡': '#C84B4B', '覚醒': '#7AB87A'
+  '滅亡': '#C84B4B', '覚醒': '#7AB87A', '自己紹介': '#B48CC8'
 };
 
 async function saveChantImage(chantText, words, type, evaluation) {
@@ -3320,6 +3393,13 @@ function selectType(btn) {
   document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   selectedType = btn.dataset.type;
+  const isIntro = selectedType === '自己紹介';
+  document.getElementById('profileForm').style.display = isIntro ? '' : 'none';
+  document.getElementById('selectedArea').style.display = isIntro ? 'none' : '';
+  document.querySelector('.altar-left').style.visibility = isIntro ? 'hidden' : '';
+  document.getElementById('altarPlaceholder').textContent = isIntro
+    ? '── 己を刻み、魂を解き放て ──'
+    : '── 言霊を選び、儀式を起動せよ ──';
 }
 function toggleSpeech() {
   speechEnabled = !speechEnabled;
@@ -3427,7 +3507,8 @@ const ALTAR_TYPE_COLORS = {
   '解放': [90, 138, 128],
   '封印': [106, 90, 138],
   '滅亡': [122, 48, 48],
-  '覚醒': [90, 122, 90]
+  '覚醒': [90, 122, 90],
+  '自己紹介': [180, 140, 200]
 };
 
 function getTypeColor() {
