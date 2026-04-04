@@ -3119,7 +3119,7 @@ async function saveChantImage(chantText, words, type, evaluation) {
     const ec = ELEMENT_COLORS[evaluation.element] || '#888';
     const rc = RARITY_COLORS[evaluation.rarity] || '#888';
     const stars = '★'.repeat(evaluation.power || 0) + '☆'.repeat(5 - (evaluation.power || 0));
-    evalHtml = `<div style="padding:8px 64px 16px;display:flex;align-items:center;justify-content:center;gap:16px;font-size:16px;">
+    evalHtml = `<div style="padding:4px 48px 12px;display:flex;align-items:center;justify-content:center;gap:16px;font-size:16px;">
       <span style="background:${ec};color:#fff;padding:3px 10px;font-weight:700;letter-spacing:0.1em;">${esc(evaluation.element)}</span>
       <span style="color:#C8A050;font-size:18px;letter-spacing:2px;">${stars}</span>
       <span style="color:${rc};font-weight:600;letter-spacing:0.1em;">${esc(evaluation.rarity)}</span>
@@ -3136,12 +3136,12 @@ async function saveChantImage(chantText, words, type, evaluation) {
       <div style="position:absolute;top:-1px;right:-1px;width:20px;height:20px;border-top:2px solid #C8A050;border-right:2px solid #C8A050;"></div>
       <div style="position:absolute;bottom:-1px;left:-1px;width:20px;height:20px;border-bottom:2px solid #C8A050;border-left:2px solid #C8A050;"></div>
       <div style="position:absolute;bottom:-1px;right:-1px;width:20px;height:20px;border-bottom:2px solid #C8A050;border-right:2px solid #C8A050;"></div>
-      <div style="padding:12px 24px;border-bottom:1px solid rgba(160,120,48,0.3);display:flex;justify-content:space-between;font-size:15px;color:rgba(160,120,48,0.7);letter-spacing:0.2em;">
+      <div style="padding:8px 24px;border-bottom:1px solid rgba(160,120,48,0.3);display:flex;justify-content:space-between;font-size:15px;color:rgba(160,120,48,0.7);letter-spacing:0.2em;">
         <span>詠唱システム</span><span style="color:${typeColor}">${type}</span>
       </div>
-      <div style="padding:40px 48px 32px;font-family:'Yuji Syuku',serif;font-size:32px;line-height:2.6;color:#E8DFC8;text-align:center;letter-spacing:0.05em;">${linesHtml}</div>
-      <div style="margin:8px 64px;height:1px;background:rgba(160,120,48,0.2);"></div>
-      <div style="padding:16px 64px 8px;font-size:15px;color:rgba(160,120,48,0.6);text-align:center;letter-spacing:0.15em;">${wordsText}</div>
+      <div style="padding:24px 48px 20px;font-family:'Yuji Syuku',serif;font-size:32px;line-height:2.6;color:#E8DFC8;text-align:center;letter-spacing:0.05em;">${linesHtml}</div>
+      <div style="margin:4px 64px;height:1px;background:rgba(160,120,48,0.2);"></div>
+      <div style="padding:10px 48px 16px;font-size:15px;color:rgba(160,120,48,0.6);text-align:center;letter-spacing:0.15em;">${wordsText}</div>
       ${evalHtml}
     </div>
     <div style="position:absolute;bottom:20px;right:24px;font-size:14px;color:rgba(160,120,48,0.4);letter-spacing:0.1em;">詠唱メーカー</div>
