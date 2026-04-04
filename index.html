@@ -3386,14 +3386,6 @@ function saveHistoryChantImage(i) {
 // ── 縦型カード（1080×1920px）──
 async function saveChantImageVertical(chantText, words, type, evaluation) {
   const typeColor = IMAGE_TYPE_COLORS[type] || '#C8A050';
-  const el = document.createElement('div');
-  el.style.cssText = `
-    position: fixed; left: -9999px; width: 1080px; height: 1920px;
-    background: #0E0C09;
-    background-image: radial-gradient(ellipse at 30% 40%, rgba(90,138,128,0.06) 0%, transparent 60%),
-      radial-gradient(ellipse at 70% 70%, rgba(160,120,48,0.06) 0%, transparent 60%);
-    font-family: 'Zen Kaku Gothic New', sans-serif; box-sizing: border-box; overflow: hidden;
-  `;
   const linesHtml = chantText.split(/\\n|\n/).map(s => s.trim()).filter(Boolean).map(s => `<div>${esc(s)}</div>`).join('');
   let evalHtml = '';
   if (evaluation) {
@@ -3411,27 +3403,46 @@ async function saveChantImageVertical(chantText, words, type, evaluation) {
   const wordsText = extraCount > 0
     ? [...displayWords, `他${extraCount}個`].join('　')
     : displayWords.join('　');
-  el.innerHTML = `
-    <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:960px;text-align:center;">
-      <div style="width:900px;margin:0 auto;border:1px solid rgba(160,120,48,0.6);background:rgba(19,17,13,0.98);position:relative;padding:60px 60px;">
-        <div style="position:absolute;top:-1px;left:-1px;width:24px;height:24px;border-top:2px solid #C8A050;border-left:2px solid #C8A050;"></div>
-        <div style="position:absolute;top:-1px;right:-1px;width:24px;height:24px;border-top:2px solid #C8A050;border-right:2px solid #C8A050;"></div>
-        <div style="position:absolute;bottom:-1px;left:-1px;width:24px;height:24px;border-bottom:2px solid #C8A050;border-left:2px solid #C8A050;"></div>
-        <div style="position:absolute;bottom:-1px;right:-1px;width:24px;height:24px;border-bottom:2px solid #C8A050;border-right:2px solid #C8A050;"></div>
-        <div style="display:flex;justify-content:space-between;padding-bottom:20px;border-bottom:1px solid rgba(160,120,48,0.2);font-size:18px;color:rgba(160,120,48,0.6);letter-spacing:0.2em;margin-bottom:60px;">
-          <span>詠唱システム</span><span style="color:${typeColor}">${type}</span>
-        </div>
-        <div style="font-family:'Yuji Syuku',serif;font-size:38px;line-height:1.9;color:#E8DFC8;text-align:center;letter-spacing:0.05em;margin-bottom:60px;">${linesHtml}</div>
-        <div style="height:1px;background:rgba(160,120,48,0.2);margin:0 40px 32px;"></div>
-        <div style="font-size:18px;color:rgba(160,120,48,0.6);text-align:center;letter-spacing:0.15em;">${wordsText}</div>
-        ${evalHtml}
-      </div>
-      <div style="margin-top:40px;font-size:18px;color:rgba(160,120,48,0.3);text-align:center;letter-spacing:0.1em;">詠唱メーカー　eishou-maker.vercel.app</div>
-    </div>
+
+  // 外側コンテナ
+  const el = document.createElement('div');
+  el.style.cssText = `
+    position: fixed; left: -9999px; width: 1080px; height: 1920px;
+    background: #0E0C09;
+    background-image: radial-gradient(ellipse at 30% 40%, rgba(90,138,128,0.06) 0%, transparent 60%),
+      radial-gradient(ellipse at 70% 70%, rgba(160,120,48,0.06) 0%, transparent 60%);
+    font-family: 'Zen Kaku Gothic New', sans-serif; overflow: hidden;
   `;
   document.body.appendChild(el);
+
+  // 内側コンテンツ（margin-top: 0 で追加して高さ測定）
+  const content = document.createElement('div');
+  content.style.cssText = 'width: 960px; margin: 0 auto;';
+  content.innerHTML = `
+    <div style="width:900px;margin:0 auto;border:1px solid rgba(160,120,48,0.6);background:rgba(19,17,13,0.98);position:relative;padding:60px 60px;">
+      <div style="position:absolute;top:-1px;left:-1px;width:24px;height:24px;border-top:2px solid #C8A050;border-left:2px solid #C8A050;"></div>
+      <div style="position:absolute;top:-1px;right:-1px;width:24px;height:24px;border-top:2px solid #C8A050;border-right:2px solid #C8A050;"></div>
+      <div style="position:absolute;bottom:-1px;left:-1px;width:24px;height:24px;border-bottom:2px solid #C8A050;border-left:2px solid #C8A050;"></div>
+      <div style="position:absolute;bottom:-1px;right:-1px;width:24px;height:24px;border-bottom:2px solid #C8A050;border-right:2px solid #C8A050;"></div>
+      <div style="display:flex;justify-content:space-between;padding-bottom:20px;border-bottom:1px solid rgba(160,120,48,0.2);font-size:18px;color:rgba(160,120,48,0.6);letter-spacing:0.2em;margin-bottom:60px;">
+        <span>詠唱システム</span><span style="color:${typeColor}">${type}</span>
+      </div>
+      <div style="font-family:'Yuji Syuku',serif;font-size:38px;line-height:1.9;color:#E8DFC8;text-align:center;letter-spacing:0.05em;margin-bottom:60px;">${linesHtml}</div>
+      <div style="height:1px;background:rgba(160,120,48,0.2);margin:0 40px 32px;"></div>
+      <div style="font-size:18px;color:rgba(160,120,48,0.6);text-align:center;letter-spacing:0.15em;">${wordsText}</div>
+      ${evalHtml}
+    </div>
+    <div style="margin-top:40px;font-size:18px;color:rgba(160,120,48,0.3);text-align:center;letter-spacing:0.1em;">詠唱メーカー　eishou-maker.vercel.app</div>
+  `;
+  el.appendChild(content);
+
   await document.fonts.ready;
-  const canvas = await html2canvas(el, { width: 1080, height: 1920, windowWidth: 1080, windowHeight: 1920, scale: 1, backgroundColor: '#0E0C09', useCORS: true, allowTaint: true });
+  // コンテンツ高さを測定してmargin-topで中央配置
+  const contentHeight = content.offsetHeight;
+  const marginTop = Math.max(0, Math.floor((1920 - contentHeight) / 2));
+  content.style.marginTop = marginTop + 'px';
+
+  const canvas = await html2canvas(el, { width: 1080, height: 1920, scale: 1, backgroundColor: '#0E0C09', useCORS: true, allowTaint: true });
   document.body.removeChild(el);
   const link = document.createElement('a');
   link.download = `詠唱_縦_${type}_${Date.now()}.png`;
@@ -3886,14 +3897,6 @@ async function saveResultImage() {
 
 async function saveResultImageVertical() {
   const d = collectResultData();
-  const el = document.createElement('div');
-  el.style.cssText = `
-    position: fixed; left: -9999px; width: 1080px; height: 1920px;
-    background: #0E0C09;
-    background-image: radial-gradient(ellipse at 30% 40%, rgba(90,138,128,0.06) 0%, transparent 60%),
-      radial-gradient(ellipse at 70% 70%, rgba(160,120,48,0.06) 0%, transparent 60%);
-    font-family: 'Zen Kaku Gothic New', sans-serif; box-sizing: border-box; overflow: hidden;
-  `;
 
   let statsHtml = `
     <div style="display:flex;flex-direction:column;gap:24px;margin:32px 0;">
@@ -3924,25 +3927,42 @@ async function saveResultImageVertical() {
     });
   }
 
-  el.innerHTML = `
-    <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:960px;text-align:center;">
-      <div style="width:900px;margin:0 auto;border:1px solid rgba(160,120,48,0.6);background:rgba(19,17,13,0.98);position:relative;padding:60px 80px;">
-        <div style="position:absolute;top:-1px;left:-1px;width:24px;height:24px;border-top:2px solid #C8A050;border-left:2px solid #C8A050;"></div>
-        <div style="position:absolute;top:-1px;right:-1px;width:24px;height:24px;border-top:2px solid #C8A050;border-right:2px solid #C8A050;"></div>
-        <div style="position:absolute;bottom:-1px;left:-1px;width:24px;height:24px;border-bottom:2px solid #C8A050;border-left:2px solid #C8A050;"></div>
-        <div style="position:absolute;bottom:-1px;right:-1px;width:24px;height:24px;border-bottom:2px solid #C8A050;border-right:2px solid #C8A050;"></div>
-        <div style="text-align:center;font-family:'Yuji Syuku',serif;font-size:28px;color:#C8A050;letter-spacing:0.2em;margin-bottom:16px;">── 今宵の儀式は終わった ──</div>
-        ${statsHtml}
-        <div style="height:1px;background:rgba(160,120,48,0.2);"></div>
-        ${hofHtml}${mvpHtml}${wordsHtml}
-      </div>
-      <div style="margin-top:40px;font-size:18px;color:rgba(160,120,48,0.3);text-align:center;letter-spacing:0.1em;">#詠唱メーカー　eishou-maker.vercel.app</div>
-    </div>
+  // 外側コンテナ
+  const el = document.createElement('div');
+  el.style.cssText = `
+    position: fixed; left: -9999px; width: 1080px; height: 1920px;
+    background: #0E0C09;
+    background-image: radial-gradient(ellipse at 30% 40%, rgba(90,138,128,0.06) 0%, transparent 60%),
+      radial-gradient(ellipse at 70% 70%, rgba(160,120,48,0.06) 0%, transparent 60%);
+    font-family: 'Zen Kaku Gothic New', sans-serif; overflow: hidden;
   `;
-
   document.body.appendChild(el);
+
+  // 内側コンテンツ（margin-top: 0 で追加して高さ測定）
+  const content = document.createElement('div');
+  content.style.cssText = 'width: 960px; margin: 0 auto;';
+  content.innerHTML = `
+    <div style="width:900px;margin:0 auto;border:1px solid rgba(160,120,48,0.6);background:rgba(19,17,13,0.98);position:relative;padding:60px 80px;">
+      <div style="position:absolute;top:-1px;left:-1px;width:24px;height:24px;border-top:2px solid #C8A050;border-left:2px solid #C8A050;"></div>
+      <div style="position:absolute;top:-1px;right:-1px;width:24px;height:24px;border-top:2px solid #C8A050;border-right:2px solid #C8A050;"></div>
+      <div style="position:absolute;bottom:-1px;left:-1px;width:24px;height:24px;border-bottom:2px solid #C8A050;border-left:2px solid #C8A050;"></div>
+      <div style="position:absolute;bottom:-1px;right:-1px;width:24px;height:24px;border-bottom:2px solid #C8A050;border-right:2px solid #C8A050;"></div>
+      <div style="text-align:center;font-family:'Yuji Syuku',serif;font-size:28px;color:#C8A050;letter-spacing:0.2em;margin-bottom:16px;">── 今宵の儀式は終わった ──</div>
+      ${statsHtml}
+      <div style="height:1px;background:rgba(160,120,48,0.2);"></div>
+      ${hofHtml}${mvpHtml}${wordsHtml}
+    </div>
+    <div style="margin-top:40px;font-size:18px;color:rgba(160,120,48,0.3);text-align:center;letter-spacing:0.1em;">#詠唱メーカー　eishou-maker.vercel.app</div>
+  `;
+  el.appendChild(content);
+
   await document.fonts.ready;
-  const canvas = await html2canvas(el, { width: 1080, height: 1920, windowWidth: 1080, windowHeight: 1920, scale: 1, backgroundColor: '#0E0C09', useCORS: true, allowTaint: true });
+  // コンテンツ高さを測定してmargin-topで中央配置
+  const contentHeight = content.offsetHeight;
+  const marginTop = Math.max(0, Math.floor((1920 - contentHeight) / 2));
+  content.style.marginTop = marginTop + 'px';
+
+  const canvas = await html2canvas(el, { width: 1080, height: 1920, scale: 1, backgroundColor: '#0E0C09', useCORS: true, allowTaint: true });
   document.body.removeChild(el);
   const link = document.createElement('a');
   link.download = `儀式リザルト_縦_${Date.now()}.png`;
