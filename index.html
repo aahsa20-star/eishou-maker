@@ -3393,7 +3393,7 @@ async function saveChantImageVertical(chantText, words, type, evaluation) {
     background-image: radial-gradient(ellipse at 30% 40%, rgba(90,138,128,0.06) 0%, transparent 60%),
       radial-gradient(ellipse at 70% 70%, rgba(160,120,48,0.06) 0%, transparent 60%);
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    font-family: 'Zen Kaku Gothic New', sans-serif; box-sizing: border-box;
+    font-family: 'Zen Kaku Gothic New', sans-serif; box-sizing: border-box; overflow: hidden;
   `;
   const linesHtml = chantText.split(/\\n|\n/).map(s => s.trim()).filter(Boolean).map(s => `<div>${esc(s)}</div>`).join('');
   let evalHtml = '';
@@ -3430,7 +3430,7 @@ async function saveChantImageVertical(chantText, words, type, evaluation) {
   `;
   document.body.appendChild(el);
   await document.fonts.ready;
-  const canvas = await html2canvas(el, { width: 1080, height: 1920, scale: 1, backgroundColor: '#0E0C09', useCORS: true, allowTaint: true });
+  const canvas = await html2canvas(el, { width: 1080, height: 1920, windowWidth: 1080, windowHeight: 1920, scale: 1, backgroundColor: '#0E0C09', useCORS: true, allowTaint: true });
   document.body.removeChild(el);
   const link = document.createElement('a');
   link.download = `詠唱_縦_${type}_${Date.now()}.png`;
@@ -3892,7 +3892,7 @@ async function saveResultImageVertical() {
     background-image: radial-gradient(ellipse at 30% 40%, rgba(90,138,128,0.06) 0%, transparent 60%),
       radial-gradient(ellipse at 70% 70%, rgba(160,120,48,0.06) 0%, transparent 60%);
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-family: 'Zen Kaku Gothic New', sans-serif; box-sizing: border-box; overflow: hidden;
   `;
 
   let statsHtml = `
@@ -3940,7 +3940,7 @@ async function saveResultImageVertical() {
 
   document.body.appendChild(el);
   await document.fonts.ready;
-  const canvas = await html2canvas(el, { width: 1080, height: 1920, scale: 1, backgroundColor: '#0E0C09', useCORS: true, allowTaint: true });
+  const canvas = await html2canvas(el, { width: 1080, height: 1920, windowWidth: 1080, windowHeight: 1920, scale: 1, backgroundColor: '#0E0C09', useCORS: true, allowTaint: true });
   document.body.removeChild(el);
   const link = document.createElement('a');
   link.download = `儀式リザルト_縦_${Date.now()}.png`;
