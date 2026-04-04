@@ -51,13 +51,36 @@ body {
 .altar-left { border-right: 1px solid var(--border); }
 .altar-right { border-left: 1px solid var(--border); }
 .altar-center { padding: 12px 24px; }
+.altar-area {
+  position: relative;
+  min-height: 180px;
+}
+.altar-area canvas {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+}
 .altar-placeholder {
+  position: relative;
+  z-index: 1;
   text-align: center;
   padding: 60px 0 40px 0;
   color: rgba(160, 120, 48, 0.3);
   font-family: 'Zen Kaku Gothic New', sans-serif;
   font-size: 13px;
   letter-spacing: 0.2em;
+}
+/* Side column dim effect */
+.altar-col {
+  transition: opacity 0.8s ease;
+}
+.altar-col.dimmed {
+  opacity: 0.2;
+  transition: opacity 0.8s ease;
+}
+.altar-col.restoring {
+  transition: opacity 0.5s ease;
 }
 
 /* Header */
@@ -1662,7 +1685,10 @@ footer a:hover { color: var(--gold); }
     </div>
   </div>
 
-  <div class="altar-placeholder" id="altarPlaceholder">── 言霊を選び、儀式を起動せよ ──</div>
+  <div class="altar-area" id="altarArea">
+    <canvas id="altarCanvas"></canvas>
+    <div class="altar-placeholder" id="altarPlaceholder">── 言霊を選び、儀式を起動せよ ──</div>
+  </div>
 
   <div class="generate-area">
     <button class="btn-generate" id="generateBtn" onclick="generate()">詠唱生成</button>
@@ -2736,6 +2762,10 @@ function closeChantOverlay() {
   document.getElementById('ovInfoMvp').classList.remove('visible');
   document.getElementById('ovInfoChain').classList.remove('visible');
 
+  // サイドカラム復帰＆魔法陣を再表示
+  restoreSideColumns();
+  document.getElementById('altarArea').style.display = '';
+
   setTimeout(() => {
     document.getElementById('chantBody').innerHTML = '';
     document.getElementById('chantDivider').classList.remove('visible');
@@ -2999,6 +3029,10 @@ async function generate() {
     if (bgmEnabled && sfx.enabled) sfx.startBGM();
   }
 
+  // サイドカラムを暗転＆魔法陣を非表示
+  dimSideColumns();
+  document.getElementById('altarArea').style.display = 'none';
+
   // カウントダウンとAPI呼び出しを並行開始
   const apiPromise = fetch(API_URL, {
     method: 'POST',
@@ -3045,6 +3079,9 @@ async function generate() {
   } catch (e) {
     console.error('[generate] error:', e);
     alert('エラー: ' + e.message);
+    // エラー時はサイドカラムと魔法陣を復帰
+    restoreSideColumns();
+    document.getElementById('altarArea').style.display = '';
   }
   resetBtn();
 }
@@ -3382,6 +3419,130 @@ if (!localStorage.getItem('ritual_initiated')) {
 function closeRitualGuideModal() {
   localStorage.setItem('ritual_initiated', '1');
   document.getElementById('ritualModalBg').classList.remove('visible');
+}
+
+// ── 魔法陣キャンバス ──
+const ALTAR_TYPE_COLORS = {
+  '召喚': [160, 120, 48],
+  '解放': [90, 138, 128],
+  '封印': [106, 90, 138],
+  '滅亡': [122, 48, 48],
+  '覚醒': [90, 122, 90]
+};
+
+function getTypeColor() {
+  return ALTAR_TYPE_COLORS[selectedType] || ALTAR_TYPE_COLORS['召喚'];
+}
+
+let altarAnimId = null;
+const altarCanvas = document.getElementById('altarCanvas');
+const altarCtx = altarCanvas ? altarCanvas.getContext('2d') : null;
+
+function resizeAltarCanvas() {
+  if (!altarCanvas) return;
+  const area = document.getElementById('altarArea');
+  if (!area) return;
+  const rect = area.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  altarCanvas.width = rect.width * dpr;
+  altarCanvas.height = rect.height * dpr;
+  altarCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+
+if (altarCanvas) {
+  const altarAreaEl = document.getElementById('altarArea');
+  if (altarAreaEl && typeof ResizeObserver !== 'undefined') {
+    new ResizeObserver(() => resizeAltarCanvas()).observe(altarAreaEl);
+  }
+  resizeAltarCanvas();
+}
+
+function drawAltarCircle(time) {
+  if (!altarCtx || !altarCanvas) return;
+  const area = document.getElementById('altarArea');
+  if (!area) return;
+  const w = area.clientWidth;
+  const h = area.clientHeight;
+  altarCtx.clearRect(0, 0, w, h);
+
+  const cx = w / 2;
+  const cy = h / 2;
+  const radius = Math.min(cx, cy) * 0.7;
+  const [r, g, b] = getTypeColor();
+
+  // Opacity scales with selected word count
+  const wordCount = selected.length;
+  const baseAlpha = 0.04;
+  const maxAlpha = 0.25;
+  const alpha = Math.min(maxAlpha, baseAlpha + wordCount * ((maxAlpha - baseAlpha) / 10));
+
+  // Outer rotating dashed circle
+  altarCtx.save();
+  altarCtx.translate(cx, cy);
+  altarCtx.rotate(time * 0.0003);
+  altarCtx.beginPath();
+  altarCtx.arc(0, 0, radius, 0, Math.PI * 2);
+  altarCtx.strokeStyle = `rgba(${r},${g},${b},${alpha})`;
+  altarCtx.lineWidth = 1;
+  altarCtx.setLineDash([8, 12]);
+  altarCtx.stroke();
+  altarCtx.restore();
+
+  // Inner rotating dashed circle (opposite direction)
+  altarCtx.save();
+  altarCtx.translate(cx, cy);
+  altarCtx.rotate(-time * 0.0005);
+  altarCtx.beginPath();
+  altarCtx.arc(0, 0, radius * 0.6, 0, Math.PI * 2);
+  altarCtx.strokeStyle = `rgba(${r},${g},${b},${alpha * 0.7})`;
+  altarCtx.lineWidth = 0.8;
+  altarCtx.setLineDash([4, 8]);
+  altarCtx.stroke();
+  altarCtx.restore();
+
+  // Crosshairs
+  altarCtx.strokeStyle = `rgba(${r},${g},${b},${alpha * 0.4})`;
+  altarCtx.lineWidth = 0.5;
+  altarCtx.setLineDash([]);
+  altarCtx.beginPath();
+  altarCtx.moveTo(cx - radius * 0.3, cy);
+  altarCtx.lineTo(cx + radius * 0.3, cy);
+  altarCtx.moveTo(cx, cy - radius * 0.3);
+  altarCtx.lineTo(cx, cy + radius * 0.3);
+  altarCtx.stroke();
+
+  // Center dot
+  altarCtx.beginPath();
+  altarCtx.arc(cx, cy, 2, 0, Math.PI * 2);
+  altarCtx.fillStyle = `rgba(${r},${g},${b},${alpha})`;
+  altarCtx.fill();
+}
+
+function altarLoop(time) {
+  drawAltarCircle(time);
+  altarAnimId = requestAnimationFrame(altarLoop);
+}
+
+// Start the altar animation
+if (altarCanvas) {
+  altarAnimId = requestAnimationFrame(altarLoop);
+}
+
+// ── サイドカラム演出 ──
+function dimSideColumns() {
+  document.querySelectorAll('.altar-left, .altar-right').forEach(col => {
+    col.classList.remove('restoring');
+    col.classList.add('dimmed');
+  });
+}
+
+function restoreSideColumns() {
+  document.querySelectorAll('.altar-left, .altar-right').forEach(col => {
+    col.classList.add('restoring');
+    col.classList.remove('dimmed');
+    // Remove restoring class after transition completes
+    setTimeout(() => col.classList.remove('restoring'), 500);
+  });
 }
 </script>
 
