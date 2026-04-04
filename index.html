@@ -1814,6 +1814,7 @@ footer a:hover { color: var(--gold); }
     <div class="chant-ov-actions" id="chantOvActions">
       <button onclick="copyChantFromOverlay(this)">テキストをコピー</button>
       <button onclick="saveChantImageFromOverlay()">スクショ保存</button>
+      <button onclick="shareFromOverlay(this)">𝕏 シェア</button>
       <button id="chantGenImageBtn" onclick="generateChantImage()">AI画像を生成</button>
       <button id="chantDlImageBtn" onclick="downloadLastGeneratedImage()" style="display:none">画像をダウンロード</button>
       <button id="chantStampBtn" onclick="makeStamp()" style="display:none">スタンプを作る</button>
@@ -2844,6 +2845,56 @@ function saveChantImageFromOverlay() {
   saveChantImage(text, words || [], type || '召喚', evaluation || null);
 }
 
+// ── Xシェア ──
+function buildShareText(text, type, evaluation) {
+  const lines = text.split(/\n/).filter(s => s.trim());
+  const preview = lines.length > 1 ? lines.slice(0, 2).join('\n') + '——' : lines[0] + '——';
+  const isIntro = type === '自己紹介';
+  let body = preview + '\n\n';
+  if (isIntro) {
+    body += '#詠唱メーカー #自己紹介詠唱';
+  } else {
+    if (evaluation) {
+      const stars = '★'.repeat(evaluation.power || 0);
+      body += `属性：${evaluation.element}　${evaluation.rarity}　${stars}\n`;
+    }
+    body += '#詠唱メーカー';
+  }
+  body += '\nhttps://eishou-maker.vercel.app';
+  // X の280字制限を超えないように切る
+  if (body.length > 270) body = body.slice(0, 267) + '...';
+  return body;
+}
+
+function shareToX(text, type, evaluation) {
+  const tweetText = buildShareText(text, type, evaluation);
+  window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`, '_blank');
+}
+
+function shareFromOverlay(btn) {
+  if (!_lastChantOverlay) return;
+  const { text, type, words, evaluation } = _lastChantOverlay;
+  // 画像DLとXを同一クリックイベント内で同時実行（ポップアップブロッカー対策）
+  saveChantImage(text, words || [], type || '召喚', evaluation || null);
+  shareToX(text, type, evaluation);
+  btn.textContent = '↓ 画像をDLしてXへ貼ってね';
+  setTimeout(() => { btn.textContent = '𝕏 シェア'; }, 3000);
+}
+
+function shareFromHistory(i) {
+  const entry = getHistory()[i];
+  if (!entry) return;
+  saveChantImage(entry.text, entry.words || [], entry.type || '召喚', entry.evaluation || null);
+  shareToX(entry.text, entry.type || '召喚', entry.evaluation || null);
+}
+
+function shareFromHof(i) {
+  const entry = getHof()[i];
+  if (!entry) return;
+  saveChantImage(entry.text, entry.words || [], entry.type || '召喚', entry.evaluation || null);
+  shareToX(entry.text, entry.type || '召喚', entry.evaluation || null);
+}
+
 // ESCキーで閉じる
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && chantOverlayActive) {
@@ -3278,7 +3329,7 @@ function renderHistory() {
     const crownMark = isHof ? '\u{1F451} ' : '';
     card.innerHTML = `<div class="history-chant">${crownMark}${esc(entry.text)}</div>
       <div class="history-meta"><div class="history-tags">${tags}<span class="history-time">${hh}:${mm}</span></div>
-      <div class="history-actions"><button class="history-btn replay" onclick="copyHistoryChant(${i}, this)">複写</button><button class="history-btn replay" onclick="replayChant(${i})">再召喚</button><button class="history-btn replay" onclick="saveHistoryChantImage(${i})">刻印</button>${hofBtn}<button class="history-btn delete" onclick="deleteHistory(${i})">抹消</button></div></div>`;
+      <div class="history-actions"><button class="history-btn replay" onclick="copyHistoryChant(${i}, this)">複写</button><button class="history-btn replay" onclick="replayChant(${i})">再召喚</button><button class="history-btn replay" onclick="saveHistoryChantImage(${i})">刻印</button><button class="history-btn replay" onclick="shareFromHistory(${i})">𝕏</button>${hofBtn}<button class="history-btn delete" onclick="deleteHistory(${i})">抹消</button></div></div>`;
     list.appendChild(card);
   });
 }
@@ -3346,6 +3397,7 @@ function renderHof() {
         <button onclick="replayHof(${i})">再召喚</button>
         <button onclick="copyHof(${i}, this)">複写</button>
         <button onclick="saveHofImage(${i})">刻印</button>
+        <button onclick="shareFromHof(${i})">𝕏</button>
         <button class="hof-remove" onclick="removeHof(${i})">封印解除</button>
       </div>`;
     list.appendChild(card);
