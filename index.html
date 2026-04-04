@@ -87,15 +87,16 @@ body {
 .header {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 8px 24px;
-  height: 48px;
+  gap: 8px;
+  padding: 8px 16px;
+  min-height: 48px;
   background: rgba(14,12,9,0.95);
   border-bottom: 1px solid var(--border);
   flex-wrap: nowrap;
   position: sticky;
   top: 0;
   z-index: 100;
+  overflow-x: auto;
 }
 .header-title {
   margin-right: 0;
@@ -121,19 +122,21 @@ body {
   transition: border-color 0.2s;
 }
 .header input:focus { border-color: #C8A050; box-shadow: 0 0 8px rgba(160,120,48,0.2); }
-.header input.channel-input { width: 140px; }
+.header input.channel-input { width: 120px; flex-shrink: 1; min-width: 80px; }
 .header button {
   background: transparent;
   color: var(--gold);
   border: 1px solid var(--border);
-  padding: 6px 14px;
+  padding: 4px 10px;
   border-radius: 0;
-  font-size: 13px;
+  font-size: 12px;
   font-family: 'Zen Kaku Gothic New', sans-serif;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 .header .rate-info {
   margin-left: auto;
@@ -1715,7 +1718,7 @@ footer a:hover { color: var(--gold); }
 }
 .btn-battle:hover { border-color: #C84B4B; color: #C84B4B; }
 .btn-battle.active { border-color: #C84B4B; color: #C84B4B; background: rgba(200,75,75,0.1); }
-.btn-battle:disabled { opacity: 0.3; cursor: not-allowed; }
+.btn-battle:disabled { opacity: 0.5; cursor: not-allowed; }
 
 #battle-left-ui { display: none; flex-direction: column; gap: 8px; height: 100%; }
 .battle-team { flex: 1; display: flex; flex-direction: column; border: 1px solid var(--border); padding: 10px; }
@@ -1814,7 +1817,7 @@ footer a:hover { color: var(--gold); }
 }
 .btn-remix:hover { border-color: var(--gold); color: var(--gold); }
 .btn-remix.active { border-color: var(--gold); color: var(--gold); background: rgba(160,120,48,0.1); }
-.btn-remix:disabled { opacity: 0.3; cursor: not-allowed; }
+.btn-remix:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .remix-title {
   text-align: center;
