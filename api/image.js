@@ -49,10 +49,10 @@ export default async function handler(req, res) {
     }
   } catch {}
 
-  // サブスクライバー限定
-  if (!isSubscriber) {
-    return res.status(403).json({ error: 'サブスクライバー限定機能です' });
-  }
+  // TEMP: 一時開放（サブスクチェック無効化）
+  // if (!isSubscriber) {
+  //   return res.status(403).json({ error: 'サブスクライバー限定機能です' });
+  // }
 
   // Rate limit（Upstash Redis）
   const rateLimitKey = `image:user:${userId}`;

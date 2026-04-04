@@ -52,8 +52,9 @@ export default async function handler(req, res) {
   // Rate limit（Upstash Redis）
   const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || 'unknown';
   const rateLimitKey = userId ? `chant:user:${userId}` : `chant:ip:${ip}`;
-  const limit = isSubscriber ? 20 : 2;
-  const windowSeconds = isSubscriber ? 3600 : 86400;
+  // TEMP: 一時開放（全員サブスク扱い）
+  const limit = 20;
+  const windowSeconds = 3600;
 
   const rl = await checkRateLimit(rateLimitKey, limit, windowSeconds);
   if (!rl.allowed) {

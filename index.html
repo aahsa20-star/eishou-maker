@@ -2230,8 +2230,9 @@ footer a:hover { color: var(--gold); }
   <span class="status" id="status">未接続</span>
   <div class="rate-info" id="rateInfo"></div>
   <button class="btn-result" onclick="showResultModal()">リザルト</button>
-  <button class="btn-battle" id="battleBtn" onclick="toggleBattleMode()" disabled title="サブスクライバー限定">バトル</button>
-  <button class="btn-remix" id="remixBtn" onclick="toggleRemixMode()" disabled title="サブスクライバー限定">リミックス</button>
+  <!-- TEMP: 一時開放 -->
+  <button class="btn-battle" id="battleBtn" onclick="toggleBattleMode()" title="詠唱バトル">バトル</button>
+  <button class="btn-remix" id="remixBtn" onclick="toggleRemixMode()" title="詠唱リミックス">リミックス</button>
   <div class="auth-area" id="authArea">
     <button class="auth-login-btn" id="authLoginBtn" onclick="twitchLogin()">Twitchでログイン</button>
   </div>
@@ -3228,23 +3229,20 @@ function updateAuthUI() {
 function updateImageGenButton() {
   const btn = document.getElementById('chantGenImageBtn');
   if (!btn) return;
-  if (authState.isSubscriber) {
-    btn.textContent = 'AI画像を生成';
-    btn.disabled = false;
-    btn.onclick = generateChantImage;
-    btn.classList.remove('locked');
-  } else {
-    btn.textContent = '\uD83D\uDD12 AI画像生成はサブスク限定';
-    btn.onclick = twitchLogin;
-    btn.classList.add('locked');
-  }
+  // TEMP: 一時開放
+  btn.textContent = 'AI画像を生成';
+  btn.disabled = false;
+  btn.onclick = generateChantImage;
+  btn.classList.remove('locked');
 }
 checkAuth();
 
 // ── レート制限 ──
-function getRateWindow() { return authState.isSubscriber ? 3600000 : 86400000; } // サブスク:1時間, 一般:24時間
+// TEMP: 一時開放（全員サブスク扱い）
+function getRateWindow() { return 3600000; }
 function getImageRateWindow() { return 86400000; } // 画像は常に24時間ウィンドウ
-function getRateMax() { return authState.isSubscriber ? 20 : 2; }
+// TEMP: 一時開放（全員サブスク扱い）
+function getRateMax() { return 20; }
 function getImageRateMax() { return 5; } // サブスク限定、常に5
 
 function getRateLogs() {
@@ -3307,10 +3305,7 @@ function updateRateInfo() {
 function updateImageRateInfo() {
   const el = document.getElementById('imageRateInfo');
   if (!el) return;
-  if (!authState.isSubscriber) {
-    el.textContent = '';
-    return;
-  }
+  // TEMP: 一時開放（画像レート表示を全員に）
   const logs = getActiveImageRateLogs();
   const max = getImageRateMax();
   const remaining = Math.max(0, max - logs.length);
@@ -3644,7 +3639,8 @@ document.addEventListener('keydown', (e) => {
 // ── DALL-E 3 画像生成 ──
 async function generateChantImage() {
   if (!_lastChantOverlay) return;
-  if (!authState.isSubscriber) { twitchLogin(); return; }
+  // TEMP: 一時開放（サブスクチェック無効化）
+  // if (!authState.isSubscriber) { twitchLogin(); return; }
 
   // 画像レート制限チェック
   if (getActiveImageRateLogs().length >= getImageRateMax()) {
@@ -5102,27 +5098,17 @@ async function startRemix() {
 
 function updateRemixBtn() {
   const btn = document.getElementById('remixBtn');
-  if (authState.isSubscriber) {
-    btn.disabled = false;
-    btn.title = '詠唱リミックス';
-  } else {
-    btn.disabled = true;
-    btn.title = 'サブスクライバー限定';
-    if (remixMode) toggleRemixMode();
-  }
+  // TEMP: 一時開放
+  btn.disabled = false;
+  btn.title = '詠唱リミックス';
 }
 
 // 認証後にバトルボタンを有効化
 function updateBattleBtn() {
   const btn = document.getElementById('battleBtn');
-  if (authState.isSubscriber) {
-    btn.disabled = false;
-    btn.title = '詠唱バトル';
-  } else {
-    btn.disabled = true;
-    btn.title = 'サブスクライバー限定';
-    if (battleMode) toggleBattleMode();
-  }
+  // TEMP: 一時開放
+  btn.disabled = false;
+  btn.title = '詠唱バトル';
 }
 </script>
 

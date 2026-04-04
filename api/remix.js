@@ -46,12 +46,15 @@ export default async function handler(req, res) {
     }
   } catch {}
 
-  if (!isSubscriber) {
-    return res.status(403).json({ error: 'サブスクライバー限定機能です' });
-  }
+  // TEMP: 一時開放（サブスクチェック無効化）
+  // if (!isSubscriber) {
+  //   return res.status(403).json({ error: 'サブスクライバー限定機能です' });
+  // }
 
   // レートリミット（chantと同じ枠を共有）
-  const rateLimitKey = `chant:user:${userId}`;
+  // TEMP: 一時開放（未ログインはIP制限）
+  const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || 'unknown';
+  const rateLimitKey = userId ? `chant:user:${userId}` : `chant:ip:${ip}`;
   const rl = await checkRateLimit(rateLimitKey, 20, 3600);
   if (!rl.allowed) {
     return res.status(429).json({

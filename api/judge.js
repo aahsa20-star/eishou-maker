@@ -43,9 +43,10 @@ export default async function handler(req, res) {
       isSubscriber = !!payload.isSubscriber;
     }
   } catch {}
-  if (!isSubscriber) {
-    return res.status(403).json({ error: 'サブスクライバー限定機能です' });
-  }
+  // TEMP: 一時開放（サブスクチェック無効化）
+  // if (!isSubscriber) {
+  //   return res.status(403).json({ error: 'サブスクライバー限定機能です' });
+  // }
 
   // レートリミット（IPベース 10回/日）
   const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || 'unknown';
