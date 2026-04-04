@@ -144,6 +144,8 @@ package.json            # jsonwebtoken・cookie
 - overlay.htmlは廃止・削除済み（index.htmlに統合）
 - 魔法陣canvasはResizeObserverでサイズ追従、requestAnimationFrameで常時回転
 - 自己紹介タイプ選択時は左カラム非表示、プロフィールフォーム表示に切替
+- Xシェア: Web Intent方式（画像DL + X投稿画面を同一クリックイベント内で同時実行）
+- シェアテキスト: 詠唱2行目まで + 属性/レア度 + #詠唱メーカー + URL（280字制限対応）
 
 ## 将来のタスク（P3）
 
