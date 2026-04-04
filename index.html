@@ -1710,7 +1710,8 @@ footer a:hover { color: var(--gold); }
     <div class="result-modal-title">── 今宵の儀式は終わった ──</div>
     <div id="resultModalBody"></div>
     <div class="result-actions">
-      <button onclick="saveResultImage()">画像保存</button>
+      <button onclick="saveResultImage()">横型保存</button>
+      <button onclick="saveResultImageVertical()">縦型保存</button>
       <button onclick="shareResultToX(this)">𝕏 シェア</button>
     </div>
   </div>
@@ -1832,7 +1833,8 @@ footer a:hover { color: var(--gold); }
     <div class="eval-area" id="evalArea"></div>
     <div class="result-actions">
       <button class="btn-copy" id="copyBtn" onclick="copyChant()">複写</button>
-      <button class="btn-copy" onclick="saveCurrentChantImage()">刻印</button>
+      <button class="btn-copy" onclick="saveCurrentChantImage()">横</button>
+      <button class="btn-copy" onclick="saveCurrentChantImageVertical()">縦</button>
     </div>
   </div>
 
@@ -1896,7 +1898,8 @@ footer a:hover { color: var(--gold); }
     <div class="chant-ov-image" id="chantOvImage"></div>
     <div class="chant-ov-actions" id="chantOvActions">
       <button onclick="copyChantFromOverlay(this)">テキストをコピー</button>
-      <button onclick="saveChantImageFromOverlay()">スクショ保存</button>
+      <button onclick="saveChantImageFromOverlay()">刻印 横</button>
+      <button onclick="saveChantImageVerticalFromOverlay()">刻印 縦</button>
       <button onclick="shareFromOverlay(this)">𝕏 シェア</button>
       <button id="chantGenImageBtn" onclick="generateChantImage()">AI画像を生成</button>
       <button id="chantDlImageBtn" onclick="downloadLastGeneratedImage()" style="display:none">画像をダウンロード</button>
@@ -3380,6 +3383,79 @@ function saveHistoryChantImage(i) {
   saveChantImage(entry.text, entry.words || [], entry.type || '召喚', entry.evaluation || null);
 }
 
+// ── 縦型カード（1080×1920px）──
+async function saveChantImageVertical(chantText, words, type, evaluation) {
+  const typeColor = IMAGE_TYPE_COLORS[type] || '#C8A050';
+  const el = document.createElement('div');
+  el.style.cssText = `
+    position: fixed; left: -9999px; width: 1080px; height: 1920px;
+    background: #0E0C09;
+    background-image: radial-gradient(ellipse at 30% 40%, rgba(90,138,128,0.06) 0%, transparent 60%),
+      radial-gradient(ellipse at 70% 70%, rgba(160,120,48,0.06) 0%, transparent 60%);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+  `;
+  const linesHtml = chantText.split(/\\n|\n/).map(s => s.trim()).filter(Boolean).map(s => `<div>${esc(s)}</div>`).join('');
+  let evalHtml = '';
+  if (evaluation) {
+    const ec = ELEMENT_COLORS[evaluation.element] || '#888';
+    const rc = RARITY_COLORS[evaluation.rarity] || '#888';
+    const stars = '★'.repeat(evaluation.power || 0) + '☆'.repeat(5 - (evaluation.power || 0));
+    evalHtml = `<div style="display:flex;align-items:center;justify-content:center;gap:16px;margin-top:24px;font-size:20px;">
+      <span style="background:${ec};color:#fff;padding:6px 16px;font-weight:700;letter-spacing:0.1em;">${esc(evaluation.element)}</span>
+      <span style="color:#C8A050;font-size:24px;letter-spacing:2px;">${stars}</span>
+      <span style="color:${rc};font-weight:600;letter-spacing:0.1em;">${esc(evaluation.rarity)}</span>
+    </div>`;
+  }
+  const displayWords = words.slice(0, 5).map(w => esc(w));
+  const extraCount = words.length - 5;
+  const wordsText = extraCount > 0
+    ? [...displayWords, `他${extraCount}個`].join('　')
+    : displayWords.join('　');
+  el.innerHTML = `
+    <div style="width:900px;border:1px solid rgba(160,120,48,0.6);background:rgba(19,17,13,0.98);position:relative;padding:60px 80px;">
+      <div style="position:absolute;top:-1px;left:-1px;width:24px;height:24px;border-top:2px solid #C8A050;border-left:2px solid #C8A050;"></div>
+      <div style="position:absolute;top:-1px;right:-1px;width:24px;height:24px;border-top:2px solid #C8A050;border-right:2px solid #C8A050;"></div>
+      <div style="position:absolute;bottom:-1px;left:-1px;width:24px;height:24px;border-bottom:2px solid #C8A050;border-left:2px solid #C8A050;"></div>
+      <div style="position:absolute;bottom:-1px;right:-1px;width:24px;height:24px;border-bottom:2px solid #C8A050;border-right:2px solid #C8A050;"></div>
+      <div style="display:flex;justify-content:space-between;padding-bottom:20px;border-bottom:1px solid rgba(160,120,48,0.2);font-size:18px;color:rgba(160,120,48,0.6);letter-spacing:0.2em;margin-bottom:60px;">
+        <span>詠唱システム</span><span style="color:${typeColor}">${type}</span>
+      </div>
+      <div style="font-family:'Yuji Syuku',serif;font-size:42px;line-height:1.9;color:#E8DFC8;text-align:center;letter-spacing:0.05em;margin-bottom:60px;">${linesHtml}</div>
+      <div style="height:1px;background:rgba(160,120,48,0.2);margin:0 40px 32px;"></div>
+      <div style="font-size:18px;color:rgba(160,120,48,0.6);text-align:center;letter-spacing:0.15em;">${wordsText}</div>
+      ${evalHtml}
+    </div>
+    <div style="margin-top:40px;font-size:18px;color:rgba(160,120,48,0.3);text-align:center;letter-spacing:0.1em;">詠唱メーカー　eishou-maker.vercel.app</div>
+  `;
+  document.body.appendChild(el);
+  await document.fonts.ready;
+  const canvas = await html2canvas(el, { width: 1080, height: 1920, scale: 1, backgroundColor: '#0E0C09', useCORS: true, allowTaint: true });
+  document.body.removeChild(el);
+  const link = document.createElement('a');
+  link.download = `詠唱_縦_${type}_${Date.now()}.png`;
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+}
+
+function saveChantImageVerticalFromOverlay() {
+  if (!_lastChantOverlay) return;
+  const { text, type, words, evaluation } = _lastChantOverlay;
+  saveChantImageVertical(text, words || [], type || '召喚', evaluation || null);
+}
+
+function saveCurrentChantImageVertical() {
+  const text = document.getElementById('resultText').textContent;
+  if (!text) return;
+  saveChantImageVertical(text, [...selected], selectedType, currentEvaluation);
+}
+
+function saveHistoryChantImageVertical(i) {
+  const entry = getHistory()[i];
+  if (!entry) return;
+  saveChantImageVertical(entry.text, entry.words || [], entry.type || '召喚', entry.evaluation || null);
+}
+
 function deleteHistory(i) {
   const history = getHistory();
   history.splice(i, 1);
@@ -3413,7 +3489,7 @@ function renderHistory() {
     const crownMark = isHof ? '\u{1F451} ' : '';
     card.innerHTML = `<div class="history-chant">${crownMark}${esc(entry.text)}</div>
       <div class="history-meta"><div class="history-tags">${tags}<span class="history-time">${hh}:${mm}</span></div>
-      <div class="history-actions"><button class="history-btn replay" onclick="copyHistoryChant(${i}, this)">複写</button><button class="history-btn replay" onclick="replayChant(${i})">再召喚</button><button class="history-btn replay" onclick="saveHistoryChantImage(${i})">刻印</button><button class="history-btn replay" onclick="shareFromHistory(${i})">𝕏</button>${hofBtn}<button class="history-btn delete" onclick="deleteHistory(${i})">抹消</button></div></div>`;
+      <div class="history-actions"><button class="history-btn replay" onclick="copyHistoryChant(${i}, this)">複写</button><button class="history-btn replay" onclick="replayChant(${i})">再召喚</button><button class="history-btn replay" onclick="saveHistoryChantImage(${i})">横</button><button class="history-btn replay" onclick="saveHistoryChantImageVertical(${i})">縦</button><button class="history-btn replay" onclick="shareFromHistory(${i})">𝕏</button>${hofBtn}<button class="history-btn delete" onclick="deleteHistory(${i})">抹消</button></div></div>`;
     list.appendChild(card);
   });
 }
@@ -3480,7 +3556,8 @@ function renderHof() {
       <div class="hof-card-actions">
         <button onclick="replayHof(${i})">再召喚</button>
         <button onclick="copyHof(${i}, this)">複写</button>
-        <button onclick="saveHofImage(${i})">刻印</button>
+        <button onclick="saveHofImage(${i})">横</button>
+        <button onclick="saveHofImageVertical(${i})">縦</button>
         <button onclick="shareFromHof(${i})">𝕏</button>
         <button class="hof-remove" onclick="removeHof(${i})">封印解除</button>
       </div>`;
@@ -3508,6 +3585,12 @@ function saveHofImage(i) {
   const entry = getHof()[i];
   if (!entry) return;
   saveChantImage(entry.text, entry.words || [], entry.type || '召喚', entry.evaluation || null);
+}
+
+function saveHofImageVertical(i) {
+  const entry = getHof()[i];
+  if (!entry) return;
+  saveChantImageVertical(entry.text, entry.words || [], entry.type || '召喚', entry.evaluation || null);
 }
 
 function removeHof(i) {
@@ -3796,6 +3879,71 @@ async function saveResultImage() {
   document.body.removeChild(el);
   const link = document.createElement('a');
   link.download = `儀式リザルト_${Date.now()}.png`;
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+}
+
+async function saveResultImageVertical() {
+  const d = collectResultData();
+  const el = document.createElement('div');
+  el.style.cssText = `
+    position: fixed; left: -9999px; width: 1080px; height: 1920px;
+    background: #0E0C09;
+    background-image: radial-gradient(ellipse at 30% 40%, rgba(90,138,128,0.06) 0%, transparent 60%),
+      radial-gradient(ellipse at 70% 70%, rgba(160,120,48,0.06) 0%, transparent 60%);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+  `;
+
+  let statsHtml = `
+    <div style="display:flex;flex-direction:column;gap:24px;margin:32px 0;">
+      <div style="display:flex;justify-content:space-between;font-size:22px;"><span style="color:rgba(160,120,48,0.6);">詠唱回数</span><span style="color:#E8DFC8;font-weight:700;">${d.count}回</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:22px;"><span style="color:rgba(160,120,48,0.6);">最高レアリティ</span><span style="color:#C8A050;font-weight:600;">${esc(d.topRarity)}</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:22px;"><span style="color:rgba(160,120,48,0.6);">使用属性</span><span style="color:#E8DFC8;">${d.elements.length > 0 ? d.elements.map(e => esc(e)).join(' · ') : '—'}</span></div>
+    </div>`;
+
+  let hofHtml = '';
+  if (d.topHof) {
+    const firstLine = d.topHof.split('\n')[0];
+    hofHtml = `
+      <div style="margin:20px 0 12px;font-size:18px;color:rgba(160,120,48,0.6);letter-spacing:0.15em;border-bottom:1px solid rgba(160,120,48,0.2);padding-bottom:8px;">── 今宵の殿堂 ──</div>
+      <div style="font-family:'Yuji Syuku',serif;font-size:28px;color:#E8DFC8;letter-spacing:0.05em;line-height:1.6;text-align:center;padding:16px 0;">${esc(firstLine)}——</div>`;
+  }
+
+  let mvpHtml = '';
+  if (d.mvp) {
+    mvpHtml = `<div style="margin:20px 0 12px;font-size:18px;color:rgba(160,120,48,0.6);letter-spacing:0.15em;border-bottom:1px solid rgba(160,120,48,0.2);padding-bottom:8px;">── MVP ──</div>
+      <div style="font-size:24px;color:#E8DFC8;text-align:center;padding:8px 0;">\u{1F451} ${esc(d.mvp.username)}（スコア ${d.mvp.score}）</div>`;
+  }
+
+  let wordsHtml = '';
+  if (d.wordEntries.length > 0) {
+    wordsHtml = `<div style="margin:20px 0 12px;font-size:18px;color:rgba(160,120,48,0.6);letter-spacing:0.15em;border-bottom:1px solid rgba(160,120,48,0.2);padding-bottom:8px;">── 人気言霊 Top3 ──</div>`;
+    d.wordEntries.forEach(([word, votes], i) => {
+      wordsHtml += `<div style="font-size:22px;color:#E8DFC8;padding:6px 0;display:flex;justify-content:space-between;"><span>${i + 1}位　${esc(word)}</span><span style="color:rgba(160,120,48,0.6);">${votes}票</span></div>`;
+    });
+  }
+
+  el.innerHTML = `
+    <div style="width:900px;border:1px solid rgba(160,120,48,0.6);background:rgba(19,17,13,0.98);position:relative;padding:60px 80px;">
+      <div style="position:absolute;top:-1px;left:-1px;width:24px;height:24px;border-top:2px solid #C8A050;border-left:2px solid #C8A050;"></div>
+      <div style="position:absolute;top:-1px;right:-1px;width:24px;height:24px;border-top:2px solid #C8A050;border-right:2px solid #C8A050;"></div>
+      <div style="position:absolute;bottom:-1px;left:-1px;width:24px;height:24px;border-bottom:2px solid #C8A050;border-left:2px solid #C8A050;"></div>
+      <div style="position:absolute;bottom:-1px;right:-1px;width:24px;height:24px;border-bottom:2px solid #C8A050;border-right:2px solid #C8A050;"></div>
+      <div style="text-align:center;font-family:'Yuji Syuku',serif;font-size:28px;color:#C8A050;letter-spacing:0.2em;margin-bottom:16px;">── 今宵の儀式は終わった ──</div>
+      ${statsHtml}
+      <div style="height:1px;background:rgba(160,120,48,0.2);"></div>
+      ${hofHtml}${mvpHtml}${wordsHtml}
+    </div>
+    <div style="margin-top:40px;font-size:18px;color:rgba(160,120,48,0.3);text-align:center;letter-spacing:0.1em;">#詠唱メーカー　eishou-maker.vercel.app</div>
+  `;
+
+  document.body.appendChild(el);
+  await document.fonts.ready;
+  const canvas = await html2canvas(el, { width: 1080, height: 1920, scale: 1, backgroundColor: '#0E0C09', useCORS: true, allowTaint: true });
+  document.body.removeChild(el);
+  const link = document.createElement('a');
+  link.download = `儀式リザルト_縦_${Date.now()}.png`;
   link.href = canvas.toDataURL('image/png');
   link.click();
 }
