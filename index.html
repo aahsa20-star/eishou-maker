@@ -53,7 +53,7 @@ body {
 .altar-center { padding: 12px 24px; }
 .altar-placeholder {
   text-align: center;
-  padding: 40px 0;
+  padding: 60px 0 40px 0;
   color: rgba(160, 120, 48, 0.3);
   font-family: 'Zen Kaku Gothic New', sans-serif;
   font-size: 13px;
@@ -389,6 +389,18 @@ body {
   min-height: 56px;
   position: relative;
 }
+/* Word panel header - prevent wrap */
+.panel-header {
+  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+.panel-header .btn-sort-toggle,
+.panel-header .btn-clear-words {
+  flex-shrink: 0;
+  white-space: nowrap;
+  font-size: 11px;
+  padding: 2px 5px;
+}
 .selected-area::before {
   content: '';
   position: absolute;
@@ -537,7 +549,7 @@ body {
   padding: 0;
   align-items: center;
   flex-wrap: wrap;
-  margin-top: 8px;
+  margin-top: 16px;
 }
 .controls-row .btn-clear {
   margin-left: auto;
@@ -615,6 +627,7 @@ body {
 /* Generate Area */
 .generate-area {
   padding: 0 0 8px 0;
+  margin-top: 16px;
 }
 .rate-info {
   text-align: right;
