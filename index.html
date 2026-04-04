@@ -1614,6 +1614,75 @@ footer a:hover { color: var(--gold); }
   background: rgba(160,120,48,0.1);
   box-shadow: 0 0 20px rgba(200,160,80,0.2);
 }
+/* Session Result Modal */
+.result-modal-bg {
+  position: fixed; inset: 0; z-index: 9000;
+  background: rgba(0,0,0,0.85);
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.4s;
+}
+.result-modal-bg.visible { opacity: 1; pointer-events: auto; }
+.result-modal {
+  width: 540px; max-width: 90vw; max-height: 85vh; overflow-y: auto;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-gold);
+  padding: 32px 36px;
+  position: relative;
+  font-family: 'Zen Kaku Gothic New', sans-serif;
+}
+.result-modal-close {
+  position: absolute; top: 8px; right: 12px;
+  background: none; border: none; color: var(--fg-dim);
+  font-size: 24px; cursor: pointer;
+}
+.result-modal-title {
+  text-align: center; font-family: 'Yuji Syuku', serif;
+  font-size: 20px; color: var(--gold-bright);
+  letter-spacing: 0.2em; margin-bottom: 24px;
+}
+.result-stat {
+  display: flex; justify-content: space-between;
+  padding: 8px 0; border-bottom: 1px solid rgba(160,120,48,0.15);
+  font-size: 14px;
+}
+.result-stat-label { color: var(--fg-dim); }
+.result-stat-value { color: var(--fg-base); font-weight: 600; }
+.result-section-title {
+  font-family: 'Yuji Syuku', serif; font-size: 15px;
+  color: var(--gold); letter-spacing: 0.15em;
+  margin: 20px 0 8px; padding-bottom: 4px;
+  border-bottom: 1px solid rgba(160,120,48,0.2);
+}
+.result-chant {
+  font-family: 'Yuji Syuku', serif; font-size: 15px;
+  color: var(--fg-base); line-height: 1.8;
+  padding: 8px 0;
+}
+.result-rank {
+  display: flex; justify-content: space-between;
+  padding: 4px 0; font-size: 13px; color: var(--fg-dim);
+}
+.result-rank-word { color: var(--fg-base); }
+.result-actions {
+  display: flex; gap: 8px; justify-content: center;
+  margin-top: 24px;
+}
+.result-actions button {
+  background: transparent; border: 1px solid var(--border-gold);
+  color: var(--fg-dim); padding: 8px 20px; font-family: inherit;
+  font-size: 13px; cursor: pointer; letter-spacing: 0.1em;
+  transition: all 0.2s;
+}
+.result-actions button:hover { border-color: var(--gold); color: var(--gold); }
+.result-empty { color: var(--fg-dim); font-size: 13px; font-style: italic; }
+.btn-result {
+  background: transparent; border: 1px solid var(--border-gold);
+  color: var(--fg-dim); padding: 4px 12px; font-family: inherit;
+  font-size: 13px; cursor: pointer; letter-spacing: 0.1em;
+  transition: all 0.2s; flex-shrink: 0;
+}
+.btn-result:hover { border-color: var(--gold); color: var(--gold); }
 </style>
 </head>
 <body>
@@ -1634,12 +1703,26 @@ footer a:hover { color: var(--gold); }
   </div>
 </div>
 
+<!-- セッションリザルトモーダル -->
+<div class="result-modal-bg" id="resultModalBg" onclick="if(event.target===this)closeResultModal()">
+  <div class="result-modal">
+    <button class="result-modal-close" onclick="closeResultModal()">&times;</button>
+    <div class="result-modal-title">── 今宵の儀式は終わった ──</div>
+    <div id="resultModalBody"></div>
+    <div class="result-actions">
+      <button onclick="saveResultImage()">画像保存</button>
+      <button onclick="shareResultToX(this)">𝕏 シェア</button>
+    </div>
+  </div>
+</div>
+
 <div class="header">
   <div class="header-title">詠唱メーカー</div>
   <input class="channel-input" id="channel" placeholder="Twitchチャンネル名">
   <button id="connectBtn" onclick="toggleConnect()">接続</button>
   <span class="status" id="status">未接続</span>
   <div class="rate-info" id="rateInfo"></div>
+  <button class="btn-result" onclick="showResultModal()">リザルト</button>
   <div class="auth-area" id="authArea">
     <button class="auth-login-btn" id="authLoginBtn" onclick="twitchLogin()">Twitchでログイン</button>
   </div>
@@ -3184,6 +3267,7 @@ async function generate() {
     showChantOverlay(text, selectedType, historyWords, evaluation);
 
     saveHistory({ text, words: historyWords, type: selectedType, timestamp: Date.now(), evaluation, imageUrl: _lastGeneratedImageUrl || null });
+    updateSessionData(text, evaluation);
     addRateLog();
     applyChainAfterGenerate();
 
@@ -3552,6 +3636,179 @@ if (!localStorage.getItem('ritual_initiated')) {
 function closeRitualGuideModal() {
   localStorage.setItem('ritual_initiated', '1');
   document.getElementById('ritualModalBg').classList.remove('visible');
+}
+
+// ── セッションリザルト ──
+function initSessionData() {
+  if (!sessionStorage.getItem('session_initialized')) {
+    sessionStorage.setItem('session_chant_count', '0');
+    sessionStorage.setItem('session_elements', '[]');
+    sessionStorage.setItem('session_rarities', '[]');
+    sessionStorage.setItem('session_best_chant', '');
+    sessionStorage.setItem('session_best_chant_rarity', '');
+    sessionStorage.setItem('session_initialized', '1');
+  }
+}
+initSessionData();
+
+function updateSessionData(chantText, evaluation) {
+  const count = parseInt(sessionStorage.getItem('session_chant_count') || '0');
+  sessionStorage.setItem('session_chant_count', String(count + 1));
+  if (evaluation?.element) {
+    const elements = JSON.parse(sessionStorage.getItem('session_elements') || '[]');
+    elements.push(evaluation.element);
+    sessionStorage.setItem('session_elements', JSON.stringify(elements));
+  }
+  if (evaluation?.rarity) {
+    const rarities = JSON.parse(sessionStorage.getItem('session_rarities') || '[]');
+    rarities.push(evaluation.rarity);
+    sessionStorage.setItem('session_rarities', JSON.stringify(rarities));
+  }
+  const rarityRank = ['レジェンド', 'スーパーレア', 'レア', 'アンコモン', 'コモン'];
+  const current = sessionStorage.getItem('session_best_chant_rarity') || '';
+  const currentIdx = rarityRank.indexOf(current);
+  const newIdx = rarityRank.indexOf(evaluation?.rarity || '');
+  if (newIdx !== -1 && (currentIdx === -1 || newIdx < currentIdx)) {
+    sessionStorage.setItem('session_best_chant', chantText);
+    sessionStorage.setItem('session_best_chant_rarity', evaluation.rarity);
+  }
+}
+
+function collectResultData() {
+  const count = parseInt(sessionStorage.getItem('session_chant_count') || '0');
+  const rarities = JSON.parse(sessionStorage.getItem('session_rarities') || '[]');
+  const rarityRank = ['レジェンド', 'スーパーレア', 'レア', 'アンコモン', 'コモン'];
+  let topRarity = '—';
+  for (const r of rarityRank) { if (rarities.includes(r)) { topRarity = r; break; } }
+
+  const elements = [...new Set(JSON.parse(sessionStorage.getItem('session_elements') || '[]'))].slice(0, 4);
+
+  const hof = getHof();
+  const topHof = (hof.length > 0 ? hof[hof.length - 1].text : null)
+    || sessionStorage.getItem('session_best_chant') || null;
+
+  const mvp = getMvp();
+  const wordEntries = Object.entries(wordVotes || {})
+    .filter(([, v]) => v > 0)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3);
+
+  return { count, topRarity, elements, topHof, mvp, wordEntries };
+}
+
+function showResultModal() {
+  const d = collectResultData();
+  const body = document.getElementById('resultModalBody');
+  let html = '';
+
+  html += `<div class="result-stat"><span class="result-stat-label">詠唱回数</span><span class="result-stat-value">${d.count}回</span></div>`;
+  html += `<div class="result-stat"><span class="result-stat-label">最高レアリティ</span><span class="result-stat-value">${esc(d.topRarity)}</span></div>`;
+  html += `<div class="result-stat"><span class="result-stat-label">使用属性</span><span class="result-stat-value">${d.elements.length > 0 ? d.elements.map(e => esc(e)).join('・') : '—'}</span></div>`;
+
+  if (d.topHof) {
+    html += `<div class="result-section-title">── 今宵の殿堂 ──</div>`;
+    const firstLine = d.topHof.split('\n')[0];
+    html += `<div class="result-chant">${esc(firstLine)}——</div>`;
+  }
+
+  if (d.mvp) {
+    html += `<div class="result-section-title">── MVP ──</div>`;
+    html += `<div class="result-stat"><span class="result-stat-label">\u{1F451} ${esc(d.mvp.username)}</span><span class="result-stat-value">スコア ${d.mvp.score}</span></div>`;
+  }
+
+  if (d.wordEntries.length > 0) {
+    html += `<div class="result-section-title">── 人気言霊 Top3 ──</div>`;
+    d.wordEntries.forEach(([word, votes], i) => {
+      html += `<div class="result-rank"><span class="result-rank-word">${i + 1}位　${esc(word)}</span><span>${votes}票</span></div>`;
+    });
+  }
+
+  if (d.count === 0 && !d.mvp && d.wordEntries.length === 0) {
+    html += `<div class="result-empty">まだ儀式は始まっていない——</div>`;
+  }
+
+  body.innerHTML = html;
+  document.getElementById('resultModalBg').classList.add('visible');
+}
+
+function closeResultModal() {
+  document.getElementById('resultModalBg').classList.remove('visible');
+}
+
+async function saveResultImage() {
+  const d = collectResultData();
+  const el = document.createElement('div');
+  el.style.cssText = `
+    position: fixed; left: -9999px; width: 1200px; height: 675px;
+    background: #0E0C09;
+    background-image: radial-gradient(ellipse at 20% 50%, rgba(90,138,128,0.06) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 20%, rgba(160,120,48,0.06) 0%, transparent 60%);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+  `;
+
+  let statsHtml = `
+    <div style="display:flex;gap:40px;margin:16px 0 20px;">
+      <div style="text-align:center;"><div style="font-size:14px;color:rgba(160,120,48,0.6);">詠唱回数</div><div style="font-size:28px;color:#E8DFC8;font-weight:700;margin-top:4px;">${d.count}</div></div>
+      <div style="text-align:center;"><div style="font-size:14px;color:rgba(160,120,48,0.6);">最高レアリティ</div><div style="font-size:20px;color:#C8A050;font-weight:600;margin-top:8px;">${esc(d.topRarity)}</div></div>
+      <div style="text-align:center;"><div style="font-size:14px;color:rgba(160,120,48,0.6);">使用属性</div><div style="font-size:16px;color:#E8DFC8;margin-top:8px;">${d.elements.length > 0 ? d.elements.map(e => esc(e)).join(' · ') : '—'}</div></div>
+    </div>`;
+
+  let hofHtml = '';
+  if (d.topHof) {
+    const firstLine = d.topHof.split('\n')[0];
+    hofHtml = `
+      <div style="margin:12px 0 8px;font-size:14px;color:rgba(160,120,48,0.6);letter-spacing:0.15em;">── 今宵の殿堂 ──</div>
+      <div style="font-family:'Yuji Syuku',serif;font-size:22px;color:#E8DFC8;letter-spacing:0.05em;">${esc(firstLine)}——</div>`;
+  }
+
+  let mvpHtml = '';
+  if (d.mvp) {
+    mvpHtml = `<div style="margin:16px 0 4px;font-size:14px;color:rgba(160,120,48,0.6);letter-spacing:0.15em;">── MVP ──</div>
+      <div style="font-size:18px;color:#E8DFC8;">\u{1F451} ${esc(d.mvp.username)}（スコア ${d.mvp.score}）</div>`;
+  }
+
+  let wordsHtml = '';
+  if (d.wordEntries.length > 0) {
+    wordsHtml = `<div style="margin:16px 0 8px;font-size:14px;color:rgba(160,120,48,0.6);letter-spacing:0.15em;">── 人気言霊 Top3 ──</div>`;
+    d.wordEntries.forEach(([word, votes], i) => {
+      wordsHtml += `<div style="font-size:16px;color:#E8DFC8;padding:2px 0;">${i + 1}位　${esc(word)}（${votes}票）</div>`;
+    });
+  }
+
+  el.innerHTML = `
+    <div style="width:1000px;border:1px solid rgba(160,120,48,0.6);background:rgba(19,17,13,0.98);position:relative;padding:32px 48px;">
+      <div style="position:absolute;top:-1px;left:-1px;width:20px;height:20px;border-top:2px solid #C8A050;border-left:2px solid #C8A050;"></div>
+      <div style="position:absolute;top:-1px;right:-1px;width:20px;height:20px;border-top:2px solid #C8A050;border-right:2px solid #C8A050;"></div>
+      <div style="position:absolute;bottom:-1px;left:-1px;width:20px;height:20px;border-bottom:2px solid #C8A050;border-left:2px solid #C8A050;"></div>
+      <div style="position:absolute;bottom:-1px;right:-1px;width:20px;height:20px;border-bottom:2px solid #C8A050;border-right:2px solid #C8A050;"></div>
+      <div style="text-align:center;font-family:'Yuji Syuku',serif;font-size:22px;color:#C8A050;letter-spacing:0.2em;">── 今宵の儀式は終わった ──</div>
+      ${statsHtml}
+      <div style="margin:8px 0;height:1px;background:rgba(160,120,48,0.2);"></div>
+      ${hofHtml}${mvpHtml}${wordsHtml}
+      <div style="margin-top:16px;height:1px;background:rgba(160,120,48,0.2);"></div>
+      <div style="margin-top:12px;text-align:center;font-size:14px;color:rgba(160,120,48,0.5);letter-spacing:0.1em;">#詠唱メーカー　eishou-maker.vercel.app</div>
+    </div>`;
+
+  document.body.appendChild(el);
+  await document.fonts.ready;
+  const canvas = await html2canvas(el, { width: 1200, height: 675, scale: 1, backgroundColor: '#0E0C09', useCORS: true, allowTaint: true });
+  document.body.removeChild(el);
+  const link = document.createElement('a');
+  link.download = `儀式リザルト_${Date.now()}.png`;
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+}
+
+function shareResultToX(btn) {
+  const d = collectResultData();
+  let text = `今宵の儀式は終わった——\n\n詠唱回数：${d.count}回\n最高レアリティ：${d.topRarity}`;
+  if (d.elements.length > 0) text += `\n使用属性：${d.elements.join('・')}`;
+  text += `\n\n#詠唱メーカー\nhttps://eishou-maker.vercel.app`;
+  saveResultImage();
+  window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`, '_blank');
+  btn.textContent = '↓ 画像をDLしてXへ貼ってね';
+  setTimeout(() => { btn.textContent = '𝕏 シェア'; }, 3000);
 }
 
 // ── 魔法陣キャンバス ──
