@@ -568,6 +568,28 @@ body {
 .type-btn.active[data-type="滅亡"] { border: 2px solid #7A3030; color: #A05050; background: rgba(122,48,48,0.12); text-shadow: 0 0 10px rgba(122,48,48,0.5); box-shadow: 0 0 12px rgba(122,48,48,0.25), inset 0 0 15px rgba(122,48,48,0.05); }
 .type-btn.active[data-type="覚醒"] { border: 2px solid #5A7A5A; color: #7A9A7A; background: rgba(90,122,90,0.12); text-shadow: 0 0 10px rgba(90,122,90,0.5); box-shadow: 0 0 12px rgba(90,122,90,0.25), inset 0 0 15px rgba(90,122,90,0.05); }
 .type-btn.active[data-type="自己紹介"] { border: 2px solid #B48CC8; color: #B48CC8; background: rgba(180,140,200,0.12); text-shadow: 0 0 10px rgba(180,140,200,0.5); box-shadow: 0 0 12px rgba(180,140,200,0.25), inset 0 0 15px rgba(180,140,200,0.05); }
+#selfintro-mode-toggle {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+  justify-content: center;
+}
+.selfintro-mode-btn {
+  padding: 6px 20px;
+  font-size: 13px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--fg-dim);
+  cursor: pointer;
+  border-radius: 0;
+  font-family: 'Zen Kaku Gothic New', sans-serif;
+  transition: all 0.2s ease;
+}
+.selfintro-mode-btn.active {
+  border-color: var(--gold);
+  color: var(--fg-base);
+  background: rgba(160,120,48,0.1);
+}
 #profileForm {
   display: flex;
   flex-direction: column;
@@ -1790,6 +1812,11 @@ footer a:hover { color: var(--gold); }
     <button class="type-btn" data-type="滅亡" onclick="selectType(this)">滅亡</button>
     <button class="type-btn" data-type="覚醒" onclick="selectType(this)">覚醒</button>
     <button class="type-btn" data-type="自己紹介" onclick="selectType(this)">自己紹介</button>
+  </div>
+
+  <div id="selfintro-mode-toggle" style="display:none;">
+    <button id="mode-kotodama" class="selfintro-mode-btn active" onclick="setSelfIntroMode('kotodama')">言霊モード</button>
+    <button id="mode-profile" class="selfintro-mode-btn" onclick="setSelfIntroMode('profile')">プロフィールモード</button>
   </div>
 
   <div id="profileForm" style="display:none;">
@@ -3199,9 +3226,10 @@ function showResultWithTyping(text) {
 
 async function generate() {
   const isIntro = selectedType === '自己紹介';
-  console.log('[generate] called. selected:', selected.length, 'type:', selectedType, 'rateLogs:', getActiveRateLogs().length, '/', getRateMax());
+  const isProfileMode = isIntro && selfIntroMode === 'profile';
+  console.log('[generate] called. selected:', selected.length, 'type:', selectedType, 'mode:', selfIntroMode, 'rateLogs:', getActiveRateLogs().length, '/', getRateMax());
 
-  if (isIntro) {
+  if (isProfileMode) {
     const pName = document.getElementById('profileName').value.trim();
     if (!pName) { alert('名前を入力してください'); return; }
   } else {
@@ -3226,9 +3254,10 @@ async function generate() {
   document.getElementById('altarArea').style.display = 'none';
 
   // リクエストbody構築
-  const requestBody = isIntro
+  const requestBody = isProfileMode
     ? {
         type: '自己紹介',
+        mode: 'profile',
         profile: {
           name: document.getElementById('profileName').value.trim(),
           activity: document.getElementById('profileActivity').value.trim(),
@@ -3236,7 +3265,9 @@ async function generate() {
           keywords: document.getElementById('profileKeywords').value.trim()
         }
       }
-    : { words: selected, type: selectedType };
+    : isIntro
+      ? { words: selected, type: '自己紹介', mode: 'kotodama' }
+      : { words: selected, type: selectedType };
 
   // カウントダウンとAPI呼び出しを並行開始
   const apiPromise = fetch(API_URL, {
@@ -3526,17 +3557,42 @@ function clearHof() {
 
 renderHof();
 
+let selfIntroMode = 'kotodama';
+
+function setSelfIntroMode(mode) {
+  selfIntroMode = mode;
+  if (mode === 'kotodama') {
+    document.querySelector('.altar-left').style.visibility = 'visible';
+    document.getElementById('selectedArea').style.display = '';
+    document.getElementById('profileForm').style.display = 'none';
+    document.getElementById('mode-kotodama').classList.add('active');
+    document.getElementById('mode-profile').classList.remove('active');
+    document.getElementById('altarPlaceholder').textContent = '── 言霊を選び、魂を刻め ──';
+  } else {
+    document.querySelector('.altar-left').style.visibility = 'hidden';
+    document.getElementById('selectedArea').style.display = 'none';
+    document.getElementById('profileForm').style.display = '';
+    document.getElementById('mode-kotodama').classList.remove('active');
+    document.getElementById('mode-profile').classList.add('active');
+    document.getElementById('altarPlaceholder').textContent = '── 己を刻み、魂を解き放て ──';
+  }
+}
+
 function selectType(btn) {
   document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   selectedType = btn.dataset.type;
-  const isIntro = selectedType === '自己紹介';
-  document.getElementById('profileForm').style.display = isIntro ? '' : 'none';
-  document.getElementById('selectedArea').style.display = isIntro ? 'none' : '';
-  document.querySelector('.altar-left').style.visibility = isIntro ? 'hidden' : '';
-  document.getElementById('altarPlaceholder').textContent = isIntro
-    ? '── 己を刻み、魂を解き放て ──'
-    : '── 言霊を選び、儀式を起動せよ ──';
+  const toggle = document.getElementById('selfintro-mode-toggle');
+  if (selectedType === '自己紹介') {
+    toggle.style.display = 'flex';
+    setSelfIntroMode('kotodama');
+  } else {
+    toggle.style.display = 'none';
+    document.querySelector('.altar-left').style.visibility = 'visible';
+    document.getElementById('selectedArea').style.display = '';
+    document.getElementById('profileForm').style.display = 'none';
+    document.getElementById('altarPlaceholder').textContent = '── 言霊を選び、儀式を起動せよ ──';
+  }
 }
 function toggleSpeech() {
   speechEnabled = !speechEnabled;
