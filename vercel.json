@@ -23,6 +23,10 @@
     "api/auth/refresh.js": {
       "memory": 128,
       "maxDuration": 10
+    },
+    "api/judge.js": {
+      "memory": 128,
+      "maxDuration": 15
     }
   }
 }

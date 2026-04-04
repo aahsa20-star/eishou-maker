@@ -1706,6 +1706,88 @@ footer a:hover { color: var(--gold); }
   transition: all 0.2s; flex-shrink: 0;
 }
 .btn-result:hover { border-color: var(--gold); color: var(--gold); }
+
+/* ── バトルモード ── */
+.btn-battle {
+  padding: 4px 14px; border: 1px solid rgba(200,80,80,0.3); background: transparent; color: var(--fg-dim);
+  font-size: 13px; cursor: pointer; letter-spacing: 0.1em; transition: all 0.2s; flex-shrink: 0;
+}
+.btn-battle:hover { border-color: #C84B4B; color: #C84B4B; }
+.btn-battle.active { border-color: #C84B4B; color: #C84B4B; background: rgba(200,75,75,0.1); }
+.btn-battle:disabled { opacity: 0.3; cursor: not-allowed; }
+
+#battle-left-ui { display: none; flex-direction: column; gap: 8px; height: 100%; }
+.battle-team { flex: 1; display: flex; flex-direction: column; border: 1px solid var(--border); padding: 10px; }
+.battle-team.red-team { border-color: rgba(200,75,75,0.3); }
+.battle-team.blue-team { border-color: rgba(75,130,200,0.3); }
+.battle-team-label { font-size: 14px; font-weight: 600; letter-spacing: 0.1em; margin-bottom: 8px; }
+.battle-team.red-team .battle-team-label { color: #C84B4B; }
+.battle-team.blue-team .battle-team-label { color: #4B82C8; }
+.battle-hint { font-size: 12px; color: var(--fg-dim); margin: 4px 0 8px; }
+
+.battle-words-area { display: flex; flex-wrap: wrap; gap: 6px; min-height: 30px; margin-bottom: 8px; }
+.battle-word-card {
+  padding: 3px 10px; font-size: 13px; cursor: pointer; border: 1px solid var(--border);
+  background: var(--bg-panel); color: var(--fg-base); transition: all 0.15s;
+}
+.battle-word-card.selected { border-color: var(--gold); color: var(--gold-bright); background: rgba(160,120,48,0.1); }
+.battle-word-card.red-card { border-color: rgba(200,75,75,0.4); }
+.battle-word-card.red-card.selected { border-color: #C84B4B; color: #C84B4B; background: rgba(200,75,75,0.1); }
+.battle-word-card.blue-card { border-color: rgba(75,130,200,0.4); }
+.battle-word-card.blue-card.selected { border-color: #4B82C8; color: #4B82C8; background: rgba(75,130,200,0.1); }
+
+.battle-selected-label { font-size: 12px; color: var(--fg-dim); margin-bottom: 4px; letter-spacing: 0.1em; }
+.battle-selected-words { display: flex; flex-wrap: wrap; gap: 4px; min-height: 24px; }
+
+#battle-center-ui { display: none; flex-direction: column; gap: 12px; align-items: center; }
+.battle-title { font-family: 'Yuji Syuku', serif; font-size: 20px; color: #C84B4B; letter-spacing: 0.15em; text-align: center; }
+.battle-selected-preview { width: 100%; }
+.battle-preview-row { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 8px; }
+.battle-preview-label { font-size: 13px; font-weight: 600; flex-shrink: 0; width: 20px; }
+.battle-preview-label.red { color: #C84B4B; }
+.battle-preview-label.blue { color: #4B82C8; }
+.battle-preview-words { font-size: 13px; color: var(--fg-dim); line-height: 1.6; }
+
+#battle-start-btn {
+  padding: 10px 40px; border: 1px solid rgba(200,75,75,0.5); background: rgba(200,75,75,0.08);
+  color: #C84B4B; font-size: 15px; font-family: 'Yuji Syuku', serif; cursor: pointer;
+  letter-spacing: 0.2em; transition: all 0.2s;
+}
+#battle-start-btn:hover { background: rgba(200,75,75,0.15); border-color: #C84B4B; }
+#battle-start-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+#battle-result-area { width: 100%; }
+.battle-result { display: flex; flex-direction: column; gap: 16px; }
+.battle-chant {
+  border: 1px solid var(--border); padding: 16px; position: relative;
+}
+.battle-chant.red-chant { border-color: rgba(200,75,75,0.4); }
+.battle-chant.blue-chant { border-color: rgba(75,130,200,0.4); }
+.chant-team-label { font-size: 13px; font-weight: 600; margin-bottom: 8px; letter-spacing: 0.1em; }
+.battle-chant.red-chant .chant-team-label { color: #C84B4B; }
+.battle-chant.blue-chant .chant-team-label { color: #4B82C8; }
+.battle-chant .chant-text {
+  font-family: 'Yuji Syuku', serif; font-size: 16px; color: var(--fg-base);
+  line-height: 1.8; white-space: pre-line;
+}
+.battle-vs {
+  text-align: center; font-size: 18px; color: var(--fg-dim); letter-spacing: 0.3em;
+  font-family: 'Yuji Syuku', serif;
+}
+.battle-winner {
+  text-align: center; font-family: 'Yuji Syuku', serif; font-size: 18px;
+  letter-spacing: 0.15em; padding: 12px; border: 1px solid var(--border);
+}
+.battle-winner.red { color: #C84B4B; border-color: rgba(200,75,75,0.5); background: rgba(200,75,75,0.06); }
+.battle-winner.blue { color: #4B82C8; border-color: rgba(75,130,200,0.5); background: rgba(75,130,200,0.06); }
+.battle-winner.draw { color: var(--gold-bright); border-color: rgba(200,160,80,0.5); background: rgba(200,160,80,0.06); }
+.battle-reason { text-align: center; font-size: 14px; color: var(--fg-dim); font-style: italic; line-height: 1.6; }
+.battle-actions { display: flex; gap: 8px; justify-content: center; margin-top: 8px; }
+.battle-actions button {
+  padding: 6px 20px; border: 1px solid var(--border); background: transparent;
+  color: var(--fg-dim); font-size: 13px; cursor: pointer; transition: all 0.2s;
+}
+.battle-actions button:hover { border-color: var(--gold); color: var(--fg-base); }
 </style>
 </head>
 <body>
@@ -1746,6 +1828,7 @@ footer a:hover { color: var(--gold); }
   <span class="status" id="status">未接続</span>
   <div class="rate-info" id="rateInfo"></div>
   <button class="btn-result" onclick="showResultModal()">リザルト</button>
+  <button class="btn-battle" id="battleBtn" onclick="toggleBattleMode()" disabled title="サブスクライバー限定">バトル</button>
   <div class="auth-area" id="authArea">
     <button class="auth-login-btn" id="authLoginBtn" onclick="twitchLogin()">Twitchでログイン</button>
   </div>
@@ -1756,49 +1839,68 @@ footer a:hover { color: var(--gold); }
 <!-- ═══ 左カラム：供物の間 ═══ -->
 <div class="altar-col altar-left">
 
-  <div class="panel">
-    <div class="panel-header">
-      <div class="panel-title teal">集いし言霊</div>
-      <button class="btn-sort-toggle" id="sortToggle" onclick="toggleVoteSort()" style="display:none">力ある順</button>
-      <button class="btn-clear-words" id="clearWordsBtn" onclick="clearAllWords()" style="display:none">言霊を散らす</button>
+  <div id="normal-left-ui">
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title teal">集いし言霊</div>
+        <button class="btn-sort-toggle" id="sortToggle" onclick="toggleVoteSort()" style="display:none">力ある順</button>
+        <button class="btn-clear-words" id="clearWordsBtn" onclick="clearAllWords()" style="display:none">言霊を散らす</button>
+      </div>
+      <div class="word-grid" id="wordGrid"></div>
+      <div style="margin-top:8px;">
+        <button class="btn-sort-toggle" id="mvpBtn" onclick="addMvpAsWord()" style="display:none">最強の使い魔を召喚</button>
+        <span class="mvp-info" id="mvpInfo" style="display:none"></span>
+      </div>
     </div>
-    <div class="word-grid" id="wordGrid"></div>
+
+    <div class="panel" style="margin-top:12px;">
+      <div class="panel-title gold">言霊を刻む</div>
+      <div class="manual-input">
+        <input id="manualWord" placeholder="汝の言霊を..." onkeydown="if(event.key==='Enter')addManualWord()">
+        <button onclick="addManualWord()">刻む</button>
+      </div>
+    </div>
+
+    <div class="odai-area" id="odaiArea">
+      <div class="odai-header">
+        <div class="panel-title gold odai-collapse-toggle" onclick="toggleOdaiCollapse()">儀式のテーマ</div>
+        <button class="odai-clear-btn" onclick="clearOdai()">消滅</button>
+      </div>
+      <div class="odai-current" id="odaiCurrent"></div>
+      <div class="odai-custom">
+        <input id="odaiCustomInput" placeholder="汝のテーマを刻め..." onkeydown="if(event.key==='Enter')adoptCustomOdai()">
+        <button onclick="adoptCustomOdai()">降臨</button>
+      </div>
+      <div class="odai-collapsible">
+        <div class="odai-presets" id="odaiPresets"></div>
+        <div class="odai-chat-candidates" id="odaiChatCandidates"></div>
+      </div>
+    </div>
+
     <div style="margin-top:8px;">
-      <button class="btn-sort-toggle" id="mvpBtn" onclick="addMvpAsWord()" style="display:none">最強の使い魔を召喚</button>
-      <span class="mvp-info" id="mvpInfo" style="display:none"></span>
+      <div class="panel-title gold" style="font-size:13px;">古の教え</div>
+      <p style="color:var(--fg-dim);font-size:13px;line-height:1.6">
+        チャットに <code style="color:#C8A050">!word 単語</code> を送ると表示されます。<br>
+        クリックで選択 → 並び替え → 詠唱生成
+      </p>
     </div>
   </div>
 
-  <div class="panel" style="margin-top:12px;">
-    <div class="panel-title gold">言霊を刻む</div>
-    <div class="manual-input">
-      <input id="manualWord" placeholder="汝の言霊を..." onkeydown="if(event.key==='Enter')addManualWord()">
-      <button onclick="addManualWord()">刻む</button>
+  <div id="battle-left-ui" style="display:none;">
+    <div class="battle-team red-team">
+      <div class="battle-team-label">赤陣営</div>
+      <div class="battle-words-area" id="redWordsArea"></div>
+      <div class="battle-hint"><code style="color:#C84B4B">!red 単語</code> で投稿</div>
+      <div class="battle-selected-label">選ばれし言霊</div>
+      <div class="battle-selected-words" id="redSelectedWords"></div>
     </div>
-  </div>
-
-  <div class="odai-area" id="odaiArea">
-    <div class="odai-header">
-      <div class="panel-title gold odai-collapse-toggle" onclick="toggleOdaiCollapse()">儀式のテーマ</div>
-      <button class="odai-clear-btn" onclick="clearOdai()">消滅</button>
+    <div class="battle-team blue-team">
+      <div class="battle-team-label">青陣営</div>
+      <div class="battle-words-area" id="blueWordsArea"></div>
+      <div class="battle-hint"><code style="color:#4B82C8">!blue 単語</code> で投稿</div>
+      <div class="battle-selected-label">選ばれし言霊</div>
+      <div class="battle-selected-words" id="blueSelectedWords"></div>
     </div>
-    <div class="odai-current" id="odaiCurrent"></div>
-    <div class="odai-custom">
-      <input id="odaiCustomInput" placeholder="汝のテーマを刻め..." onkeydown="if(event.key==='Enter')adoptCustomOdai()">
-      <button onclick="adoptCustomOdai()">降臨</button>
-    </div>
-    <div class="odai-collapsible">
-      <div class="odai-presets" id="odaiPresets"></div>
-      <div class="odai-chat-candidates" id="odaiChatCandidates"></div>
-    </div>
-  </div>
-
-  <div style="margin-top:8px;">
-    <div class="panel-title gold" style="font-size:13px;">古の教え</div>
-    <p style="color:var(--fg-dim);font-size:13px;line-height:1.6">
-      チャットに <code style="color:#C8A050">!word 単語</code> を送ると表示されます。<br>
-      クリックで選択 → 並び替え → 詠唱生成
-    </p>
   </div>
 
 </div>
@@ -1806,6 +1908,30 @@ footer a:hover { color: var(--gold); }
 <!-- ═══ 中央カラム：儀式祭壇 ═══ -->
 <div class="altar-col altar-center">
 
+  <div id="battle-center-ui" style="display:none; flex-direction:column; gap:12px; align-items:center; width:100%;">
+    <div class="battle-title">⚔ 詠唱バトル</div>
+    <div class="type-selector">
+      <button class="type-btn active" data-type="召喚" onclick="selectType(this)">召喚</button>
+      <button class="type-btn" data-type="解放" onclick="selectType(this)">解放</button>
+      <button class="type-btn" data-type="封印" onclick="selectType(this)">封印</button>
+      <button class="type-btn" data-type="滅亡" onclick="selectType(this)">滅亡</button>
+      <button class="type-btn" data-type="覚醒" onclick="selectType(this)">覚醒</button>
+    </div>
+    <div class="battle-selected-preview">
+      <div class="battle-preview-row">
+        <span class="battle-preview-label red">赤</span>
+        <span class="battle-preview-words" id="battleRedPreview">言霊を選べ...</span>
+      </div>
+      <div class="battle-preview-row">
+        <span class="battle-preview-label blue">青</span>
+        <span class="battle-preview-words" id="battleBluePreview">言霊を選べ...</span>
+      </div>
+    </div>
+    <button id="battle-start-btn" onclick="startBattle()">⚔ バトル開始</button>
+    <div id="battle-result-area" style="display:none;"></div>
+  </div>
+
+  <div id="normal-center-ui">
   <div class="type-selector">
     <button class="type-btn active" data-type="召喚" onclick="selectType(this)">召喚</button>
     <button class="type-btn" data-type="解放" onclick="selectType(this)">解放</button>
@@ -1875,6 +2001,7 @@ footer a:hover { color: var(--gold); }
     <button class="speech-toggle" id="chainToggle" onclick="toggleChainChant()">連続詠唱</button>
     <button class="btn-clear" onclick="clearSelected()">クリア</button>
   </div>
+  </div><!-- /normal-center-ui -->
 
 </div>
 
@@ -2198,6 +2325,19 @@ function connect(channel) {
       if (odaiMatch) {
         const text = odaiMatch[1].trim().slice(0, 20);
         if (text) addOdaiFromChat(text, username);
+      }
+      // バトルモード：!red / !blue
+      if (battleMode) {
+        const redMatch = line.match(/PRIVMSG\s+#\S+\s+:!red\s+(.+)/i);
+        if (redMatch) {
+          const w = redMatch[1].trim().substring(0, 20);
+          if (w) addBattleWord('red', w, username);
+        }
+        const blueMatch = line.match(/PRIVMSG\s+#\S+\s+:!blue\s+(.+)/i);
+        if (blueMatch) {
+          const w = blueMatch[1].trim().substring(0, 20);
+          if (w) addBattleWord('blue', w, username);
+        }
       }
     }
   };
@@ -2575,6 +2715,7 @@ async function twitchLogout() {
   authState = { loggedIn: false, userName: null, isSubscriber: false };
   updateAuthUI();
   updateRateInfo();
+  updateBattleBtn();
 }
 async function checkAuth() {
   try {
@@ -2586,6 +2727,7 @@ async function checkAuth() {
   } catch {}
   updateAuthUI();
   updateRateInfo();
+  updateBattleBtn();
 }
 function updateAuthUI() {
   const area = document.getElementById('authArea');
@@ -3989,6 +4131,179 @@ function restoreSideColumns() {
     // Remove restoring class after transition completes
     setTimeout(() => col.classList.remove('restoring'), 500);
   });
+}
+
+// ── 詠唱バトル ──
+let battleMode = false;
+let battleWords = { red: [], blue: [] };
+let battleSelected = { red: [], blue: [] };
+
+function toggleBattleMode() {
+  battleMode = !battleMode;
+  const btn = document.getElementById('battleBtn');
+  btn.classList.toggle('active', battleMode);
+
+  document.getElementById('normal-left-ui').style.display = battleMode ? 'none' : '';
+  document.getElementById('battle-left-ui').style.display = battleMode ? 'flex' : 'none';
+  document.getElementById('normal-center-ui').style.display = battleMode ? 'none' : '';
+  document.getElementById('battle-center-ui').style.display = battleMode ? 'flex' : 'none';
+
+  if (!battleMode) resetBattle();
+}
+
+function resetBattle() {
+  battleWords = { red: [], blue: [] };
+  battleSelected = { red: [], blue: [] };
+  renderBattleWords('red');
+  renderBattleWords('blue');
+  updateBattlePreview();
+  document.getElementById('battle-result-area').style.display = 'none';
+  document.getElementById('battle-result-area').innerHTML = '';
+  const btn = document.getElementById('battle-start-btn');
+  btn.disabled = false;
+  btn.textContent = '⚔ バトル開始';
+}
+
+function addBattleWord(team, word, username) {
+  if (battleWords[team].find(w => w.word === word)) return;
+  battleWords[team].push({ word, username });
+  renderBattleWords(team);
+}
+
+function toggleBattleWordSelect(team, word) {
+  const idx = battleSelected[team].indexOf(word);
+  if (idx >= 0) {
+    battleSelected[team].splice(idx, 1);
+  } else {
+    if (battleSelected[team].length >= 10) return;
+    battleSelected[team].push(word);
+  }
+  renderBattleWords(team);
+  updateBattlePreview();
+}
+
+function renderBattleWords(team) {
+  const area = document.getElementById(team === 'red' ? 'redWordsArea' : 'blueWordsArea');
+  const selArea = document.getElementById(team === 'red' ? 'redSelectedWords' : 'blueSelectedWords');
+  const cardClass = team === 'red' ? 'red-card' : 'blue-card';
+
+  area.innerHTML = battleWords[team].map(w => {
+    const isSelected = battleSelected[team].includes(w.word);
+    return `<div class="battle-word-card ${cardClass}${isSelected ? ' selected' : ''}" onclick="toggleBattleWordSelect('${team}','${esc(w.word)}')">${esc(w.word)}</div>`;
+  }).join('');
+
+  selArea.innerHTML = battleSelected[team].length > 0
+    ? battleSelected[team].map(w => `<span style="color:var(--fg-base);font-size:13px;">${esc(w)}</span>`).join('、')
+    : '<span style="color:var(--fg-dim);font-size:12px;">未選択</span>';
+}
+
+function updateBattlePreview() {
+  document.getElementById('battleRedPreview').textContent =
+    battleSelected.red.length > 0 ? battleSelected.red.join('、') : '言霊を選べ...';
+  document.getElementById('battleBluePreview').textContent =
+    battleSelected.blue.length > 0 ? battleSelected.blue.join('、') : '言霊を選べ...';
+}
+
+async function startBattle() {
+  if (battleSelected.red.length === 0 || battleSelected.blue.length === 0) {
+    alert('両陣営に言霊が必要です');
+    return;
+  }
+
+  const btn = document.getElementById('battle-start-btn');
+  btn.disabled = true;
+  btn.textContent = '詠唱中...';
+  document.getElementById('battle-result-area').style.display = 'none';
+
+  try {
+    // 両詠唱を並行生成
+    const [redRes, blueRes] = await Promise.allSettled([
+      fetch('/api/chant', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ words: battleSelected.red, type: selectedType })
+      }).then(r => r.json()),
+      fetch('/api/chant', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ words: battleSelected.blue, type: selectedType })
+      }).then(r => r.json())
+    ]);
+
+    if (redRes.status === 'rejected' || blueRes.status === 'rejected') {
+      throw new Error('詠唱の生成に失敗しました');
+    }
+    if (redRes.value.error || blueRes.value.error) {
+      throw new Error(redRes.value.error || blueRes.value.error);
+    }
+
+    const redChant = redRes.value.text;
+    const blueChant = blueRes.value.text;
+
+    // 審判
+    btn.textContent = '審判中...';
+    const judgeRes = await fetch('/api/judge', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ red: redChant, blue: blueChant })
+    });
+    const judgment = await judgeRes.json();
+    if (judgment.error) throw new Error(judgment.error);
+
+    showBattleResult(redChant, blueChant, judgment);
+  } catch (err) {
+    alert(err.message || 'バトルに失敗しました');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '⚔ バトル開始';
+  }
+}
+
+function showBattleResult(redChant, blueChant, judgment) {
+  const area = document.getElementById('battle-result-area');
+  const winnerLabel = judgment.winner === 'red' ? '赤陣営の勝利！'
+    : judgment.winner === 'blue' ? '青陣営の勝利！'
+    : '引き分け——両者の力は互角であった';
+  const winnerClass = judgment.winner;
+
+  area.innerHTML = `
+    <div class="battle-result">
+      <div class="battle-chant red-chant">
+        <div class="chant-team-label">赤陣営</div>
+        <div class="chant-text">${esc(redChant)}</div>
+      </div>
+      <div class="battle-vs">VS</div>
+      <div class="battle-chant blue-chant">
+        <div class="chant-team-label">青陣営</div>
+        <div class="chant-text">${esc(blueChant)}</div>
+      </div>
+      <div class="battle-winner ${esc(winnerClass)}">
+        ${esc(winnerLabel)}
+      </div>
+      <div class="battle-reason">${esc(judgment.reason || '')}</div>
+      <div class="battle-actions">
+        <button onclick="resetBattle()">もう一度バトル</button>
+        <button onclick="toggleBattleMode()">通常モードに戻る</button>
+      </div>
+    </div>
+  `;
+  area.style.display = 'block';
+}
+
+// 認証後にバトルボタンを有効化
+function updateBattleBtn() {
+  const btn = document.getElementById('battleBtn');
+  if (authState.isSubscriber) {
+    btn.disabled = false;
+    btn.title = '詠唱バトル';
+  } else {
+    btn.disabled = true;
+    btn.title = 'サブスクライバー限定';
+    if (battleMode) toggleBattleMode();
+  }
 }
 </script>
 
