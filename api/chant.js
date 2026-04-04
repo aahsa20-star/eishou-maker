@@ -69,8 +69,8 @@ export default async function handler(req, res) {
 
   // Validate
   const { words, type, profile, mode } = req.body || {};
-  const validTypes = ['召喚', '解放', '封印', '滅亡', '覚醒', '自己紹介'];
-  const chantType = validTypes.includes(type) ? type : '召喚';
+  const validTypes = ['召喚', '解放', '封印', '滅亡', '覚醒', '自己紹介', '自動'];
+  const chantType = validTypes.includes(type) ? type : '自動';
   const isIntro = chantType === '自己紹介';
   const isProfileMode = isIntro && mode === 'profile';
 
@@ -163,6 +163,29 @@ EVAL:以降はJSONのみ出力すること`;
 - ${evalBlock}`;
 
       userMessage = `以下の単語を使って厨二病な自己紹介文を生成してください：\n${sanitized.join('、')}`;
+
+    } else if (chantType === '自動') {
+      // 自動タイプ：AIがタイプを判断
+      systemPrompt = `あなたは厨二病な詠唱文を生成する専門家です。
+与えられた単語を必ず全て使い、単語の雰囲気・内容から
+以下のタイプのうち最も合うものを自分で判断して詠唱を生成してください。
+
+タイプ：召喚・解放・封印・滅亡・覚醒
+
+ルール：
+- 3〜5文程度
+- 1文は40文字以内を目安にすること
+- 各文は改行で区切ること（1行に1文）
+- 「——」「！」「よ」「せよ」など詠唱らしい語尾を使う
+- 単語の意味より語感・リズムを優先してよい
+- 日本語のみ
+- 余計な説明は不要。詠唱文のみ出力すること
+- ${evalBlock}
+
+EVALのJSONに "type" フィールドを追加して選んだタイプ名（召喚・解放・封印・滅亡・覚醒のいずれか）を入れること。
+例：EVAL:{"element":"闇","power":4,"rarity":"レア","type":"封印"}`;
+
+      userMessage = `以下の単語を使って詠唱を生成してください：\n${sanitized.join('、')}`;
 
     } else {
       // 通常の詠唱タイプ

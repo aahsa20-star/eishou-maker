@@ -550,6 +550,7 @@ body {
   border-color: var(--border-gold);
   color: var(--fg-base);
 }
+.type-btn[data-type="自動"] { border-color: rgba(160,120,48,0.3); }
 .type-btn[data-type="召喚"] { border-color: rgba(160,120,48,0.3); }
 .type-btn[data-type="解放"] { border-color: rgba(90,138,128,0.3); }
 .type-btn[data-type="封印"] { border-color: rgba(106,90,138,0.3); }
@@ -1799,6 +1800,237 @@ footer a:hover { color: var(--gold); }
   color: var(--fg-dim); font-size: 13px; cursor: pointer; transition: all 0.2s;
 }
 .battle-actions button:hover { border-color: var(--gold); color: var(--fg-base); }
+
+/* ── Battle Animation Overlay ── */
+.battle-overlay-bg {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  background: #080604;
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.6s, visibility 0.6s;
+}
+.battle-overlay-bg.visible { opacity: 1; visibility: visible; }
+
+.battle-overlay-window {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(900px, 92vw);
+  max-height: 90vh;
+  overflow-y: auto;
+  background: rgba(19,17,13,0.97);
+  border: 1px solid rgba(160,120,48,0.5);
+  box-shadow: 0 0 60px rgba(0,0,0,0.9), 0 0 30px rgba(160,120,48,0.08);
+  z-index: 1001;
+  padding: 0;
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 0.5s, visibility 0.5s;
+}
+.battle-overlay-window.visible { visibility: visible; opacity: 1; }
+.battle-overlay-window::before {
+  content: '';
+  position: absolute;
+  top: -1px; left: -1px;
+  width: 16px; height: 16px;
+  border-top: 2px solid #C8A050;
+  border-left: 2px solid #C8A050;
+  z-index: 6;
+}
+.battle-overlay-window::after {
+  content: '';
+  position: absolute;
+  bottom: -1px; right: -1px;
+  width: 16px; height: 16px;
+  border-bottom: 2px solid #C8A050;
+  border-right: 2px solid #C8A050;
+  z-index: 6;
+}
+
+.battle-overlay-header {
+  display: flex;
+  align-items: center;
+  padding: 14px 28px;
+  border-bottom: 1px solid rgba(160,120,48,0.4);
+}
+.battle-overlay-header-label {
+  font-family: 'Yuji Syuku', serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--gold-bright);
+  letter-spacing: 0.2em;
+}
+.battle-overlay-header-line {
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+  margin: 0 16px;
+}
+.battle-overlay-header-type {
+  font-family: 'Zen Kaku Gothic New', sans-serif;
+  font-size: 14px;
+  color: var(--fg-dim);
+  letter-spacing: 0.1em;
+}
+
+.battle-overlay-content {
+  padding: 28px 36px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.battle-overlay-team {
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.4s, transform 0.4s;
+}
+.battle-overlay-team.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.battle-overlay-team-label {
+  font-family: 'Zen Kaku Gothic New', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  margin-bottom: 8px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(160,120,48,0.2);
+}
+.battle-overlay-team-label.red { color: #C84B4B; border-color: rgba(200,75,75,0.3); }
+.battle-overlay-team-label.blue { color: #4B82C8; border-color: rgba(75,130,200,0.3); }
+
+.battle-overlay-chant-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-height: 60px;
+}
+.battle-overlay-chant-line {
+  font-family: 'Yuji Syuku', serif;
+  font-size: clamp(18px, 2.2vw, 24px);
+  font-weight: 700;
+  line-height: 2;
+  text-align: center;
+  color: var(--fg-base);
+  clip-path: inset(0 100% 0 0);
+  transition: clip-path 0.6s cubic-bezier(0.2, 0, 0.1, 1);
+}
+.battle-overlay-chant-line.revealed {
+  clip-path: inset(0 0% 0 0);
+}
+
+.battle-vs-display {
+  text-align: center;
+  opacity: 0;
+  transform: scale(0.5);
+  transition: opacity 0.4s, transform 0.4s cubic-bezier(0.2, 0, 0.1, 1);
+}
+.battle-vs-display.visible {
+  opacity: 1;
+  transform: scale(1);
+}
+.vs-text {
+  font-family: 'Yuji Syuku', serif;
+  font-size: 48px;
+  font-weight: 700;
+  color: var(--gold-bright);
+  letter-spacing: 0.3em;
+  text-shadow: 0 0 30px rgba(200,160,80,0.4);
+}
+
+.battle-judging {
+  text-align: center;
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+.battle-judging.visible { opacity: 1; }
+.battle-judging-text {
+  font-family: 'Yuji Syuku', serif;
+  font-size: 20px;
+  color: var(--fg-dim);
+  letter-spacing: 0.2em;
+}
+.battle-judging-dots {
+  display: inline-block;
+  animation: dotPulse 1.4s infinite;
+}
+@keyframes dotPulse {
+  0%, 20% { content: ''; opacity: 0.3; }
+  40% { content: '・'; opacity: 0.6; }
+  60% { content: '・・'; opacity: 0.8; }
+  80%, 100% { content: '・・・'; opacity: 1; }
+}
+
+.battle-winner-display {
+  text-align: center;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.6s, transform 0.6s cubic-bezier(0.2, 0, 0.1, 1);
+}
+.battle-winner-display.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.winner-label {
+  font-family: 'Yuji Syuku', serif;
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  margin-bottom: 8px;
+}
+.winner-label.red { color: #C84B4B; text-shadow: 0 0 20px rgba(200,75,75,0.4); }
+.winner-label.blue { color: #4B82C8; text-shadow: 0 0 20px rgba(75,130,200,0.4); }
+.winner-label.draw { color: var(--gold-bright); text-shadow: 0 0 20px rgba(200,160,80,0.4); }
+.winner-reason {
+  font-family: 'Yuji Syuku', serif;
+  font-size: 16px;
+  color: var(--fg-dim);
+  font-style: italic;
+  line-height: 1.8;
+}
+
+.battle-overlay-close {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  background: none;
+  border: none;
+  color: var(--fg-dim);
+  font-size: 24px;
+  cursor: pointer;
+  z-index: 10;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s, color 0.2s;
+}
+.battle-overlay-close.visible { opacity: 1; visibility: visible; }
+.battle-overlay-close:hover { color: var(--fg-base); }
+
+.battle-overlay-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+.battle-overlay-actions.visible { opacity: 1; }
+.battle-overlay-actions button {
+  padding: 6px 20px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--fg-dim);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.battle-overlay-actions button:hover { border-color: var(--gold); color: var(--fg-base); }
 </style>
 </head>
 <body>
@@ -1930,7 +2162,8 @@ footer a:hover { color: var(--gold); }
   <div id="battle-center-ui" style="display:none; flex-direction:column; gap:12px; align-items:center; width:100%;">
     <div class="battle-title">⚔ 詠唱バトル</div>
     <div class="type-selector">
-      <button class="type-btn active" data-type="召喚" onclick="selectType(this)">召喚</button>
+      <button class="type-btn active" data-type="自動" onclick="selectType(this)">自動</button>
+      <button class="type-btn" data-type="召喚" onclick="selectType(this)">召喚</button>
       <button class="type-btn" data-type="解放" onclick="selectType(this)">解放</button>
       <button class="type-btn" data-type="封印" onclick="selectType(this)">封印</button>
       <button class="type-btn" data-type="滅亡" onclick="selectType(this)">滅亡</button>
@@ -1952,7 +2185,8 @@ footer a:hover { color: var(--gold); }
 
   <div id="normal-center-ui">
   <div class="type-selector">
-    <button class="type-btn active" data-type="召喚" onclick="selectType(this)">召喚</button>
+    <button class="type-btn active" data-type="自動" onclick="selectType(this)">自動</button>
+    <button class="type-btn" data-type="召喚" onclick="selectType(this)">召喚</button>
     <button class="type-btn" data-type="解放" onclick="selectType(this)">解放</button>
     <button class="type-btn" data-type="封印" onclick="selectType(this)">封印</button>
     <button class="type-btn" data-type="滅亡" onclick="selectType(this)">滅亡</button>
@@ -2087,6 +2321,42 @@ footer a:hover { color: var(--gold); }
 <div class="ov-info-guide" id="ovInfoGuide">
   <div class="ov-info-guide-title">言霊を刻め</div>
   <div class="ov-info-guide-text"><span class="cmd">!word 言霊</span> を刻め<br>例）<span class="cmd">!word 闇</span>　<span class="cmd">!word 覇</span>　<span class="cmd">!word 混沌</span></div>
+</div>
+
+<!-- ═══ バトル演出オーバーレイ ═══ -->
+<div class="battle-overlay-bg" id="battleOverlayBg"></div>
+<div class="battle-overlay-window" id="battleOverlayWindow">
+  <button class="battle-overlay-close" id="battleOverlayClose" onclick="closeBattleOverlay()">&times;</button>
+  <div class="battle-overlay-header">
+    <span class="battle-overlay-header-label">詠唱バトル</span>
+    <span class="battle-overlay-header-line"></span>
+    <span class="battle-overlay-header-type" id="battleOverlayType"></span>
+  </div>
+  <div class="battle-overlay-content" id="battleOverlayContent">
+    <div class="battle-overlay-team" id="battleOvRed">
+      <div class="battle-overlay-team-label red">赤陣営</div>
+      <div class="battle-overlay-chant-body" id="battleOvRedBody"></div>
+    </div>
+    <div class="battle-vs-display" id="battleOvVs">
+      <span class="vs-text">V S</span>
+    </div>
+    <div class="battle-overlay-team" id="battleOvBlue">
+      <div class="battle-overlay-team-label blue">青陣営</div>
+      <div class="battle-overlay-chant-body" id="battleOvBlueBody"></div>
+    </div>
+    <div class="battle-judging" id="battleOvJudging">
+      <span class="battle-judging-text">——審判の刻——</span>
+      <span class="battle-judging-dots">・・・</span>
+    </div>
+    <div class="battle-winner-display" id="battleOvWinner">
+      <div class="winner-label" id="battleOvWinnerLabel"></div>
+      <div class="winner-reason" id="battleOvWinnerReason"></div>
+    </div>
+    <div class="battle-overlay-actions" id="battleOvActions">
+      <button onclick="closeBattleOverlay(); resetBattle();">もう一度バトル</button>
+      <button onclick="closeBattleOverlay(); toggleBattleMode();">通常モードに戻る</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -2281,7 +2551,7 @@ let chainChantEnabled = localStorage.getItem('chain_chant') === 'true';
 let chainCount = 0;
 let chainedWord = null; // 引き継ぎ単語
 let selected = [];
-let selectedType = '召喚';
+let selectedType = '自動';
 let speechEnabled = true;
 let ws = null;
 let connected = false;
@@ -2860,6 +3130,7 @@ function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
 // ── 詠唱オーバーレイ演出 ──
 const CHANT_TYPE_CONFIG = {
+  '自動': { color: '#C8A050' },
   '召喚': { color: '#A07830' },
   '解放': { color: '#5A8A80' },
   '封印': { color: '#6A5A8A' },
@@ -3286,7 +3557,7 @@ async function runCountdown(type) {
   const numEl = document.getElementById('countdownNumber');
   const labelEl = document.getElementById('countdownLabel');
   const typeColors = {
-    '召喚': '#C8A050', '解放': '#7AB8B0', '封印': '#8A7AA0',
+    '自動': '#C8A050', '召喚': '#C8A050', '解放': '#7AB8B0', '封印': '#8A7AA0',
     '滅亡': '#A05050', '覚醒': '#7A9A7A', '自己紹介': '#B48CC8'
   };
   const color = typeColors[type] || '#C8A050';
@@ -3447,6 +3718,11 @@ async function generate() {
     const text = data.text;
     const evaluation = data.evaluation || null;
 
+    // 自動タイプ：AIが選んだタイプを使用
+    const displayType = selectedType === '自動' && evaluation?.type
+      ? evaluation.type
+      : selectedType;
+
     // 結果プレビュー（パネル内）
     showResultWithTyping(text);
     showEvaluation(evaluation);
@@ -3457,9 +3733,9 @@ async function generate() {
     const historyWords = isIntro
       ? [document.getElementById('profileName').value.trim()].filter(Boolean)
       : [...selected];
-    showChantOverlay(text, selectedType, historyWords, evaluation);
+    showChantOverlay(text, displayType, historyWords, evaluation);
 
-    saveHistory({ text, words: historyWords, type: selectedType, timestamp: Date.now(), evaluation, imageUrl: _lastGeneratedImageUrl || null });
+    saveHistory({ text, words: historyWords, type: displayType, timestamp: Date.now(), evaluation, imageUrl: _lastGeneratedImageUrl || null });
     updateSessionData(text, evaluation);
     addRateLog();
     applyChainAfterGenerate();
@@ -3500,7 +3776,7 @@ function saveHistory(entry) {
 }
 // ── スクリーンショット機能 ──
 const IMAGE_TYPE_COLORS = {
-  '召喚': '#C8A050', '解放': '#5ABAB4', '封印': '#9B7EC8',
+  '自動': '#C8A050', '召喚': '#C8A050', '解放': '#5ABAB4', '封印': '#9B7EC8',
   '滅亡': '#C84B4B', '覚醒': '#7AB87A', '自己紹介': '#B48CC8'
 };
 
@@ -3564,7 +3840,9 @@ async function saveChantImage(chantText, words, type, evaluation) {
 function saveCurrentChantImage() {
   const text = document.getElementById('resultText').textContent;
   if (!text) return;
-  saveChantImage(text, [...selected], selectedType, currentEvaluation);
+  const imgType = selectedType === '自動' && currentEvaluation?.type
+    ? currentEvaluation.type : selectedType;
+  saveChantImage(text, [...selected], imgType, currentEvaluation);
 }
 
 function saveHistoryChantImage(i) {
@@ -3593,7 +3871,7 @@ function renderHistory() {
   history.forEach((entry, i) => {
     const card = document.createElement('div');
     card.className = 'history-card';
-    const typeColors = { '召喚': 'rgba(160,120,48,0.05)', '解放': 'rgba(90,138,128,0.05)', '封印': 'rgba(106,90,138,0.05)', '滅亡': 'rgba(122,48,48,0.05)', '覚醒': 'rgba(90,122,90,0.05)' };
+    const typeColors = { '自動': 'rgba(160,120,48,0.05)', '召喚': 'rgba(160,120,48,0.05)', '解放': 'rgba(90,138,128,0.05)', '封印': 'rgba(106,90,138,0.05)', '滅亡': 'rgba(122,48,48,0.05)', '覚醒': 'rgba(90,122,90,0.05)' };
     card.style.background = typeColors[entry.type] || 'rgba(160,120,48,0.05)';
     const time = new Date(entry.timestamp);
     const hh = String(time.getHours()).padStart(2, '0');
@@ -4031,6 +4309,7 @@ function shareResultToX(btn) {
 
 // ── 魔法陣キャンバス ──
 const ALTAR_TYPE_COLORS = {
+  '自動': [160, 120, 48],
   '召喚': [160, 120, 48],
   '解放': [90, 138, 128],
   '封印': [106, 90, 138],
@@ -4243,20 +4522,23 @@ async function startBattle() {
   document.getElementById('battle-result-area').style.display = 'none';
 
   try {
-    // 両詠唱を並行生成
-    const [redRes, blueRes] = await Promise.allSettled([
-      fetch('/api/chant', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ words: battleSelected.red, type: selectedType })
-      }).then(r => r.json()),
-      fetch('/api/chant', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ words: battleSelected.blue, type: selectedType })
-      }).then(r => r.json())
+    // カウントダウンとAPI呼び出しを並行実行
+    const [, [redRes, blueRes]] = await Promise.all([
+      runCountdown(selectedType),
+      Promise.allSettled([
+        fetch('/api/chant', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ words: battleSelected.red, type: selectedType })
+        }).then(r => r.json()),
+        fetch('/api/chant', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ words: battleSelected.blue, type: selectedType })
+        }).then(r => r.json())
+      ])
     ]);
 
     if (redRes.status === 'rejected' || blueRes.status === 'rejected') {
@@ -4269,19 +4551,19 @@ async function startBattle() {
     const redChant = redRes.value.text;
     const blueChant = blueRes.value.text;
 
-    // 審判
-    btn.textContent = '審判中...';
-    const judgeRes = await fetch('/api/judge', {
+    // 審判API呼び出し（バックグラウンドで開始、演出中に完了を待つ）
+    const judgePromise = fetch('/api/judge', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
       body: JSON.stringify({ red: redChant, blue: blueChant })
-    });
-    const judgment = await judgeRes.json();
-    if (judgment.error) throw new Error(judgment.error);
+    }).then(r => r.json());
 
-    showBattleResult(redChant, blueChant, judgment);
+    // バトル演出を実行
+    await runBattleAnimation(redChant, blueChant, judgePromise);
+
   } catch (err) {
+    closeBattleOverlay();
     alert(err.message || 'バトルに失敗しました');
   } finally {
     btn.disabled = false;
@@ -4289,7 +4571,138 @@ async function startBattle() {
   }
 }
 
-function showBattleResult(redChant, blueChant, judgment) {
+// ── バトル演出メイン ──
+let battleOverlayActive = false;
+
+async function runBattleAnimation(redChant, blueChant, judgePromise) {
+  battleOverlayActive = true;
+  const bg = document.getElementById('battleOverlayBg');
+  const win = document.getElementById('battleOverlayWindow');
+  const typeEl = document.getElementById('battleOverlayType');
+
+  // リセット
+  document.getElementById('battleOvRedBody').innerHTML = '';
+  document.getElementById('battleOvBlueBody').innerHTML = '';
+  document.getElementById('battleOvRed').classList.remove('visible');
+  document.getElementById('battleOvBlue').classList.remove('visible');
+  document.getElementById('battleOvVs').classList.remove('visible');
+  document.getElementById('battleOvJudging').classList.remove('visible');
+  document.getElementById('battleOvWinner').classList.remove('visible');
+  document.getElementById('battleOvActions').classList.remove('visible');
+  document.getElementById('battleOverlayClose').classList.remove('visible');
+
+  typeEl.textContent = selectedType || '召喚';
+  const cfg = CHANT_TYPE_CONFIG[selectedType] || CHANT_TYPE_CONFIG['召喚'];
+  typeEl.style.color = cfg.color;
+
+  // オーバーレイ表示
+  bg.classList.add('visible');
+  await sleep(300);
+  win.classList.add('visible');
+  await sleep(400);
+
+  // 赤陣営の詠唱を表示
+  await showTeamChant('red', redChant);
+  await sleep(600);
+
+  // VS表示
+  showVS();
+  await sleep(800);
+
+  // 青陣営の詠唱を表示
+  await showTeamChant('blue', blueChant);
+  await sleep(600);
+
+  // 審判中表示
+  showJudging();
+
+  // 審判結果を待つ
+  const judgment = await judgePromise;
+  if (judgment.error) {
+    closeBattleOverlay();
+    throw new Error(judgment.error);
+  }
+
+  await sleep(1500); // 審判の間を演出
+  document.getElementById('battleOvJudging').classList.remove('visible');
+  await sleep(300);
+
+  // 勝者発表
+  showWinner(judgment);
+  sfx.chantComplete(selectedType || '召喚');
+
+  // 静的結果も中央カラムに残す
+  showBattleResultStatic(redChant, blueChant, judgment);
+}
+
+async function showTeamChant(team, chantText) {
+  const teamEl = document.getElementById(team === 'red' ? 'battleOvRed' : 'battleOvBlue');
+  const bodyEl = document.getElementById(team === 'red' ? 'battleOvRedBody' : 'battleOvBlueBody');
+
+  const lines = chantText.split(/\\n|\n/).map(s => s.trim()).filter(Boolean);
+  bodyEl.innerHTML = '';
+  const lineEls = lines.map(line => {
+    const el = document.createElement('div');
+    el.className = 'battle-overlay-chant-line';
+    el.textContent = line;
+    bodyEl.appendChild(el);
+    return el;
+  });
+
+  teamEl.classList.add('visible');
+  sfx.lineReveal(0, lines.length);
+
+  // 各行を順番にクリップパスで表示
+  for (let i = 0; i < lineEls.length; i++) {
+    await sleep(200);
+    lineEls[i].classList.add('revealed');
+    if (i < lineEls.length - 1) sfx.lineReveal(i + 1, lineEls.length);
+    await sleep(400);
+  }
+}
+
+function showVS() {
+  const el = document.getElementById('battleOvVs');
+  el.classList.add('visible');
+  sfx.wordSelected();
+}
+
+function showJudging() {
+  const el = document.getElementById('battleOvJudging');
+  el.classList.add('visible');
+}
+
+function showWinner(judgment) {
+  const el = document.getElementById('battleOvWinner');
+  const labelEl = document.getElementById('battleOvWinnerLabel');
+  const reasonEl = document.getElementById('battleOvWinnerReason');
+
+  const winnerText = judgment.winner === 'red' ? '赤陣営の勝利！'
+    : judgment.winner === 'blue' ? '青陣営の勝利！'
+    : '引き分け——両者の力は互角であった';
+
+  labelEl.textContent = winnerText;
+  labelEl.className = 'winner-label ' + (judgment.winner || 'draw');
+  reasonEl.textContent = judgment.reason || '';
+
+  el.classList.add('visible');
+
+  // ×ボタンとアクション表示
+  setTimeout(() => {
+    document.getElementById('battleOverlayClose').classList.add('visible');
+    document.getElementById('battleOvActions').classList.add('visible');
+  }, 600);
+}
+
+function closeBattleOverlay() {
+  battleOverlayActive = false;
+  const bg = document.getElementById('battleOverlayBg');
+  const win = document.getElementById('battleOverlayWindow');
+  bg.classList.remove('visible');
+  win.classList.remove('visible');
+}
+
+function showBattleResultStatic(redChant, blueChant, judgment) {
   const area = document.getElementById('battle-result-area');
   const winnerLabel = judgment.winner === 'red' ? '赤陣営の勝利！'
     : judgment.winner === 'blue' ? '青陣営の勝利！'
