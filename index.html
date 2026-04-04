@@ -3472,9 +3472,7 @@ function drawAltarCircle(time) {
 
   // Opacity scales with selected word count
   const wordCount = selected.length;
-  const baseAlpha = 0.04;
-  const maxAlpha = 0.25;
-  const alpha = Math.min(maxAlpha, baseAlpha + wordCount * ((maxAlpha - baseAlpha) / 10));
+  const alpha = Math.min(0.45, 0.12 + (wordCount / 10) * 0.33);
 
   // Outer rotating dashed circle
   altarCtx.save();
@@ -3483,7 +3481,7 @@ function drawAltarCircle(time) {
   altarCtx.beginPath();
   altarCtx.arc(0, 0, radius, 0, Math.PI * 2);
   altarCtx.strokeStyle = `rgba(${r},${g},${b},${alpha})`;
-  altarCtx.lineWidth = 1;
+  altarCtx.lineWidth = 1.5;
   altarCtx.setLineDash([8, 12]);
   altarCtx.stroke();
   altarCtx.restore();
@@ -3495,14 +3493,14 @@ function drawAltarCircle(time) {
   altarCtx.beginPath();
   altarCtx.arc(0, 0, radius * 0.6, 0, Math.PI * 2);
   altarCtx.strokeStyle = `rgba(${r},${g},${b},${alpha * 0.7})`;
-  altarCtx.lineWidth = 0.8;
+  altarCtx.lineWidth = 1;
   altarCtx.setLineDash([4, 8]);
   altarCtx.stroke();
   altarCtx.restore();
 
   // Crosshairs
   altarCtx.strokeStyle = `rgba(${r},${g},${b},${alpha * 0.4})`;
-  altarCtx.lineWidth = 0.5;
+  altarCtx.lineWidth = 0.8;
   altarCtx.setLineDash([]);
   altarCtx.beginPath();
   altarCtx.moveTo(cx - radius * 0.3, cy);
