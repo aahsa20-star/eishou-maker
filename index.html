@@ -1881,6 +1881,7 @@ footer a:hover { color: var(--gold); }
 #remix-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 #remix-btn:not(:disabled):hover { background: rgba(160,120,48,0.25); color: var(--fg-base); }
 .remix-add-btn { display: none; }
+.remix-mode-active .remix-add-btn { display: inline-block; }
 
 /* ── Battle Animation Overlay ── */
 .battle-overlay-bg {
@@ -4855,10 +4856,8 @@ function toggleRemixMode() {
   document.getElementById('remix-center-ui').style.display = remixMode ? 'flex' : 'none';
   document.getElementById('normal-center-ui').style.display = remixMode ? 'none' : '';
 
-  // 融合ボタンの表示切り替え
-  document.querySelectorAll('.remix-add-btn').forEach(b => {
-    b.style.display = remixMode ? '' : 'none';
-  });
+  // 融合ボタンの表示切り替え（bodyにクラスを付与してCSSで制御）
+  document.body.classList.toggle('remix-mode-active', remixMode);
 
   if (!remixMode) resetRemix();
 }
