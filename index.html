@@ -692,6 +692,83 @@ body {
   opacity: 0.3;
   pointer-events: none;
 }
+
+/* ── Speech Settings ── */
+#speech-settings {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  padding: 12px 16px;
+  margin-top: 8px;
+  font-size: 13px;
+  width: 100%;
+}
+.speech-setting-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.speech-setting-row label {
+  width: 80px;
+  color: var(--fg-dim);
+  font-size: 12px;
+  flex-shrink: 0;
+}
+.speech-setting-row input[type="range"] {
+  flex: 1;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  background: var(--border);
+  outline: none;
+}
+.speech-setting-row input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  background: var(--gold);
+  cursor: pointer;
+}
+.speech-setting-row input[type="range"]::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  background: var(--gold);
+  border: none;
+  cursor: pointer;
+}
+.speech-setting-row select {
+  flex: 1;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  color: var(--fg-base);
+  padding: 4px 8px;
+  font-size: 12px;
+  font-family: inherit;
+}
+#speech-test-btn {
+  width: 100%;
+  padding: 6px;
+  font-size: 12px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--fg-dim);
+  cursor: pointer;
+  margin-top: 4px;
+  transition: all 0.2s;
+}
+#speech-test-btn:hover { border-color: var(--gold); color: var(--fg-base); }
+.speech-gear {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--fg-dim);
+  padding: 6px 8px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.speech-gear:hover { border-color: var(--gold); color: var(--fg-base); }
+
 .btn-clear {
   background: transparent;
   color: var(--fg-dim);
@@ -2346,6 +2423,7 @@ footer a:hover { color: var(--gold); }
 
   <div class="controls-row">
     <button class="speech-toggle active" id="speechToggle" onclick="toggleSpeech()">読み上げ</button>
+    <button class="speech-gear" onclick="toggleSpeechSettings()" title="読み上げ設定">&#9881;</button>
     <button class="speech-toggle active" id="guideToggle" onclick="toggleGuide()">参加説明</button>
     <div class="se-controls">
       <button class="speech-toggle active" id="seToggle" onclick="toggleSE()">効果音</button>
@@ -2354,6 +2432,21 @@ footer a:hover { color: var(--gold); }
     </div>
     <button class="speech-toggle" id="chainToggle" onclick="toggleChainChant()">連続詠唱</button>
     <button class="btn-clear" onclick="clearSelected()">クリア</button>
+  </div>
+  <div id="speech-settings" style="display:none;">
+    <div class="speech-setting-row">
+      <label>声</label>
+      <select id="speech-voice"></select>
+    </div>
+    <div class="speech-setting-row">
+      <label>速度 <span id="speech-rate-val">0.75</span></label>
+      <input type="range" id="speech-rate" min="0.3" max="2.0" step="0.05" value="0.75">
+    </div>
+    <div class="speech-setting-row">
+      <label>ピッチ <span id="speech-pitch-val">0.8</span></label>
+      <input type="range" id="speech-pitch" min="0.3" max="2.0" step="0.05" value="0.8">
+    </div>
+    <button id="speech-test-btn" onclick="testSpeech()">テスト再生</button>
   </div>
   </div><!-- /normal-center-ui -->
 
@@ -3844,15 +3937,7 @@ async function generate() {
     applyChainAfterGenerate();
 
     if (speechEnabled && 'speechSynthesis' in window) {
-      speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = 'ja-JP';
-      utterance.rate = 0.75;
-      utterance.pitch = 0.8;
-      utterance.volume = 1.0;
-      utterance.onend = resetBtn;
-      utterance.onerror = resetBtn;
-      speechSynthesis.speak(utterance);
+      speakChant(text, resetBtn, resetBtn);
       // 安全弁：30秒後にspeechが終わらなかったら強制リセット
       setTimeout(() => { if (btn.disabled) resetBtn(); }, 30000);
       return;
@@ -4143,6 +4228,85 @@ function toggleSpeech() {
   speechEnabled = !speechEnabled;
   document.getElementById('speechToggle').classList.toggle('active', speechEnabled);
 }
+
+function toggleSpeechSettings() {
+  const panel = document.getElementById('speech-settings');
+  panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+}
+
+// ── 読み上げ設定 ──
+function speakChant(text, onEnd, onError) {
+  if (!('speechSynthesis' in window)) return;
+  speechSynthesis.cancel();
+  setTimeout(() => {
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'ja-JP';
+    utterance.rate = parseFloat(localStorage.getItem('speech_rate') || '0.75');
+    utterance.pitch = parseFloat(localStorage.getItem('speech_pitch') || '0.8');
+    utterance.volume = 1.0;
+    const savedVoice = localStorage.getItem('speech_voice');
+    if (savedVoice) {
+      const voice = speechSynthesis.getVoices().find(v => v.name === savedVoice);
+      if (voice) utterance.voice = voice;
+    }
+    if (onEnd) utterance.onend = onEnd;
+    if (onError) utterance.onerror = onError;
+    speechSynthesis.speak(utterance);
+  }, 100);
+}
+
+function testSpeech() {
+  speakChant('汝の名は混沌——今こそ目覚めよ！');
+}
+
+function loadVoices() {
+  const voices = speechSynthesis.getVoices();
+  const select = document.getElementById('speech-voice');
+  if (!select || voices.length === 0) return;
+  select.innerHTML = '';
+  const jaVoices = voices.filter(v => v.lang.startsWith('ja'));
+  const otherVoices = voices.filter(v => !v.lang.startsWith('ja'));
+  [...jaVoices, ...otherVoices].forEach(voice => {
+    const option = document.createElement('option');
+    option.value = voice.name;
+    option.textContent = `${voice.name} (${voice.lang})`;
+    select.appendChild(option);
+  });
+  // 保存済みの声を復元、なければ最初の日本語声
+  const saved = localStorage.getItem('speech_voice');
+  if (saved && voices.find(v => v.name === saved)) {
+    select.value = saved;
+  } else if (jaVoices.length > 0) {
+    select.value = jaVoices[0].name;
+  }
+}
+if ('speechSynthesis' in window) {
+  speechSynthesis.addEventListener('voiceschanged', loadVoices);
+  loadVoices();
+}
+
+// 設定スライダーのイベント
+document.getElementById('speech-rate').addEventListener('input', e => {
+  document.getElementById('speech-rate-val').textContent = e.target.value;
+  localStorage.setItem('speech_rate', e.target.value);
+});
+document.getElementById('speech-pitch').addEventListener('input', e => {
+  document.getElementById('speech-pitch-val').textContent = e.target.value;
+  localStorage.setItem('speech_pitch', e.target.value);
+});
+document.getElementById('speech-voice').addEventListener('change', e => {
+  localStorage.setItem('speech_voice', e.target.value);
+});
+
+// 設定の復元
+(function restoreSpeechSettings() {
+  const rate = localStorage.getItem('speech_rate') || '0.75';
+  const pitch = localStorage.getItem('speech_pitch') || '0.8';
+  document.getElementById('speech-rate').value = rate;
+  document.getElementById('speech-rate-val').textContent = rate;
+  document.getElementById('speech-pitch').value = pitch;
+  document.getElementById('speech-pitch-val').textContent = pitch;
+})();
 let guideEnabled = localStorage.getItem('show_guide') !== 'false';
 document.getElementById('guideToggle').classList.toggle('active', guideEnabled);
 function toggleGuide() {
