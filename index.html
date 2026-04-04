@@ -1801,6 +1801,84 @@ footer a:hover { color: var(--gold); }
 }
 .battle-actions button:hover { border-color: var(--gold); color: var(--fg-base); }
 
+/* ── Remix UI ── */
+.btn-remix {
+  padding: 4px 12px;
+  font-size: 12px;
+  color: var(--fg-dim);
+  border: 1px solid var(--border);
+  background: transparent;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+.btn-remix:hover { border-color: var(--gold); color: var(--gold); }
+.btn-remix.active { border-color: var(--gold); color: var(--gold); background: rgba(160,120,48,0.1); }
+.btn-remix:disabled { opacity: 0.3; cursor: not-allowed; }
+
+.remix-title {
+  text-align: center;
+  font-family: 'Yuji Syuku', serif;
+  font-size: 20px;
+  color: var(--gold);
+  letter-spacing: 0.3em;
+}
+.remix-slot {
+  border: 1px solid var(--border-gold);
+  padding: 12px 16px;
+  min-height: 80px;
+  position: relative;
+}
+.remix-slot-label {
+  font-size: 11px;
+  color: var(--gold);
+  letter-spacing: 0.2em;
+  margin-bottom: 8px;
+}
+.remix-slot-empty {
+  font-size: 13px;
+  color: var(--fg-dim);
+  font-style: italic;
+}
+.remix-slot-text {
+  font-family: 'Yuji Syuku', serif;
+  font-size: 15px;
+  color: var(--fg-base);
+  line-height: 1.6;
+  white-space: pre-line;
+}
+.remix-symbol {
+  text-align: center;
+  font-size: 24px;
+  color: var(--gold);
+}
+.remix-clear-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: transparent;
+  border: none;
+  color: var(--fg-dim);
+  cursor: pointer;
+  font-size: 14px;
+}
+.remix-clear-btn:hover { color: var(--fg-base); }
+#remix-btn {
+  width: 100%;
+  padding: 14px;
+  font-family: 'Shippori Mincho B1', serif;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 0.4em;
+  border: 2px solid var(--gold);
+  background: rgba(160,120,48,0.15);
+  color: var(--gold-bright);
+  cursor: pointer;
+}
+#remix-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+#remix-btn:not(:disabled):hover { background: rgba(160,120,48,0.25); color: var(--fg-base); }
+.remix-add-btn { display: none; }
+
 /* ── Battle Animation Overlay ── */
 .battle-overlay-bg {
   position: fixed;
@@ -2072,6 +2150,7 @@ footer a:hover { color: var(--gold); }
   <div class="rate-info" id="rateInfo"></div>
   <button class="btn-result" onclick="showResultModal()">リザルト</button>
   <button class="btn-battle" id="battleBtn" onclick="toggleBattleMode()" disabled title="サブスクライバー限定">バトル</button>
+  <button class="btn-remix" id="remixBtn" onclick="toggleRemixMode()" disabled title="サブスクライバー限定">リミックス</button>
   <div class="auth-area" id="authArea">
     <button class="auth-login-btn" id="authLoginBtn" onclick="twitchLogin()">Twitchでログイン</button>
   </div>
@@ -2158,6 +2237,24 @@ footer a:hover { color: var(--gold); }
 
 <!-- ═══ 中央カラム：儀式祭壇 ═══ -->
 <div class="altar-col altar-center">
+
+  <div id="remix-center-ui" style="display:none; flex-direction:column; gap:12px; align-items:center; width:100%;">
+    <div class="remix-title">詠唱融合</div>
+    <div class="remix-slot" id="remix-slot-1">
+      <div class="remix-slot-label">詠唱 壱</div>
+      <div class="remix-slot-content" id="remix-slot-1-content">
+        <span class="remix-slot-empty">履歴または封印から選べ</span>
+      </div>
+    </div>
+    <div class="remix-symbol">⊕</div>
+    <div class="remix-slot" id="remix-slot-2">
+      <div class="remix-slot-label">詠唱 弐</div>
+      <div class="remix-slot-content" id="remix-slot-2-content">
+        <span class="remix-slot-empty">履歴または封印から選べ</span>
+      </div>
+    </div>
+    <button id="remix-btn" disabled onclick="startRemix()">融 合</button>
+  </div>
 
   <div id="battle-center-ui" style="display:none; flex-direction:column; gap:12px; align-items:center; width:100%;">
     <div class="battle-title">⚔ 詠唱バトル</div>
@@ -3005,6 +3102,7 @@ async function twitchLogout() {
   updateAuthUI();
   updateRateInfo();
   updateBattleBtn();
+  updateRemixBtn();
 }
 async function checkAuth() {
   try {
@@ -3017,6 +3115,7 @@ async function checkAuth() {
   updateAuthUI();
   updateRateInfo();
   updateBattleBtn();
+  updateRemixBtn();
 }
 function updateAuthUI() {
   const area = document.getElementById('authArea');
@@ -3882,9 +3981,10 @@ function renderHistory() {
       ? `<button class="history-btn replay" style="color:var(--gold-bright);border-color:var(--gold);" onclick="toggleHof(${i})">\u{1F451} 封印済</button>`
       : `<button class="history-btn replay" onclick="toggleHof(${i})">封印する</button>`;
     const crownMark = isHof ? '\u{1F451} ' : '';
+    const remixBtn = `<button class="history-btn replay remix-add-btn" onclick="addToRemixSlot(getHistory()[${i}])">融合</button>`;
     card.innerHTML = `<div class="history-chant">${crownMark}${esc(entry.text)}</div>
       <div class="history-meta"><div class="history-tags">${tags}<span class="history-time">${hh}:${mm}</span></div>
-      <div class="history-actions"><button class="history-btn replay" onclick="copyHistoryChant(${i}, this)">複写</button><button class="history-btn replay" onclick="replayChant(${i})">再召喚</button><button class="history-btn replay" onclick="saveHistoryChantImage(${i})">刻印</button><button class="history-btn replay" onclick="shareFromHistory(${i})">𝕏</button>${hofBtn}<button class="history-btn delete" onclick="deleteHistory(${i})">抹消</button></div></div>`;
+      <div class="history-actions"><button class="history-btn replay" onclick="copyHistoryChant(${i}, this)">複写</button><button class="history-btn replay" onclick="replayChant(${i})">再召喚</button><button class="history-btn replay" onclick="saveHistoryChantImage(${i})">刻印</button><button class="history-btn replay" onclick="shareFromHistory(${i})">𝕏</button>${hofBtn}${remixBtn}<button class="history-btn delete" onclick="deleteHistory(${i})">抹消</button></div></div>`;
     list.appendChild(card);
   });
 }
@@ -3953,6 +4053,7 @@ function renderHof() {
         <button onclick="copyHof(${i}, this)">複写</button>
         <button onclick="saveHofImage(${i})">刻印</button>
         <button onclick="shareFromHof(${i})">𝕏</button>
+        <button class="remix-add-btn" onclick="addToRemixSlot(getHof()[${i}])">融合</button>
         <button class="hof-remove" onclick="removeHof(${i})">封印解除</button>
       </div>`;
     list.appendChild(card);
@@ -4437,6 +4538,9 @@ let battleWords = { red: [], blue: [] };
 let battleSelected = { red: [], blue: [] };
 
 function toggleBattleMode() {
+  // リミックスモード中なら先に解除
+  if (remixMode) toggleRemixMode();
+
   battleMode = !battleMode;
   const btn = document.getElementById('battleBtn');
   btn.classList.toggle('active', battleMode);
@@ -4731,6 +4835,115 @@ function showBattleResultStatic(redChant, blueChant, judgment) {
     </div>
   `;
   area.style.display = 'block';
+}
+
+// ── リミックス機能 ──
+let remixMode = false;
+let remixSlots = [null, null];
+
+function toggleRemixMode() {
+  // バトルモード中なら先に解除
+  if (battleMode) toggleBattleMode();
+
+  remixMode = !remixMode;
+  const btn = document.getElementById('remixBtn');
+  btn.classList.toggle('active', remixMode);
+
+  document.getElementById('remix-center-ui').style.display = remixMode ? 'flex' : 'none';
+  document.getElementById('normal-center-ui').style.display = remixMode ? 'none' : '';
+
+  // 融合ボタンの表示切り替え
+  document.querySelectorAll('.remix-add-btn').forEach(b => {
+    b.style.display = remixMode ? '' : 'none';
+  });
+
+  if (!remixMode) resetRemix();
+}
+
+function addToRemixSlot(entry) {
+  if (!entry || !entry.text) return;
+  const slotIndex = remixSlots[0] === null ? 0 : 1;
+  remixSlots[slotIndex] = entry;
+  updateRemixUI();
+}
+
+function updateRemixUI() {
+  [0, 1].forEach(i => {
+    const content = document.getElementById(`remix-slot-${i + 1}-content`);
+    if (remixSlots[i]) {
+      const firstLine = remixSlots[i].text.split('\n')[0];
+      const preview = firstLine.length > 40 ? firstLine.slice(0, 40) + '…' : firstLine;
+      content.innerHTML = `<div class="remix-slot-text">${esc(preview)}</div><button onclick="clearRemixSlot(${i})" class="remix-clear-btn">&times;</button>`;
+    } else {
+      content.innerHTML = '<span class="remix-slot-empty">履歴または封印から選べ</span>';
+    }
+  });
+  document.getElementById('remix-btn').disabled = remixSlots[0] === null || remixSlots[1] === null;
+}
+
+function clearRemixSlot(index) {
+  remixSlots[index] = null;
+  updateRemixUI();
+}
+
+function resetRemix() {
+  remixSlots = [null, null];
+  updateRemixUI();
+}
+
+async function startRemix() {
+  if (!remixSlots[0] || !remixSlots[1]) return;
+
+  const btn = document.getElementById('remix-btn');
+  btn.disabled = true;
+  btn.textContent = '融合中...';
+
+  try {
+    const countdownPromise = runCountdown('召喚');
+    const apiPromise = fetch('/api/remix', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({
+        chant1: remixSlots[0].text,
+        chant2: remixSlots[1].text
+      })
+    }).then(r => r.json());
+
+    const [, data] = await Promise.all([countdownPromise, apiPromise]);
+    if (data.error) throw new Error(data.error);
+
+    const evaluation = data.evaluation || null;
+    const displayType = evaluation?.type || '召喚';
+
+    // 融合元の単語を結合
+    const sourceWords = [
+      ...(remixSlots[0].words || []),
+      ...(remixSlots[1].words || [])
+    ].slice(0, 10);
+
+    showChantOverlay(data.text, displayType, sourceWords, evaluation);
+    saveHistory({ text: data.text, words: sourceWords, type: displayType, timestamp: Date.now(), evaluation, imageUrl: null });
+    addRateLog();
+    updateRateInfo();
+  } catch (err) {
+    alert(err.message || '融合に失敗しました');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '融 合';
+  }
+}
+
+function updateRemixBtn() {
+  const btn = document.getElementById('remixBtn');
+  if (authState.isSubscriber) {
+    btn.disabled = false;
+    btn.title = '詠唱リミックス';
+  } else {
+    btn.disabled = true;
+    btn.title = 'サブスクライバー限定';
+    if (remixMode) toggleRemixMode();
+  }
 }
 
 // 認証後にバトルボタンを有効化
