@@ -1633,6 +1633,84 @@ footer a {
   text-decoration: none;
 }
 footer a:hover { color: var(--gold); }
+.show-privilege-link { font-size: 11px; color: var(--gold); cursor: pointer; text-decoration: underline; margin-left: 6px; }
+.show-privilege-link:hover { color: var(--gold-bright); }
+
+/* Author Modal */
+.author-modal-overlay {
+  position: fixed; inset: 0; z-index: 3000;
+  background: rgba(4,3,2,0.92);
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; visibility: hidden; transition: opacity 0.4s, visibility 0.4s;
+}
+.author-modal-overlay.visible { opacity: 1; visibility: visible; }
+.author-modal-window {
+  position: relative;
+  width: 480px; max-width: 90vw;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-gold);
+  padding: 36px 40px;
+  box-shadow: 0 0 60px rgba(160,120,48,0.15), 0 0 120px rgba(160,120,48,0.06);
+}
+.author-modal-window::before,
+.author-modal-window::after {
+  content: ''; position: absolute; width: 24px; height: 24px;
+  border-color: var(--gold); border-style: solid;
+}
+.author-modal-window::before { top: 8px; left: 8px; border-width: 1px 0 0 1px; }
+.author-modal-window::after { bottom: 8px; right: 8px; border-width: 0 1px 1px 0; }
+.author-modal-header {
+  display: flex; justify-content: space-between; align-items: center;
+  font-family: 'Yuji Syuku', serif; font-size: 14px;
+  color: rgba(160,120,48,0.7); letter-spacing: 0.2em;
+  margin-bottom: 24px; padding-bottom: 12px;
+  border-bottom: 1px solid rgba(160,120,48,0.2);
+}
+.author-close-btn {
+  background: transparent; border: none; color: var(--fg-dim);
+  cursor: pointer; font-size: 16px;
+}
+.author-close-btn:hover { color: var(--fg-base); }
+.author-profile { text-align: center; margin-bottom: 24px; }
+.author-name {
+  font-family: 'Yuji Syuku', serif; font-size: 22px;
+  color: var(--fg-base); margin-bottom: 4px;
+}
+.author-title { font-size: 13px; color: var(--fg-dim); }
+.author-section-title {
+  text-align: center; font-size: 12px;
+  color: rgba(160,120,48,0.6); letter-spacing: 0.2em; margin-bottom: 16px;
+}
+.privilege-table {
+  width: 100%; border-collapse: collapse;
+  font-size: 13px; margin-bottom: 24px;
+}
+.privilege-table th {
+  font-size: 11px; color: var(--fg-dim);
+  padding: 6px 12px; text-align: center;
+  border-bottom: 1px solid rgba(160,120,48,0.2);
+}
+.privilege-table td {
+  padding: 8px 12px; text-align: center;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.privilege-table td:first-child { text-align: left; color: var(--fg-dim); }
+.subscriber-col { color: var(--gold); }
+.author-actions { display: flex; flex-direction: column; gap: 8px; }
+.author-btn {
+  display: block; text-align: center; padding: 10px;
+  font-size: 13px; text-decoration: none; letter-spacing: 0.1em;
+  transition: all 0.2s ease;
+}
+.author-btn.primary {
+  border: 1px solid var(--gold); color: var(--gold);
+  background: rgba(160,120,48,0.1);
+}
+.author-btn.primary:hover { background: rgba(160,120,48,0.2); }
+.author-btn.secondary {
+  border: 1px solid var(--border); color: var(--fg-dim); background: transparent;
+}
+.author-btn.secondary:hover { border-color: var(--border-gold); color: var(--fg-base); }
 
 /* Ritual Guide Modal */
 .ritual-modal-bg {
@@ -2233,8 +2311,8 @@ footer a:hover { color: var(--gold); }
   <span class="status" id="status">未接続</span>
   <div class="rate-info" id="rateInfo"></div>
   <button class="btn-result" onclick="showResultModal()">リザルト</button>
-  <button class="btn-battle" id="battleBtn" onclick="toggleBattleMode()" disabled title="サブスクライバー限定">バトル</button>
-  <button class="btn-remix" id="remixBtn" onclick="toggleRemixMode()" disabled title="サブスクライバー限定">リミックス</button>
+  <button class="btn-battle" id="battleBtn" onclick="openAuthorModal()" style="opacity:0.5" title="サブスクライバー限定（クリックで特典を見る）">バトル</button>
+  <button class="btn-remix" id="remixBtn" onclick="openAuthorModal()" style="opacity:0.5" title="サブスクライバー限定（クリックで特典を見る）">リミックス</button>
   <div class="auth-area" id="authArea">
     <button class="auth-login-btn" id="authLoginBtn" onclick="twitchLogin()">Twitchでログイン</button>
   </div>
@@ -3240,8 +3318,8 @@ function updateImageGenButton() {
     btn.onclick = generateChantImage;
     btn.classList.remove('locked');
   } else {
-    btn.textContent = '\uD83D\uDD12 AI画像生成はサブスク限定';
-    btn.onclick = twitchLogin;
+    btn.innerHTML = '\uD83D\uDD12 AI画像生成はサブスク限定 <span class="show-privilege-link" onclick="event.stopPropagation();openAuthorModal()">特典を見る</span>';
+    btn.onclick = null;
     btn.classList.add('locked');
   }
 }
@@ -5115,14 +5193,29 @@ async function startRemix() {
   }
 }
 
+// ── 術者の書モーダル ──
+function openAuthorModal() {
+  document.getElementById('authorModal').classList.add('visible');
+}
+function closeAuthorModal() {
+  document.getElementById('authorModal').classList.remove('visible');
+}
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeAuthorModal();
+});
+
 function updateRemixBtn() {
   const btn = document.getElementById('remixBtn');
   if (authState.isSubscriber) {
     btn.disabled = false;
     btn.title = '詠唱リミックス';
+    btn.onclick = toggleRemixMode;
+    btn.style.opacity = '';
   } else {
-    btn.disabled = true;
-    btn.title = 'サブスクライバー限定';
+    btn.disabled = false;
+    btn.title = 'サブスクライバー限定（クリックで特典を見る）';
+    btn.onclick = openAuthorModal;
+    btn.style.opacity = '0.5';
     if (remixMode) toggleRemixMode();
   }
 }
@@ -5133,18 +5226,55 @@ function updateBattleBtn() {
   if (authState.isSubscriber) {
     btn.disabled = false;
     btn.title = '詠唱バトル';
+    btn.onclick = toggleBattleMode;
+    btn.style.opacity = '';
   } else {
-    btn.disabled = true;
-    btn.title = 'サブスクライバー限定';
+    btn.disabled = false;
+    btn.title = 'サブスクライバー限定（クリックで特典を見る）';
+    btn.onclick = openAuthorModal;
+    btn.style.opacity = '0.5';
     if (battleMode) toggleBattleMode();
   }
 }
 </script>
 
+<!-- 術者の書モーダル -->
+<div id="authorModal" class="author-modal-overlay" onclick="if(event.target===this)closeAuthorModal()">
+  <div class="author-modal-window">
+    <div class="author-modal-header">
+      <span>術者の書</span>
+      <button onclick="closeAuthorModal()" class="author-close-btn">✕</button>
+    </div>
+    <div class="author-profile">
+      <div class="author-name">ダツ皿アキ</div>
+      <div class="author-title">Twitch配信者 / 個人開発者</div>
+    </div>
+    <div class="author-section-title">── 契約者の特権 ──</div>
+    <table class="privilege-table">
+      <thead><tr><th></th><th>一般</th><th class="subscriber-col">契約者</th></tr></thead>
+      <tbody>
+        <tr><td>詠唱生成</td><td>2回/日</td><td class="subscriber-col">20回/時</td></tr>
+        <tr><td>AI画像生成</td><td>✕</td><td class="subscriber-col">5回/日</td></tr>
+        <tr><td>詠唱バトル</td><td>✕</td><td class="subscriber-col">✅</td></tr>
+        <tr><td>詠唱リミックス</td><td>✕</td><td class="subscriber-col">✅</td></tr>
+      </tbody>
+    </table>
+    <div class="author-actions">
+      <a href="https://www.twitch.tv/subs/datsusara_aki" target="_blank" rel="noopener" class="author-btn primary">盟約を結ぶ（Twitchサブスク）</a>
+      <a href="https://www.twitch.tv/datsusara_aki" target="_blank" rel="noopener" class="author-btn secondary">配信を見に行く（Twitch）</a>
+      <a href="https://twitter.com/akiissamurai" target="_blank" rel="noopener" class="author-btn secondary">X（旧Twitter）</a>
+      <a href="https://youtube.com/channel/UCLZJRStlPpH7fAjZjbjP4sQ?sub_confirmation=1" target="_blank" rel="noopener" class="author-btn secondary">YouTube</a>
+      <a href="https://discord.gg/ZnCBFJ8AUp" target="_blank" rel="noopener" class="author-btn secondary">Discord</a>
+    </div>
+  </div>
+</div>
+
 <footer>
   <a href="/privacy.html">プライバシーポリシー</a>
   <span>·</span>
   <a href="/terms.html">利用規約</a>
+  <span>·</span>
+  <a href="#" onclick="openAuthorModal();return false;">術者の書</a>
   <span>·</span>
   <span>&copy; 2026 datsusara_aki</span>
 </footer>
