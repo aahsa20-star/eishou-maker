@@ -3330,9 +3330,10 @@ function updateImageGenButton() {
     btn.onclick = generateChantImage;
     btn.classList.remove('locked');
   } else {
-    btn.innerHTML = '\uD83D\uDD12 AI画像生成はサブスク限定 <span class="show-privilege-link" onclick="event.stopPropagation();openAuthorModal()">特典を見る</span>';
-    btn.onclick = null;
-    btn.classList.add('locked');
+    btn.textContent = 'AI画像を生成';
+    btn.disabled = false;
+    btn.onclick = openAuthorModal;
+    btn.classList.remove('locked');
   }
 }
 checkAuth();
