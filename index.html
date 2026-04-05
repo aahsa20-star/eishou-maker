@@ -3060,11 +3060,11 @@ function syncOdai() {
 }
 
 initOdaiPresets();
-// お題折りたたみの初期状態
-if (localStorage.getItem('odai_collapsed') !== 'false') {
-  // デフォルトは折りたたみ
-} else {
+// お題折りたたみの初期状態（デフォルトは折りたたみ）
+if (localStorage.getItem('odai_collapsed') === 'false') {
   document.getElementById('odaiArea').classList.add('expanded');
+} else {
+  document.getElementById('odaiArea').classList.remove('expanded');
 }
 
 // ── お題チャット募集 ──
