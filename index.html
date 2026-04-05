@@ -5527,6 +5527,7 @@ function openSettingsModal() {
     chainBtn.classList.toggle('active', chainChantEnabled);
   }
   document.getElementById('settingsModal').classList.add('visible');
+  loadVoices();
 }
 function closeSettingsModal() {
   document.getElementById('settingsModal').classList.remove('visible');
