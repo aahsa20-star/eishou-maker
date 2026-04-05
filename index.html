@@ -1890,6 +1890,12 @@ footer a:hover { color: var(--gold); }
   transition: all 0.2s; flex-shrink: 0;
 }
 .btn-result:hover { border-color: var(--gold); color: var(--gold); }
+.header-theme-btn {
+  background: transparent; border: 1px solid var(--border-gold);
+  padding: 4px 8px; font-size: 14px; cursor: pointer;
+  transition: all 0.2s; flex-shrink: 0; line-height: 1;
+}
+.header-theme-btn:hover { border-color: var(--gold); }
 
 /* ── バトルモード ── */
 .btn-battle {
@@ -2335,6 +2341,7 @@ footer a:hover { color: var(--gold); }
   <button id="connectBtn" onclick="toggleConnect()">接続</button>
   <span class="status" id="status">未接続</span>
   <div class="rate-info" id="rateInfo"></div>
+  <button class="header-theme-btn" id="themeToggleBtn" onclick="cycleTheme()" title="テーマ切り替え">🎨</button>
   <button class="btn-result" onclick="showResultModal()">リザルト</button>
   <button class="btn-battle" id="battleBtn" onclick="openAuthorModal()">バトル</button>
   <button class="btn-remix" id="remixBtn" onclick="openAuthorModal()">リミックス</button>
@@ -2539,7 +2546,6 @@ footer a:hover { color: var(--gold); }
       <input type="range" class="se-volume" id="seVolume" min="0" max="100" value="50" oninput="setSEVolume(this.value)">
     </div>
     <button class="speech-toggle" id="chainToggle" onclick="toggleChainChant()">連続詠唱</button>
-    <button class="speech-toggle" id="themeToggleBtn" onclick="cycleTheme()">🎨 黄昏</button>
     <button class="btn-clear" onclick="clearSelected()">クリア</button>
   </div>
   <div id="speech-settings" style="display:none;">
@@ -4823,13 +4829,14 @@ function updateThemeUI(themeKey) {
     btn.classList.toggle('active', btn.dataset.theme === themeKey);
   });
   const toggleBtn = document.getElementById('themeToggleBtn');
-  if (toggleBtn) toggleBtn.textContent = '🎨 ' + THEMES[themeKey].name;
+  if (toggleBtn) toggleBtn.title = `テーマ：${THEMES[themeKey].name}（クリックで切り替え）`;
 }
 
 function cycleTheme() {
   const keys = Object.keys(THEMES);
   const next = keys[(keys.indexOf(currentTheme) + 1) % keys.length];
   applyTheme(next);
+  showToast(`テーマ：${THEMES[next].name}`, 'info', 2000);
 }
 
 // ページ読み込み時にテーマ復元
