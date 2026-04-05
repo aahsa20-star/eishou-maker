@@ -2540,6 +2540,7 @@ footer a:hover { color: var(--gold); }
       <input type="range" class="se-volume" id="seVolume" min="0" max="100" value="50" oninput="setSEVolume(this.value)">
     </div>
     <button class="speech-toggle" id="chainToggle" onclick="toggleChainChant()">連続詠唱</button>
+    <button class="speech-toggle" id="themeToggleBtn" onclick="cycleTheme()">🎨 黄昏</button>
     <button class="btn-clear" onclick="clearSelected()">クリア</button>
   </div>
   <div id="speech-settings" style="display:none;">
@@ -4828,6 +4829,14 @@ function updateThemeUI(themeKey) {
   document.querySelectorAll('.theme-btn').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.theme === themeKey);
   });
+  const toggleBtn = document.getElementById('themeToggleBtn');
+  if (toggleBtn) toggleBtn.textContent = '🎨 ' + THEMES[themeKey].name;
+}
+
+function cycleTheme() {
+  const keys = Object.keys(THEMES);
+  const next = keys[(keys.indexOf(currentTheme) + 1) % keys.length];
+  applyTheme(next);
 }
 
 // ページ読み込み時にテーマ復元
