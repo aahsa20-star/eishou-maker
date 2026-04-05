@@ -1831,7 +1831,10 @@ footer a:hover { color: var(--gold); }
 .battle-selected-words { display: flex; flex-wrap: wrap; gap: 4px; min-height: 24px; }
 
 #battle-center-ui { display: none; flex-direction: column; gap: 12px; align-items: center; }
-.battle-title { font-family: 'Yuji Syuku', serif; font-size: 20px; color: #C84B4B; letter-spacing: 0.15em; text-align: center; }
+.battle-title { font-family: 'Yuji Syuku', serif; font-size: 20px; color: #C84B4B; letter-spacing: 0.15em; text-align: center; flex: 1; }
+.battle-title-row { display: flex; align-items: center; width: 100%; }
+.battle-exit-btn { background: none; border: 1px solid var(--fg-dim); color: var(--fg-dim); font-size: 11px; padding: 2px 10px; border-radius: 4px; cursor: pointer; font-family: 'Yuji Syuku', serif; }
+.battle-exit-btn:hover { border-color: var(--fg); color: var(--fg); }
 .battle-selected-preview { width: 100%; }
 .battle-preview-row { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 8px; }
 .battle-preview-label { font-size: 13px; font-weight: 600; flex-shrink: 0; width: 20px; }
@@ -2338,7 +2341,10 @@ footer a:hover { color: var(--gold); }
   </div>
 
   <div id="battle-center-ui" style="display:none; flex-direction:column; gap:12px; align-items:center; width:100%;">
-    <div class="battle-title">⚔ 詠唱バトル</div>
+    <div class="battle-title-row">
+      <div class="battle-title">⚔ 詠唱バトル</div>
+      <button onclick="toggleBattleMode()" class="battle-exit-btn">終了</button>
+    </div>
     <div class="type-selector">
       <button class="type-btn active" data-type="自動" onclick="selectType(this)">自動</button>
       <button class="type-btn" data-type="召喚" onclick="selectType(this)">召喚</button>
@@ -4712,6 +4718,15 @@ function toggleBattleMode() {
   battleMode = !battleMode;
   const btn = document.getElementById('battleBtn');
   btn.classList.toggle('active', battleMode);
+  if (battleMode) {
+    btn.textContent = 'バトル終了';
+    btn.style.borderColor = 'var(--gold)';
+    btn.style.color = 'var(--gold)';
+  } else {
+    btn.textContent = 'バトル';
+    btn.style.borderColor = '';
+    btn.style.color = '';
+  }
 
   document.getElementById('normal-left-ui').style.display = battleMode ? 'none' : '';
   document.getElementById('battle-left-ui').style.display = battleMode ? 'flex' : 'none';
