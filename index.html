@@ -1636,6 +1636,18 @@ footer a:hover { color: var(--gold); }
 .show-privilege-link { font-size: 11px; color: var(--gold); cursor: pointer; text-decoration: underline; margin-left: 6px; }
 .show-privilege-link:hover { color: var(--gold-bright); }
 
+/* Toast */
+.toast {
+  position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+  padding: 10px 24px; font-family: 'Zen Kaku Gothic New', sans-serif;
+  font-size: 13px; z-index: 9999; opacity: 0;
+  transition: opacity 0.3s ease; pointer-events: none; white-space: nowrap;
+}
+.toast.visible { opacity: 1; }
+.toast-info { background: rgba(19,17,13,0.95); border: 1px solid var(--border-gold); color: var(--fg-base); }
+.toast-error { background: rgba(19,17,13,0.95); border: 1px solid #C84B4B; color: #F0B0B0; }
+.toast-success { background: rgba(19,17,13,0.95); border: 1px solid #5ABAB4; color: #B0E8E4; }
+
 /* Author Modal */
 .author-modal-overlay {
   position: fixed; inset: 0; z-index: 3000;
@@ -2311,8 +2323,8 @@ footer a:hover { color: var(--gold); }
   <span class="status" id="status">未接続</span>
   <div class="rate-info" id="rateInfo"></div>
   <button class="btn-result" onclick="showResultModal()">リザルト</button>
-  <button class="btn-battle" id="battleBtn" onclick="openAuthorModal()" style="opacity:0.5" title="サブスクライバー限定（クリックで特典を見る）">バトル</button>
-  <button class="btn-remix" id="remixBtn" onclick="openAuthorModal()" style="opacity:0.5" title="サブスクライバー限定（クリックで特典を見る）">リミックス</button>
+  <button class="btn-battle" id="battleBtn" onclick="openAuthorModal()">バトル</button>
+  <button class="btn-remix" id="remixBtn" onclick="openAuthorModal()">リミックス</button>
   <div class="auth-area" id="authArea">
     <button class="auth-login-btn" id="authLoginBtn" onclick="twitchLogin()">Twitchでログイン</button>
   </div>
@@ -3383,7 +3395,11 @@ function updateRateInfo() {
   el.className = 'rate-info' + (remaining <= 0 ? ' danger' : remaining <= 1 ? ' warning' : '');
   if (remaining <= 0) {
     btn.disabled = true;
-    el.textContent = `詠唱の刻 残り 0 / ${max} ― 力が尽きた。時を待て`;
+    if (!authState.isSubscriber) {
+      el.innerHTML = `詠唱の刻 残り 0 / ${max} ― 力が尽きた。時を待て<span style="display:block;font-size:11px;margin-top:4px;color:var(--fg-dim);">──<span onclick="openAuthorModal()" style="color:var(--gold);cursor:pointer;text-decoration:underline;margin-left:4px;">契約者は20回/時</span></span>`;
+    } else {
+      el.textContent = `詠唱の刻 残り 0 / ${max} ― 力が尽きた。時を待て`;
+    }
   } else if (btn.textContent === '詠唱生成') {
     btn.disabled = false;
   }
@@ -3948,7 +3964,11 @@ async function generate() {
   } else {
     if (selected.length === 0) { alert('単語を選択してください'); return; }
   }
-  if (getActiveRateLogs().length >= getRateMax()) { updateRateInfo(); return; }
+  if (getActiveRateLogs().length >= getRateMax()) {
+    updateRateInfo();
+    if (!authState.isSubscriber) showToast('契約者になると20回/時に解放されます', 'info', 5000);
+    return;
+  }
 
   const btn = document.getElementById('generateBtn');
   btn.disabled = true;
@@ -5193,6 +5213,19 @@ async function startRemix() {
   }
 }
 
+// ── トースト通知 ──
+function showToast(message, type = 'info', duration = 3000) {
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type}`;
+  toast.textContent = message;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.classList.add('visible'), 10);
+  setTimeout(() => {
+    toast.classList.remove('visible');
+    setTimeout(() => { if (document.body.contains(toast)) document.body.removeChild(toast); }, 300);
+  }, duration);
+}
+
 // ── 術者の書モーダル ──
 function openAuthorModal() {
   document.getElementById('authorModal').classList.add('visible');
@@ -5210,12 +5243,10 @@ function updateRemixBtn() {
     btn.disabled = false;
     btn.title = '詠唱リミックス';
     btn.onclick = toggleRemixMode;
-    btn.style.opacity = '';
   } else {
     btn.disabled = false;
     btn.title = 'サブスクライバー限定（クリックで特典を見る）';
     btn.onclick = openAuthorModal;
-    btn.style.opacity = '0.5';
     if (remixMode) toggleRemixMode();
   }
 }
@@ -5227,12 +5258,10 @@ function updateBattleBtn() {
     btn.disabled = false;
     btn.title = '詠唱バトル';
     btn.onclick = toggleBattleMode;
-    btn.style.opacity = '';
   } else {
     btn.disabled = false;
     btn.title = 'サブスクライバー限定（クリックで特典を見る）';
     btn.onclick = openAuthorModal;
-    btn.style.opacity = '0.5';
     if (battleMode) toggleBattleMode();
   }
 }
