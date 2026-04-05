@@ -773,6 +773,14 @@ body {
 }
 .speech-gear:hover { border-color: var(--gold); color: var(--fg-base); }
 
+.copy-commands-btn {
+  background: transparent; border: 1px solid var(--border);
+  color: var(--fg-dim); padding: 6px 12px; font-size: 12px;
+  cursor: pointer; transition: all 0.2s; font-family: inherit;
+  width: 100%; margin-top: 8px;
+}
+.copy-commands-btn:hover { border-color: var(--gold); color: var(--fg-base); }
+
 .btn-clear {
   background: transparent;
   color: var(--fg-dim);
@@ -2480,6 +2488,7 @@ footer a:hover { color: var(--gold); }
         チャットに <code style="color:var(--gold-bright)">!word 単語</code> を送ると表示されます。<br>
         クリックで選択 → 並び替え → 詠唱生成
       </p>
+      <button class="copy-commands-btn" onclick="copyCommands()">📋 コマンドをコピー</button>
     </div>
   </div>
 
@@ -5499,6 +5508,17 @@ async function startRemix() {
 }
 
 // ── トースト通知 ──
+function copyCommands() {
+  const text = battleMode
+    ? '【詠唱バトル参加方法】\n!red 単語 → 赤陣営に言霊を捧げる\n!blue 単語 → 青陣営に言霊を捧げる'
+    : '【詠唱メーカー参加方法】\n!word 単語 → 言霊を捧げる\n!vote 番号 → 単語に投票\n!odai テーマ → お題を提案';
+  navigator.clipboard.writeText(text).then(() => {
+    showToast('コマンドをコピーしました', 'success', 2000);
+  }).catch(() => {
+    showToast('コピーに失敗しました', 'error', 2000);
+  });
+}
+
 function showToast(message, type = 'info', duration = 3000) {
   const toast = document.createElement('div');
   toast.className = `toast toast-${type}`;
