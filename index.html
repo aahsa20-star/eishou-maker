@@ -1890,12 +1890,93 @@ footer a:hover { color: var(--gold); }
   transition: all 0.2s; flex-shrink: 0;
 }
 .btn-result:hover { border-color: var(--gold); color: var(--gold); }
-.header-theme-btn {
+.header-settings-btn {
   background: transparent; border: 1px solid var(--border-gold);
-  padding: 4px 8px; font-size: 14px; cursor: pointer;
-  transition: all 0.2s; flex-shrink: 0; line-height: 1;
+  padding: 4px 10px; font-size: 13px; cursor: pointer; color: var(--fg-dim);
+  transition: all 0.2s; flex-shrink: 0; font-family: inherit; letter-spacing: 0.05em;
 }
-.header-theme-btn:hover { border-color: var(--gold); }
+.header-settings-btn:hover { border-color: var(--gold); color: var(--fg-base); }
+
+/* 設定モーダル */
+.settings-modal-overlay {
+  position: fixed; inset: 0; z-index: 3000;
+  background: rgba(4,3,2,0.92);
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; visibility: hidden; transition: opacity 0.3s, visibility 0.3s;
+}
+.settings-modal-overlay.visible { opacity: 1; visibility: visible; }
+.settings-modal-window {
+  position: relative;
+  width: 480px; max-width: 90vw; max-height: 85vh; overflow-y: auto;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-gold);
+  padding: 32px 40px;
+  box-shadow: 0 0 60px rgba(var(--gold-r),var(--gold-g),var(--gold-b),0.15);
+}
+.settings-modal-window::before,
+.settings-modal-window::after {
+  content: ''; position: absolute; width: 24px; height: 24px;
+  border-color: var(--gold); border-style: solid;
+}
+.settings-modal-window::before { top: 8px; left: 8px; border-width: 1px 0 0 1px; }
+.settings-modal-window::after { bottom: 8px; right: 8px; border-width: 0 1px 1px 0; }
+.settings-modal-header {
+  display: flex; justify-content: space-between; align-items: center;
+  font-family: 'Yuji Syuku', serif; font-size: 14px;
+  color: rgba(var(--gold-r),var(--gold-g),var(--gold-b),0.7); letter-spacing: 0.2em;
+  margin-bottom: 24px; padding-bottom: 12px;
+  border-bottom: 1px solid rgba(var(--gold-r),var(--gold-g),var(--gold-b),0.2);
+}
+.settings-close-btn {
+  background: transparent; border: none; color: var(--fg-dim);
+  cursor: pointer; font-size: 16px;
+}
+.settings-close-btn:hover { color: var(--fg-base); }
+.settings-section {
+  margin-bottom: 24px; padding-bottom: 20px;
+  border-bottom: 1px solid rgba(var(--gold-r),var(--gold-g),var(--gold-b),0.1);
+}
+.settings-section:last-child { border-bottom: none; margin-bottom: 0; }
+.settings-section-title {
+  font-size: 12px; text-align: center; letter-spacing: 0.2em;
+  color: rgba(var(--gold-r),var(--gold-g),var(--gold-b),0.6); margin-bottom: 16px;
+}
+.settings-row {
+  display: flex; align-items: center; gap: 12px; margin-bottom: 12px;
+}
+.settings-row label {
+  width: 110px; font-size: 12px; color: var(--fg-dim); flex-shrink: 0;
+}
+.settings-row select {
+  flex: 1; background: var(--bg-input); border: 1px solid var(--border);
+  color: var(--fg-base); padding: 4px 8px; font-size: 12px; font-family: inherit;
+}
+.settings-row input[type="range"] {
+  flex: 1; -webkit-appearance: none; appearance: none;
+  height: 4px; background: var(--border); outline: none;
+}
+.settings-row input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 14px; height: 14px; background: var(--gold); cursor: pointer;
+}
+.settings-row input[type="range"]::-moz-range-thumb {
+  width: 14px; height: 14px; background: var(--gold); border: none; cursor: pointer;
+}
+.settings-toggle-btn {
+  background: transparent; border: 1px solid var(--border);
+  color: var(--fg-dim); padding: 4px 12px; font-size: 12px;
+  cursor: pointer; transition: all 0.2s; font-family: inherit;
+}
+.settings-toggle-btn.active {
+  border-color: var(--gold); color: var(--gold);
+}
+.settings-test-btn {
+  background: transparent; border: 1px solid var(--border);
+  color: var(--fg-dim); padding: 6px 16px; font-size: 12px;
+  cursor: pointer; transition: all 0.2s; font-family: inherit;
+  margin-top: 4px;
+}
+.settings-test-btn:hover { border-color: var(--gold); color: var(--fg-base); }
 
 /* ── バトルモード ── */
 .btn-battle {
@@ -2341,7 +2422,7 @@ footer a:hover { color: var(--gold); }
   <button id="connectBtn" onclick="toggleConnect()">接続</button>
   <span class="status" id="status">未接続</span>
   <div class="rate-info" id="rateInfo"></div>
-  <button class="header-theme-btn" id="themeToggleBtn" onclick="cycleTheme()" title="テーマ切り替え">🎨</button>
+  <button class="header-settings-btn" onclick="openSettingsModal()">⚙ 設定</button>
   <button class="btn-result" onclick="showResultModal()">リザルト</button>
   <button class="btn-battle" id="battleBtn" onclick="openAuthorModal()">バトル</button>
   <button class="btn-remix" id="remixBtn" onclick="openAuthorModal()">リミックス</button>
@@ -2539,29 +2620,12 @@ footer a:hover { color: var(--gold); }
 
   <div class="controls-row">
     <button class="speech-toggle active" id="speechToggle" onclick="toggleSpeech()">読み上げ</button>
-    <button class="speech-gear" onclick="toggleSpeechSettings()" title="読み上げ設定">&#9881;</button>
     <div class="se-controls">
       <button class="speech-toggle active" id="seToggle" onclick="toggleSE()">効果音</button>
       <button class="speech-toggle active" id="bgmToggle" onclick="toggleBGM()">BGM</button>
       <input type="range" class="se-volume" id="seVolume" min="0" max="100" value="50" oninput="setSEVolume(this.value)">
     </div>
-    <button class="speech-toggle" id="chainToggle" onclick="toggleChainChant()">連続詠唱</button>
     <button class="btn-clear" onclick="clearSelected()">クリア</button>
-  </div>
-  <div id="speech-settings" style="display:none;">
-    <div class="speech-setting-row">
-      <label>声</label>
-      <select id="speech-voice"></select>
-    </div>
-    <div class="speech-setting-row">
-      <label>速度 <span id="speech-rate-val">0.75</span></label>
-      <input type="range" id="speech-rate" min="0.3" max="2.0" step="0.05" value="0.75">
-    </div>
-    <div class="speech-setting-row">
-      <label>ピッチ <span id="speech-pitch-val">0.8</span></label>
-      <input type="range" id="speech-pitch" min="0.3" max="2.0" step="0.05" value="0.8">
-    </div>
-    <button id="speech-test-btn" onclick="testSpeech()">テスト再生</button>
   </div>
   </div><!-- /normal-center-ui -->
 
@@ -2999,8 +3063,12 @@ function syncVoteRanking() {
 function toggleChainChant() {
   chainChantEnabled = !chainChantEnabled;
   localStorage.setItem('chain_chant', chainChantEnabled);
-  const btn = document.getElementById('chainToggle');
-  btn.classList.toggle('active', chainChantEnabled);
+  // 設定モーダル内のボタンを同期
+  const settingsBtn = document.getElementById('settingsChainBtn');
+  if (settingsBtn) {
+    settingsBtn.textContent = chainChantEnabled ? 'ON' : 'OFF';
+    settingsBtn.classList.toggle('active', chainChantEnabled);
+  }
   if (!chainChantEnabled) {
     chainedWord = null;
     resetChain();
@@ -4360,10 +4428,6 @@ function toggleSpeech() {
   document.getElementById('speechToggle').classList.toggle('active', speechEnabled);
 }
 
-function toggleSpeechSettings() {
-  const panel = document.getElementById('speech-settings');
-  panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
-}
 
 // ── 読み上げ設定 ──
 function speakChant(text, onEnd, onError) {
@@ -4417,27 +4481,27 @@ if ('speechSynthesis' in window) {
 }
 
 // 設定スライダーのイベント
-document.getElementById('speech-rate').addEventListener('input', e => {
-  document.getElementById('speech-rate-val').textContent = e.target.value;
-  localStorage.setItem('speech_rate', e.target.value);
-});
-document.getElementById('speech-pitch').addEventListener('input', e => {
-  document.getElementById('speech-pitch-val').textContent = e.target.value;
-  localStorage.setItem('speech_pitch', e.target.value);
-});
-document.getElementById('speech-voice').addEventListener('change', e => {
-  localStorage.setItem('speech_voice', e.target.value);
-});
-
-// 設定の復元
-(function restoreSpeechSettings() {
+// 読み上げ設定（設定モーダル内の要素はDOMContentLoaded後に初期化）
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('speech-rate').addEventListener('input', e => {
+    document.getElementById('speech-rate-val').textContent = e.target.value;
+    localStorage.setItem('speech_rate', e.target.value);
+  });
+  document.getElementById('speech-pitch').addEventListener('input', e => {
+    document.getElementById('speech-pitch-val').textContent = e.target.value;
+    localStorage.setItem('speech_pitch', e.target.value);
+  });
+  document.getElementById('speech-voice').addEventListener('change', e => {
+    localStorage.setItem('speech_voice', e.target.value);
+  });
+  // 設定の復元
   const rate = localStorage.getItem('speech_rate') || '0.75';
   const pitch = localStorage.getItem('speech_pitch') || '0.8';
   document.getElementById('speech-rate').value = rate;
   document.getElementById('speech-rate-val').textContent = rate;
   document.getElementById('speech-pitch').value = pitch;
   document.getElementById('speech-pitch-val').textContent = pitch;
-})();
+});
 const guideEnabled = true;
 
 // SE controls
@@ -4906,16 +4970,8 @@ function updateThemeUI(themeKey) {
   document.querySelectorAll('.theme-btn').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.theme === themeKey);
   });
-  const toggleBtn = document.getElementById('themeToggleBtn');
-  if (toggleBtn) toggleBtn.title = `テーマ：${THEMES[themeKey].name}（クリックで切り替え）`;
 }
 
-function cycleTheme() {
-  const keys = Object.keys(THEMES);
-  const next = keys[(keys.indexOf(currentTheme) + 1) % keys.length];
-  applyTheme(next);
-  showToast(`テーマ：${THEMES[next].name}`, 'info', 2000);
-}
 
 // ページ読み込み時にテーマ復元
 applyTheme(localStorage.getItem('theme') || 'tasogare');
@@ -5462,8 +5518,25 @@ function openAuthorModal() {
 function closeAuthorModal() {
   document.getElementById('authorModal').classList.remove('visible');
 }
+
+function openSettingsModal() {
+  // 連続詠唱ボタンの状態を同期
+  const chainBtn = document.getElementById('settingsChainBtn');
+  if (chainBtn) {
+    chainBtn.textContent = chainChantEnabled ? 'ON' : 'OFF';
+    chainBtn.classList.toggle('active', chainChantEnabled);
+  }
+  document.getElementById('settingsModal').classList.add('visible');
+}
+function closeSettingsModal() {
+  document.getElementById('settingsModal').classList.remove('visible');
+}
+
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') closeAuthorModal();
+  if (e.key === 'Escape') {
+    closeAuthorModal();
+    closeSettingsModal();
+  }
 });
 
 function updateRemixBtn() {
@@ -5496,6 +5569,59 @@ function updateBattleBtn() {
 }
 </script>
 
+<!-- 設定モーダル -->
+<div id="settingsModal" class="settings-modal-overlay" onclick="if(event.target===this)closeSettingsModal()">
+  <div class="settings-modal-window">
+    <div class="settings-modal-header">
+      <span>設定</span>
+      <button class="settings-close-btn" onclick="closeSettingsModal()">✕</button>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-section-title">── 儀式の装い ──</div>
+      <div class="theme-selector">
+        <button class="theme-btn" data-theme="tasogare" onclick="applyTheme('tasogare')">
+          <span class="theme-preview" style="background:#A07830;"></span>黄昏
+        </button>
+        <button class="theme-btn" data-theme="kurenai" onclick="applyTheme('kurenai')">
+          <span class="theme-preview" style="background:#AA3A20;"></span>紅蓮
+        </button>
+        <button class="theme-btn" data-theme="shin_en" onclick="applyTheme('shin_en')">
+          <span class="theme-preview" style="background:#7A3AAA;"></span>深淵
+        </button>
+        <button class="theme-btn" data-theme="souen" onclick="applyTheme('souen')">
+          <span class="theme-preview" style="background:#4A8AAA;"></span>蒼炎
+        </button>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-section-title">── 読み上げ ──</div>
+      <div class="settings-row">
+        <label>声</label>
+        <select id="speech-voice"></select>
+      </div>
+      <div class="settings-row">
+        <label>速度 <span id="speech-rate-val">0.75</span></label>
+        <input type="range" id="speech-rate" min="0.3" max="2.0" step="0.05" value="0.75">
+      </div>
+      <div class="settings-row">
+        <label>ピッチ <span id="speech-pitch-val">0.8</span></label>
+        <input type="range" id="speech-pitch" min="0.3" max="2.0" step="0.05" value="0.8">
+      </div>
+      <button class="settings-test-btn" onclick="testSpeech()">テスト再生</button>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-section-title">── その他 ──</div>
+      <div class="settings-row">
+        <label>連続詠唱モード</label>
+        <button class="settings-toggle-btn" id="settingsChainBtn" onclick="toggleChainChant()">OFF</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- 術者の書モーダル -->
 <div id="authorModal" class="author-modal-overlay" onclick="if(event.target===this)closeAuthorModal()">
   <div class="author-modal-window">
@@ -5517,21 +5643,6 @@ function updateBattleBtn() {
         <tr><td>詠唱リミックス</td><td>✕</td><td class="subscriber-col">✅</td></tr>
       </tbody>
     </table>
-    <div class="author-section-title" style="margin-top:20px;">── 儀式の装い ──</div>
-    <div class="theme-selector">
-      <button class="theme-btn" data-theme="tasogare" onclick="applyTheme('tasogare')">
-        <span class="theme-preview" style="background:#A07830;"></span>黄昏
-      </button>
-      <button class="theme-btn" data-theme="kurenai" onclick="applyTheme('kurenai')">
-        <span class="theme-preview" style="background:#AA3A20;"></span>紅蓮
-      </button>
-      <button class="theme-btn" data-theme="shin_en" onclick="applyTheme('shin_en')">
-        <span class="theme-preview" style="background:#7A3AAA;"></span>深淵
-      </button>
-      <button class="theme-btn" data-theme="souen" onclick="applyTheme('souen')">
-        <span class="theme-preview" style="background:#4A8AAA;"></span>蒼炎
-      </button>
-    </div>
     <div class="author-actions">
       <a href="https://www.twitch.tv/subs/datsusara_aki" target="_blank" rel="noopener" class="author-btn primary">盟約を結ぶ（Twitchサブスク）</a>
       <a href="https://www.twitch.tv/datsusara_aki" target="_blank" rel="noopener" class="author-btn secondary">配信を見に行く（Twitch）</a>
