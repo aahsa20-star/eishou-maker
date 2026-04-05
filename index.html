@@ -2533,7 +2533,6 @@ footer a:hover { color: var(--gold); }
   <div class="controls-row">
     <button class="speech-toggle active" id="speechToggle" onclick="toggleSpeech()">読み上げ</button>
     <button class="speech-gear" onclick="toggleSpeechSettings()" title="読み上げ設定">&#9881;</button>
-    <button class="speech-toggle active" id="guideToggle" onclick="toggleGuide()">参加説明</button>
     <div class="se-controls">
       <button class="speech-toggle active" id="seToggle" onclick="toggleSE()">効果音</button>
       <button class="speech-toggle active" id="bgmToggle" onclick="toggleBGM()">BGM</button>
@@ -4433,13 +4432,7 @@ document.getElementById('speech-voice').addEventListener('change', e => {
   document.getElementById('speech-pitch').value = pitch;
   document.getElementById('speech-pitch-val').textContent = pitch;
 })();
-let guideEnabled = localStorage.getItem('show_guide') !== 'false';
-document.getElementById('guideToggle').classList.toggle('active', guideEnabled);
-function toggleGuide() {
-  guideEnabled = !guideEnabled;
-  localStorage.setItem('show_guide', guideEnabled);
-  document.getElementById('guideToggle').classList.toggle('active', guideEnabled);
-}
+const guideEnabled = true;
 
 // SE controls
 const seToggleEl = document.getElementById('seToggle');
