@@ -4753,6 +4753,84 @@ const THEMES = {
       },
     }
   },
+  kurenai: {
+    name: '紅蓮',
+    css: {
+      '--fg-base': '#F0D8C8', '--fg-dim': '#B08070',
+      '--gold': '#AA3A20', '--gold-bright': '#CC5A30',
+      '--gold-r': '170', '--gold-g': '58', '--gold-b': '32',
+      '--gold-bright-r': '204', '--gold-bright-g': '90', '--gold-bright-b': '48',
+      '--teal': '#8A3A20', '--teal-dim': '#4A1A10',
+      '--teal-r': '138', '--teal-g': '58', '--teal-b': '32',
+      '--fg-base-r': '240', '--fg-base-g': '216', '--fg-base-b': '200',
+      '--bg-base': '#0E0804', '--bg-panel': '#130A06', '--bg-input': '#0A0604',
+      '--border': '#2A1408', '--border-gold': 'rgba(170,58,32,0.4)',
+    },
+    js: {
+      typeConfig: {
+        自動: { color: '#CC5A30', altarRgb: [170, 58, 32] },
+        召喚: { color: '#CC5A30', altarRgb: [170, 58, 32] },
+        解放: { color: '#E07A20', altarRgb: [200, 100, 30] },
+        封印: { color: '#AA4A60', altarRgb: [160, 70, 80] },
+        滅亡: { color: '#CC2A2A', altarRgb: [180, 30, 30] },
+        覚醒: { color: '#E0A030', altarRgb: [200, 140, 40] },
+        自己紹介: { color: '#C86A50', altarRgb: [180, 100, 70] },
+      },
+      imageTypeColors: {
+        自動: '#CC5A30', 召喚: '#CC5A30', 解放: '#E07A20',
+        封印: '#AA4A60', 滅亡: '#CC2A2A', 覚醒: '#E0A030', 自己紹介: '#C86A50',
+      },
+      countdownTypeColors: {
+        自動: '#CC5A30', 召喚: '#CC5A30', 解放: '#E07A20',
+        封印: '#AA4A60', 滅亡: '#CC2A2A', 覚醒: '#E0A030', 自己紹介: '#C86A50',
+      },
+      historyTypeBg: {
+        自動: 'rgba(170,58,32,0.05)', 召喚: 'rgba(170,58,32,0.05)',
+        解放: 'rgba(200,100,30,0.05)', 封印: 'rgba(160,70,80,0.05)',
+        滅亡: 'rgba(180,30,30,0.05)', 覚醒: 'rgba(200,140,40,0.05)',
+        自己紹介: 'rgba(180,100,70,0.05)',
+      },
+    }
+  },
+  shin_en: {
+    name: '深淵',
+    css: {
+      '--fg-base': '#D8C8F0', '--fg-dim': '#8A78AA',
+      '--gold': '#7A3AAA', '--gold-bright': '#9A5ACC',
+      '--gold-r': '122', '--gold-g': '58', '--gold-b': '170',
+      '--gold-bright-r': '154', '--gold-bright-g': '90', '--gold-bright-b': '204',
+      '--teal': '#5A2A8A', '--teal-dim': '#2A1040',
+      '--teal-r': '90', '--teal-g': '42', '--teal-b': '138',
+      '--fg-base-r': '216', '--fg-base-g': '200', '--fg-base-b': '240',
+      '--bg-base': '#08040E', '--bg-panel': '#0C0814', '--bg-input': '#060410',
+      '--border': '#1A0A2A', '--border-gold': 'rgba(122,58,170,0.4)',
+    },
+    js: {
+      typeConfig: {
+        自動: { color: '#9A5ACC', altarRgb: [122, 58, 170] },
+        召喚: { color: '#9A5ACC', altarRgb: [122, 58, 170] },
+        解放: { color: '#6A8ACC', altarRgb: [90, 120, 180] },
+        封印: { color: '#AA6ACC', altarRgb: [150, 90, 180] },
+        滅亡: { color: '#8A2A6A', altarRgb: [130, 40, 100] },
+        覚醒: { color: '#AA80FF', altarRgb: [160, 120, 240] },
+        自己紹介: { color: '#9A70CC', altarRgb: [140, 100, 190] },
+      },
+      imageTypeColors: {
+        自動: '#9A5ACC', 召喚: '#9A5ACC', 解放: '#6A8ACC',
+        封印: '#AA6ACC', 滅亡: '#8A2A6A', 覚醒: '#AA80FF', 自己紹介: '#9A70CC',
+      },
+      countdownTypeColors: {
+        自動: '#9A5ACC', 召喚: '#9A5ACC', 解放: '#6A8ACC',
+        封印: '#AA6ACC', 滅亡: '#8A2A6A', 覚醒: '#AA80FF', 自己紹介: '#9A70CC',
+      },
+      historyTypeBg: {
+        自動: 'rgba(122,58,170,0.05)', 召喚: 'rgba(122,58,170,0.05)',
+        解放: 'rgba(90,120,180,0.05)', 封印: 'rgba(150,90,180,0.05)',
+        滅亡: 'rgba(130,40,100,0.05)', 覚醒: 'rgba(160,120,240,0.05)',
+        自己紹介: 'rgba(140,100,190,0.05)',
+      },
+    }
+  },
   souen: {
     name: '蒼炎',
     css: {
@@ -5443,6 +5521,12 @@ function updateBattleBtn() {
     <div class="theme-selector">
       <button class="theme-btn" data-theme="tasogare" onclick="applyTheme('tasogare')">
         <span class="theme-preview" style="background:#A07830;"></span>黄昏
+      </button>
+      <button class="theme-btn" data-theme="kurenai" onclick="applyTheme('kurenai')">
+        <span class="theme-preview" style="background:#AA3A20;"></span>紅蓮
+      </button>
+      <button class="theme-btn" data-theme="shin_en" onclick="applyTheme('shin_en')">
+        <span class="theme-preview" style="background:#7A3AAA;"></span>深淵
       </button>
       <button class="theme-btn" data-theme="souen" onclick="applyTheme('souen')">
         <span class="theme-preview" style="background:#4A8AAA;"></span>蒼炎
