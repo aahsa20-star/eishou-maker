@@ -4164,6 +4164,18 @@ function replayChant(i) {
   if (!entry) return;
   showChantOverlay(entry.text, entry.type || '召喚', entry.words || [], entry.evaluation || null, entry.imageUrl || null);
 }
+// グローバルカラーマップ（テーマで上書き）— renderHistory/runCountdownで参照するためここで定義
+const COUNTDOWN_TYPE_COLORS = {
+  '自動': '#C8A050', '召喚': '#C8A050', '解放': '#7AB8B0', '封印': '#8A7AA0',
+  '滅亡': '#A05050', '覚醒': '#7A9A7A', '自己紹介': '#B48CC8'
+};
+const HISTORY_TYPE_BG = {
+  '自動': 'rgba(160,120,48,0.05)', '召喚': 'rgba(160,120,48,0.05)',
+  '解放': 'rgba(90,138,128,0.05)', '封印': 'rgba(106,90,138,0.05)',
+  '滅亡': 'rgba(122,48,48,0.05)', '覚醒': 'rgba(90,122,90,0.05)',
+  '自己紹介': 'rgba(180,140,200,0.05)'
+};
+
 function renderHistory() {
   const list = document.getElementById('historyList');
   const history = getHistory();
@@ -4698,18 +4710,6 @@ const ALTAR_TYPE_COLORS = {
   '滅亡': [122, 48, 48],
   '覚醒': [90, 122, 90],
   '自己紹介': [180, 140, 200]
-};
-
-// グローバルカラーマップ（テーマで上書き）
-const COUNTDOWN_TYPE_COLORS = {
-  '自動': '#C8A050', '召喚': '#C8A050', '解放': '#7AB8B0', '封印': '#8A7AA0',
-  '滅亡': '#A05050', '覚醒': '#7A9A7A', '自己紹介': '#B48CC8'
-};
-const HISTORY_TYPE_BG = {
-  '自動': 'rgba(160,120,48,0.05)', '召喚': 'rgba(160,120,48,0.05)',
-  '解放': 'rgba(90,138,128,0.05)', '封印': 'rgba(106,90,138,0.05)',
-  '滅亡': 'rgba(122,48,48,0.05)', '覚醒': 'rgba(90,122,90,0.05)',
-  '自己紹介': 'rgba(180,140,200,0.05)'
 };
 
 // ── テーマシステム ──
