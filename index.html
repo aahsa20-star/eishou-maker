@@ -778,11 +778,14 @@ body {
 }
 .speech-gear:hover { border-color: var(--gold); color: var(--fg-base); }
 
+.copy-commands-row {
+  display: flex; gap: 6px; margin-top: 8px;
+}
 .copy-commands-btn {
   background: transparent; border: 1px solid var(--border);
   color: var(--fg-dim); padding: 6px 12px; font-size: 12px;
   cursor: pointer; transition: all 0.2s; font-family: inherit;
-  width: 100%; margin-top: 8px;
+  flex: 1;
 }
 .copy-commands-btn:hover { border-color: var(--gold); color: var(--fg-base); }
 .copy-commands-hint { font-size: 11px; color: var(--fg-dim); margin-top: 4px; text-align: center; }
@@ -2506,7 +2509,10 @@ footer a:hover { color: var(--gold); }
         <code style="color:var(--gold-bright)">!odai テーマ</code> でお題を提案できます。<br>
         クリックで選択 → 並び替え → 詠唱生成
       </p>
-      <button class="copy-commands-btn" onclick="copyCommands()">📋 コマンドをコピー</button>
+      <div class="copy-commands-row">
+        <button class="copy-commands-btn" onclick="copyCommands()">📋 コピー</button>
+        <button class="copy-commands-btn" onclick="saveCommandImage()">🖼 画像保存</button>
+      </div>
       <div class="copy-commands-hint">チャットに貼ってリスナーに共有</div>
     </div>
   </div>
@@ -5633,6 +5639,58 @@ function copyCommands() {
   }).catch(() => {
     showToast('コピーに失敗しました', 'error', 2000);
   });
+}
+
+async function saveCommandImage() {
+  await document.fonts.ready;
+  const isBattle = battleMode;
+  const s = k => getComputedStyle(document.documentElement).getPropertyValue(k).trim();
+  const bgBase = s('--bg-base'), bgPanel = s('--bg-panel');
+  const goldBright = s('--gold-bright'), fgDim = s('--fg-dim');
+  const gR = s('--gold-r'), gG = s('--gold-g'), gB = s('--gold-b');
+
+  const commands = isBattle ? [
+    { cmd: '!red 単語', desc: '赤陣営に言霊を捧げる' },
+    { cmd: '!blue 単語', desc: '青陣営に言霊を捧げる' },
+  ] : [
+    { cmd: '!word 単語', desc: '言霊を捧げる' },
+    { cmd: '!vote 番号', desc: '単語に投票する' },
+    { cmd: '!odai テーマ', desc: 'お題を提案する' },
+  ];
+  const title = isBattle ? '詠唱バトル 参加方法' : '詠唱メーカー 参加方法';
+
+  const el = document.createElement('div');
+  el.style.cssText = `position:fixed;left:-9999px;width:400px;height:600px;background:${bgBase};display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px;box-sizing:border-box;font-family:'Zen Kaku Gothic New',sans-serif;`;
+
+  const corner = (t,r,b,l) => `position:absolute;${t};${r};${b};${l};width:20px;height:20px;border-${t.split(':')[0]}:2px solid ${goldBright};border-${l?'left':'right'}:2px solid ${goldBright};`;
+  el.innerHTML = `
+    <div style="width:100%;height:100%;border:1px solid rgba(${gR},${gG},${gB},0.6);background:${bgPanel};padding:32px;box-sizing:border-box;display:flex;flex-direction:column;position:relative;">
+      <div style="position:absolute;top:-1px;left:-1px;width:20px;height:20px;border-top:2px solid ${goldBright};border-left:2px solid ${goldBright};"></div>
+      <div style="position:absolute;top:-1px;right:-1px;width:20px;height:20px;border-top:2px solid ${goldBright};border-right:2px solid ${goldBright};"></div>
+      <div style="position:absolute;bottom:-1px;left:-1px;width:20px;height:20px;border-bottom:2px solid ${goldBright};border-left:2px solid ${goldBright};"></div>
+      <div style="position:absolute;bottom:-1px;right:-1px;width:20px;height:20px;border-bottom:2px solid ${goldBright};border-right:2px solid ${goldBright};"></div>
+      <div style="text-align:center;font-family:'Yuji Syuku',serif;font-size:18px;color:${goldBright};letter-spacing:0.15em;margin-bottom:32px;padding-bottom:16px;border-bottom:1px solid rgba(${gR},${gG},${gB},0.3);">── ${esc(title)} ──</div>
+      <div style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:28px;">
+        ${commands.map(c => `
+          <div style="text-align:center;">
+            <div style="font-family:'Shippori Mincho B1',serif;font-size:22px;font-weight:700;color:${goldBright};letter-spacing:0.1em;margin-bottom:6px;">${esc(c.cmd)}</div>
+            <div style="font-size:14px;color:${fgDim};letter-spacing:0.05em;">${esc(c.desc)}</div>
+          </div>
+        `).join('')}
+      </div>
+      <div style="text-align:center;font-size:12px;color:rgba(${gR},${gG},${gB},0.4);margin-top:24px;padding-top:16px;border-top:1px solid rgba(${gR},${gG},${gB},0.2);letter-spacing:0.1em;">eishou-maker.vercel.app</div>
+    </div>
+  `;
+
+  document.body.appendChild(el);
+  const canvas = await html2canvas(el, { width: 400, height: 600, scale: 2, backgroundColor: bgBase, useCORS: true });
+  document.body.removeChild(el);
+
+  const link = document.createElement('a');
+  link.download = isBattle ? `バトルコマンド_${Date.now()}.png` : `コマンド_${Date.now()}.png`;
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+  showToast('コマンド画像を保存しました', 'success', 2000);
 }
 
 function showToast(message, type = 'info', duration = 3000) {
