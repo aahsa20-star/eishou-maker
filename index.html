@@ -2743,6 +2743,8 @@ footer a:hover { color: var(--gold); }
       <div class="winner-reason" id="battleOvWinnerReason"></div>
     </div>
     <div class="battle-overlay-actions" id="battleOvActions">
+      <button onclick="saveBattleResultImage()">📷 画像保存</button>
+      <button onclick="shareBattleResultToX()">𝕏 シェア</button>
       <button onclick="closeBattleOverlay(); resetBattle();">もう一度バトル</button>
       <button onclick="closeBattleOverlay(); toggleBattleMode();">通常モードに戻る</button>
     </div>
@@ -5327,6 +5329,7 @@ async function startBattle() {
 
 // ── バトル演出メイン ──
 let battleOverlayActive = false;
+let lastBattleJudgment = null;
 
 async function runBattleAnimation(redChant, blueChant, judgePromise) {
   battleOverlayActive = true;
@@ -5427,6 +5430,7 @@ function showJudging() {
 }
 
 function showWinner(judgment) {
+  lastBattleJudgment = judgment;
   const el = document.getElementById('battleOvWinner');
   const labelEl = document.getElementById('battleOvWinnerLabel');
   const reasonEl = document.getElementById('battleOvWinnerReason');
@@ -5454,6 +5458,31 @@ function closeBattleOverlay() {
   const win = document.getElementById('battleOverlayWindow');
   bg.classList.remove('visible');
   win.classList.remove('visible');
+}
+
+async function saveBattleResultImage() {
+  await document.fonts.ready;
+  const el = document.getElementById('battleOverlayWindow');
+  const canvas = await html2canvas(el, {
+    scale: 1.5,
+    backgroundColor: getThemeBgBase(),
+    useCORS: true,
+  });
+  const link = document.createElement('a');
+  link.download = `詠唱バトル_${Date.now()}.png`;
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+  showToast('バトル結果を保存しました', 'success', 2000);
+}
+
+function shareBattleResultToX() {
+  saveBattleResultImage();
+  const winnerText = lastBattleJudgment?.winner === 'red' ? '🔴 赤陣営の勝利！'
+    : lastBattleJudgment?.winner === 'blue' ? '🔵 青陣営の勝利！'
+    : '⚔ 引き分け——';
+  const text = `${winnerText}\n\n#詠唱メーカー\nhttps://eishou-maker.vercel.app`;
+  const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
+  setTimeout(() => window.open(url, '_blank'), 500);
 }
 
 function showBattleResultStatic(redChant, blueChant, judgment) {
