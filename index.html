@@ -2035,7 +2035,7 @@ footer a:hover { color: var(--gold); }
 .battle-selected-words { display: flex; flex-wrap: wrap; gap: 4px; min-height: 24px; }
 
 #battle-center-ui { display: none; flex-direction: column; gap: 12px; align-items: center; }
-#battle-center-ui .type-row { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+#battle-center-ui .type-selector { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
 #battle-center-ui .type-btn { padding: 6px 12px; font-size: 13px; flex: 0 0 auto; }
 .battle-title { font-family: 'Yuji Syuku', serif; font-size: 20px; color: #C84B4B; letter-spacing: 0.15em; text-align: center; flex: 1; }
 .battle-title-row { display: flex; align-items: center; width: 100%; }
@@ -2571,6 +2571,7 @@ footer a:hover { color: var(--gold); }
       <button class="type-btn" data-type="封印" onclick="selectType(this)">封印</button>
       <button class="type-btn" data-type="滅亡" onclick="selectType(this)">滅亡</button>
       <button class="type-btn" data-type="覚醒" onclick="selectType(this)">覚醒</button>
+      <button class="type-btn" data-type="自己紹介" onclick="selectType(this)">自己紹介</button>
     </div>
     <div class="battle-selected-preview">
       <div class="battle-preview-row">
