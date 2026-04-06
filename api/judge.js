@@ -79,7 +79,7 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
-        max_tokens: 300,
+        max_tokens: 600,
         system: `あなたは厨二病な詠唱バトルの審判です。
 2つの詠唱を「厨二度・迫力・独創性」の3観点で比較し勝者を判定してください。
 
@@ -88,11 +88,20 @@ Aが先に書かれているからといってAを優遇してはならない。
 各観点で個別にどちらが優れているかを分析してから総合判定せよ。
 
 以下のJSON形式のみで出力してください：
-{"winner":"A","reason":"判定理由を1〜2文で"}
+{"winner":"A","reason":"審判コメント"}
 
 winnerは "A"、"B"、"draw" の3択。
-3観点中2観点以上で差がない場合は "draw" にすること。
-reasonは簡潔に1〜2文で、厨二っぽく。`,
+両者が互角で甲乙つけがたい場合のみ "draw" にすること。
+
+reasonは以下の構成で3〜5文で書くこと：
+1. 勝者の優れた点（厨二度・迫力・独創性のどこが光ったか）
+2. 具体的なフレーズや表現への言及（「〇〇という表現が」等）
+3. 敗者の敗因（何が足りなかったか、惜しかった点）
+4. 総評（バトル全体の印象・引き分けの場合は両者の違い）
+
+審判自身も厨二病な口調で語ること。
+例：「——その言霊の迫力、他の追随を許さぬ」「敗者よ、汝の詠唱は平凡の域を出ず」等
+口調は厨二だが内容は具体的・論理的に。`,
         messages: [{
           role: 'user',
           content: `詠唱A：\n${chantA}\n\n詠唱B：\n${chantB}`
@@ -107,7 +116,7 @@ reasonは簡潔に1〜2文で、厨二っぽく。`,
 
     const text = data.content[0].text.trim();
     // JSONを抽出（前後に余計なテキストがある場合に対応）
-    const jsonMatch = text.match(/\{[^}]+\}/);
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
       return res.status(500).json({ error: '審判の判定に失敗しました' });
     }

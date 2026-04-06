@@ -2080,7 +2080,7 @@ footer a:hover { color: var(--gold); }
 .battle-winner.red { color: #C84B4B; border-color: rgba(200,75,75,0.5); background: rgba(200,75,75,0.06); }
 .battle-winner.blue { color: #4B82C8; border-color: rgba(75,130,200,0.5); background: rgba(75,130,200,0.06); }
 .battle-winner.draw { color: var(--gold-bright); border-color: rgba(var(--gold-bright-r),var(--gold-bright-g),var(--gold-bright-b),0.5); background: rgba(var(--gold-bright-r),var(--gold-bright-g),var(--gold-bright-b),0.06); }
-.battle-reason { text-align: center; font-size: 14px; color: var(--fg-dim); font-style: italic; line-height: 1.6; }
+.battle-reason { text-align: left; font-size: 14px; color: var(--fg-dim); font-style: italic; line-height: 1.8; max-width: 680px; margin: 8px auto 0; }
 .battle-actions { display: flex; gap: 8px; justify-content: center; margin-top: 8px; }
 .battle-actions button {
   padding: 6px 20px; border: 1px solid var(--border); background: transparent;
@@ -2355,11 +2355,20 @@ footer a:hover { color: var(--gold); }
 .winner-label.blue { color: #4B82C8; text-shadow: 0 0 20px rgba(75,130,200,0.4); }
 .winner-label.draw { color: var(--gold-bright); text-shadow: 0 0 20px rgba(var(--gold-bright-r),var(--gold-bright-g),var(--gold-bright-b),0.4); }
 .winner-reason {
-  font-family: 'Yuji Syuku', serif;
-  font-size: 16px;
-  color: var(--fg-dim);
+  font-family: 'Zen Kaku Gothic New', sans-serif;
+  font-size: 14px;
+  color: rgba(var(--fg-base-r),var(--fg-base-g),var(--fg-base-b),0.8);
   font-style: italic;
-  line-height: 1.8;
+  line-height: 1.9;
+  max-width: 680px;
+  margin: 0 auto;
+  text-align: left;
+  max-height: 180px;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+.winner-reason::-webkit-scrollbar {
+  display: none;
 }
 
 .battle-overlay-close {
