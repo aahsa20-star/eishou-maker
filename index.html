@@ -22,6 +22,11 @@
   --gold-bright-r: 200; --gold-bright-g: 160; --gold-bright-b: 80;
   --teal-r: 90;  --teal-g: 138; --teal-b: 128;
   --fg-base-r: 232; --fg-base-g: 223; --fg-base-b: 200;
+  --bg-overlay: #080604;
+  --bg-window: rgba(19,17,13,0.95);
+  --bg-window-heavy: rgba(19,17,13,0.97);
+  --overlay-dim: rgba(0,0,0,0.7);
+  --overlay-dim-heavy: rgba(0,0,0,0.85);
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
 vercel-live-feedback, [data-vercel-toolbar] { display: none !important; }
@@ -214,7 +219,7 @@ body {
 }
 
 .panel {
-  background: linear-gradient(135deg, #13110D 0%, #0F1410 100%);
+  background: linear-gradient(135deg, var(--bg-panel) 0%, var(--bg-overlay) 100%);
   border: 1px solid rgba(var(--gold-r),var(--gold-g),var(--gold-b),0.5);
   box-shadow: 0 0 0 1px rgba(var(--gold-r),var(--gold-g),var(--gold-b),0.1), inset 0 1px 0 rgba(255,255,255,0.03);
   border-radius: 0;
@@ -410,7 +415,7 @@ body {
 
 /* Selected Area */
 .selected-area {
-  background: linear-gradient(135deg, #13110D 0%, #0F1410 100%);
+  background: linear-gradient(135deg, var(--bg-panel) 0%, var(--bg-overlay) 100%);
   border: 1px solid rgba(var(--gold-r),var(--gold-g),var(--gold-b),0.5);
   box-shadow: 0 0 0 1px rgba(var(--gold-r),var(--gold-g),var(--gold-b),0.1), inset 0 1px 0 rgba(255,255,255,0.03);
   border-radius: 0;
@@ -1003,7 +1008,7 @@ body {
   transition: background 0.5s;
 }
 .countdown-overlay.active {
-  background: rgba(0,0,0,0.7);
+  background: var(--overlay-dim);
   pointer-events: auto;
 }
 .countdown-number {
@@ -1187,7 +1192,7 @@ body {
   inset: 0;
   width: 100vw;
   height: 100vh;
-  background: #080604;
+  background: var(--bg-overlay);
   z-index: 1000;
   opacity: 0;
   visibility: hidden;
@@ -1228,9 +1233,9 @@ body {
   top: calc(50% + 2vh);
   transform: translate(-50%, -50%);
   width: min(860px, 90vw);
-  background: rgba(19,17,13,0.95);
+  background: var(--bg-window);
   border: 1px solid rgba(var(--gold-r),var(--gold-g),var(--gold-b),0.7);
-  box-shadow: 0 0 60px rgba(0,0,0,0.9), 0 0 30px rgba(var(--gold-r),var(--gold-g),var(--gold-b),0.08);
+  box-shadow: 0 0 60px var(--overlay-dim-heavy), 0 0 30px rgba(var(--gold-r),var(--gold-g),var(--gold-b),0.08);
   padding: 0;
   z-index: 1001;
   max-height: 90vh;
@@ -1656,9 +1661,9 @@ footer a:hover { color: var(--gold); }
   transition: opacity 0.3s ease; pointer-events: none; white-space: nowrap;
 }
 .toast.visible { opacity: 1; }
-.toast-info { background: rgba(19,17,13,0.95); border: 1px solid var(--border-gold); color: var(--fg-base); }
-.toast-error { background: rgba(19,17,13,0.95); border: 1px solid #C84B4B; color: #F0B0B0; }
-.toast-success { background: rgba(19,17,13,0.95); border: 1px solid #5ABAB4; color: #B0E8E4; }
+.toast-info { background: var(--bg-window); border: 1px solid var(--border-gold); color: var(--fg-base); }
+.toast-error { background: var(--bg-window); border: 1px solid #C84B4B; color: #F0B0B0; }
+.toast-success { background: var(--bg-window); border: 1px solid #5ABAB4; color: #B0E8E4; }
 
 /* Author Modal */
 .author-modal-overlay {
@@ -1832,7 +1837,7 @@ footer a:hover { color: var(--gold); }
 /* Session Result Modal */
 .result-modal-bg {
   position: fixed; inset: 0; z-index: 9000;
-  background: rgba(0,0,0,0.85);
+  background: var(--overlay-dim-heavy);
   display: flex; align-items: center; justify-content: center;
   opacity: 0; pointer-events: none;
   transition: opacity 0.4s;
@@ -2167,7 +2172,7 @@ footer a:hover { color: var(--gold); }
   inset: 0;
   width: 100vw;
   height: 100vh;
-  background: #080604;
+  background: var(--bg-overlay);
   z-index: 1000;
   opacity: 0;
   visibility: hidden;
@@ -2183,9 +2188,9 @@ footer a:hover { color: var(--gold); }
   width: min(900px, 92vw);
   max-height: 90vh;
   overflow-y: auto;
-  background: rgba(19,17,13,0.97);
+  background: var(--bg-window-heavy);
   border: 1px solid rgba(var(--gold-r),var(--gold-g),var(--gold-b),0.5);
-  box-shadow: 0 0 60px rgba(0,0,0,0.9), 0 0 30px rgba(var(--gold-r),var(--gold-g),var(--gold-b),0.08);
+  box-shadow: 0 0 60px var(--overlay-dim-heavy), 0 0 30px rgba(var(--gold-r),var(--gold-g),var(--gold-b),0.08);
   z-index: 1001;
   padding: 0;
   visibility: hidden;
@@ -4165,17 +4170,28 @@ const IMAGE_TYPE_COLORS = {
   '滅亡': '#C84B4B', '覚醒': '#7AB87A', '自己紹介': '#B48CC8'
 };
 
+function getThemeBgBase() {
+  return getComputedStyle(document.documentElement).getPropertyValue('--bg-base').trim();
+}
+function getThemeBgWindow() {
+  return getComputedStyle(document.documentElement).getPropertyValue('--bg-window').trim();
+}
+function getThemeFgBase() {
+  return getComputedStyle(document.documentElement).getPropertyValue('--fg-base').trim();
+}
+
 async function saveChantImage(chantText, words, type, evaluation) {
   const typeColor = IMAGE_TYPE_COLORS[type] || '#C8A050';
   const canvasEl = document.createElement('div');
   canvasEl.style.cssText = `
     position: fixed; left: -9999px; width: 1200px; height: 675px;
-    background: #0E0C09;
+    background: ${getThemeBgBase()};
     background-image: radial-gradient(ellipse at 20% 50%, rgba(var(--teal-r),var(--teal-g),var(--teal-b),0.06) 0%, transparent 60%),
       radial-gradient(ellipse at 80% 20%, rgba(var(--gold-r),var(--gold-g),var(--gold-b),0.06) 0%, transparent 60%);
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     font-family: 'Zen Kaku Gothic New', sans-serif;
   `;
+  const fgBase = getThemeFgBase();
   const linesHtml = chantText.split(/\\n|\n/).map(s => s.trim()).filter(Boolean).map(s => esc(s)).join('<br>');
   let evalHtml = '';
   if (evaluation) {
@@ -4194,7 +4210,7 @@ async function saveChantImage(chantText, words, type, evaluation) {
     ? [...displayWords, `他${extraCount}個`].join('　')
     : displayWords.join('　');
   canvasEl.innerHTML = `
-    <div style="width:1100px;border:1px solid rgba(var(--gold-r),var(--gold-g),var(--gold-b),0.6);background:rgba(19,17,13,0.98);position:relative;">
+    <div style="width:1100px;border:1px solid rgba(var(--gold-r),var(--gold-g),var(--gold-b),0.6);background:${getThemeBgWindow()};position:relative;">
       <div style="position:absolute;top:-1px;left:-1px;width:20px;height:20px;border-top:2px solid var(--gold-bright);border-left:2px solid var(--gold-bright);"></div>
       <div style="position:absolute;top:-1px;right:-1px;width:20px;height:20px;border-top:2px solid var(--gold-bright);border-right:2px solid var(--gold-bright);"></div>
       <div style="position:absolute;bottom:-1px;left:-1px;width:20px;height:20px;border-bottom:2px solid var(--gold-bright);border-left:2px solid var(--gold-bright);"></div>
@@ -4202,7 +4218,7 @@ async function saveChantImage(chantText, words, type, evaluation) {
       <div style="padding:8px 24px;border-bottom:1px solid rgba(var(--gold-r),var(--gold-g),var(--gold-b),0.3);display:flex;justify-content:space-between;font-size:15px;color:rgba(var(--gold-r),var(--gold-g),var(--gold-b),0.7);letter-spacing:0.2em;">
         <span>詠唱システム</span><span style="color:${typeColor}">${type}</span>
       </div>
-      <div style="padding:24px 48px 20px;font-family:'Yuji Syuku',serif;font-size:32px;line-height:2.6;color:#E8DFC8;text-align:center;letter-spacing:0.05em;">${linesHtml}</div>
+      <div style="padding:24px 48px 20px;font-family:'Yuji Syuku',serif;font-size:32px;line-height:2.6;color:${fgBase};text-align:center;letter-spacing:0.05em;">${linesHtml}</div>
       <div style="margin:4px 64px;height:1px;background:rgba(var(--gold-r),var(--gold-g),var(--gold-b),0.2);"></div>
       <div style="padding:10px 48px 16px;font-size:15px;color:rgba(var(--gold-r),var(--gold-g),var(--gold-b),0.6);text-align:center;letter-spacing:0.15em;">${wordsText}</div>
       ${evalHtml}
@@ -4213,7 +4229,7 @@ async function saveChantImage(chantText, words, type, evaluation) {
   await document.fonts.ready;
   const canvas = await html2canvas(canvasEl, {
     width: 1200, height: 675, scale: 1,
-    backgroundColor: '#0E0C09', useCORS: true, allowTaint: true
+    backgroundColor: getThemeBgBase(), useCORS: true, allowTaint: true
   });
   document.body.removeChild(canvasEl);
   const link = document.createElement('a');
@@ -4701,9 +4717,11 @@ function closeResultModal() {
 async function saveResultImage() {
   const d = collectResultData();
   const el = document.createElement('div');
+  const bgBase = getThemeBgBase();
+  const fgBase = getThemeFgBase();
   el.style.cssText = `
     position: fixed; left: -9999px; width: 1200px; height: 675px;
-    background: #0E0C09;
+    background: ${bgBase};
     background-image: radial-gradient(ellipse at 20% 50%, rgba(var(--teal-r),var(--teal-g),var(--teal-b),0.06) 0%, transparent 60%),
       radial-gradient(ellipse at 80% 20%, rgba(var(--gold-r),var(--gold-g),var(--gold-b),0.06) 0%, transparent 60%);
     display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -4712,9 +4730,9 @@ async function saveResultImage() {
 
   let statsHtml = `
     <div style="display:flex;gap:40px;margin:16px 0 20px;">
-      <div style="text-align:center;"><div style="font-size:14px;color:rgba(var(--gold-r),var(--gold-g),var(--gold-b),0.6);">詠唱回数</div><div style="font-size:28px;color:#E8DFC8;font-weight:700;margin-top:4px;">${d.count}</div></div>
-      <div style="text-align:center;"><div style="font-size:14px;color:rgba(var(--gold-r),var(--gold-g),var(--gold-b),0.6);">最高レアリティ</div><div style="font-size:20px;color:#C8A050;font-weight:600;margin-top:8px;">${esc(d.topRarity)}</div></div>
-      <div style="text-align:center;"><div style="font-size:14px;color:rgba(var(--gold-r),var(--gold-g),var(--gold-b),0.6);">使用属性</div><div style="font-size:16px;color:#E8DFC8;margin-top:8px;">${d.elements.length > 0 ? d.elements.map(e => esc(e)).join(' · ') : '—'}</div></div>
+      <div style="text-align:center;"><div style="font-size:14px;color:rgba(var(--gold-r),var(--gold-g),var(--gold-b),0.6);">詠唱回数</div><div style="font-size:28px;color:${fgBase};font-weight:700;margin-top:4px;">${d.count}</div></div>
+      <div style="text-align:center;"><div style="font-size:14px;color:rgba(var(--gold-r),var(--gold-g),var(--gold-b),0.6);">最高レアリティ</div><div style="font-size:20px;color:var(--gold-bright);font-weight:600;margin-top:8px;">${esc(d.topRarity)}</div></div>
+      <div style="text-align:center;"><div style="font-size:14px;color:rgba(var(--gold-r),var(--gold-g),var(--gold-b),0.6);">使用属性</div><div style="font-size:16px;color:${fgBase};margin-top:8px;">${d.elements.length > 0 ? d.elements.map(e => esc(e)).join(' · ') : '—'}</div></div>
     </div>`;
 
   let hofHtml = '';
@@ -4722,30 +4740,30 @@ async function saveResultImage() {
     const firstLine = d.topHof.split('\n')[0];
     hofHtml = `
       <div style="margin:12px 0 8px;font-size:14px;color:rgba(var(--gold-r),var(--gold-g),var(--gold-b),0.6);letter-spacing:0.15em;">── 今宵の殿堂 ──</div>
-      <div style="font-family:'Yuji Syuku',serif;font-size:22px;color:#E8DFC8;letter-spacing:0.05em;">${esc(firstLine)}——</div>`;
+      <div style="font-family:'Yuji Syuku',serif;font-size:22px;color:${fgBase};letter-spacing:0.05em;">${esc(firstLine)}——</div>`;
   }
 
   let mvpHtml = '';
   if (d.mvp) {
     mvpHtml = `<div style="margin:16px 0 4px;font-size:14px;color:rgba(var(--gold-r),var(--gold-g),var(--gold-b),0.6);letter-spacing:0.15em;">── MVP ──</div>
-      <div style="font-size:18px;color:#E8DFC8;">\u{1F451} ${esc(d.mvp.username)}（スコア ${d.mvp.score}）</div>`;
+      <div style="font-size:18px;color:${fgBase};">\u{1F451} ${esc(d.mvp.username)}（スコア ${d.mvp.score}）</div>`;
   }
 
   let wordsHtml = '';
   if (d.wordEntries.length > 0) {
     wordsHtml = `<div style="margin:16px 0 8px;font-size:14px;color:rgba(var(--gold-r),var(--gold-g),var(--gold-b),0.6);letter-spacing:0.15em;">── 人気言霊 Top3 ──</div>`;
     d.wordEntries.forEach(([word, votes], i) => {
-      wordsHtml += `<div style="font-size:16px;color:#E8DFC8;padding:2px 0;">${i + 1}位　${esc(word)}（${votes}票）</div>`;
+      wordsHtml += `<div style="font-size:16px;color:${fgBase};padding:2px 0;">${i + 1}位　${esc(word)}（${votes}票）</div>`;
     });
   }
 
   el.innerHTML = `
-    <div style="width:1000px;border:1px solid rgba(var(--gold-r),var(--gold-g),var(--gold-b),0.6);background:rgba(19,17,13,0.98);position:relative;padding:32px 48px;">
+    <div style="width:1000px;border:1px solid rgba(var(--gold-r),var(--gold-g),var(--gold-b),0.6);background:${getThemeBgWindow()};position:relative;padding:32px 48px;">
       <div style="position:absolute;top:-1px;left:-1px;width:20px;height:20px;border-top:2px solid var(--gold-bright);border-left:2px solid var(--gold-bright);"></div>
       <div style="position:absolute;top:-1px;right:-1px;width:20px;height:20px;border-top:2px solid var(--gold-bright);border-right:2px solid var(--gold-bright);"></div>
       <div style="position:absolute;bottom:-1px;left:-1px;width:20px;height:20px;border-bottom:2px solid var(--gold-bright);border-left:2px solid var(--gold-bright);"></div>
       <div style="position:absolute;bottom:-1px;right:-1px;width:20px;height:20px;border-bottom:2px solid var(--gold-bright);border-right:2px solid var(--gold-bright);"></div>
-      <div style="text-align:center;font-family:'Yuji Syuku',serif;font-size:22px;color:#C8A050;letter-spacing:0.2em;">── 今宵の儀式は終わった ──</div>
+      <div style="text-align:center;font-family:'Yuji Syuku',serif;font-size:22px;color:var(--gold-bright);letter-spacing:0.2em;">── 今宵の儀式は終わった ──</div>
       ${statsHtml}
       <div style="margin:8px 0;height:1px;background:rgba(var(--gold-r),var(--gold-g),var(--gold-b),0.2);"></div>
       ${hofHtml}${mvpHtml}${wordsHtml}
@@ -4755,7 +4773,7 @@ async function saveResultImage() {
 
   document.body.appendChild(el);
   await document.fonts.ready;
-  const canvas = await html2canvas(el, { width: 1200, height: 675, scale: 1, backgroundColor: '#0E0C09', useCORS: true, allowTaint: true });
+  const canvas = await html2canvas(el, { width: 1200, height: 675, scale: 1, backgroundColor: getThemeBgBase(), useCORS: true, allowTaint: true });
   document.body.removeChild(el);
   const link = document.createElement('a');
   link.download = `儀式リザルト_${Date.now()}.png`;
@@ -4799,6 +4817,9 @@ const THEMES = {
       '--fg-base-r': '232', '--fg-base-g': '223', '--fg-base-b': '200',
       '--bg-base': '#0E0C09', '--bg-panel': '#13110D', '--bg-input': '#0A0907',
       '--border': '#2A2418', '--border-gold': 'rgba(160,120,48,0.4)',
+      '--bg-overlay': '#080604', '--bg-window': 'rgba(19,17,13,0.95)',
+      '--bg-window-heavy': 'rgba(19,17,13,0.97)',
+      '--overlay-dim': 'rgba(0,0,0,0.7)', '--overlay-dim-heavy': 'rgba(0,0,0,0.85)',
     },
     js: {
       typeConfig: {
@@ -4838,6 +4859,9 @@ const THEMES = {
       '--fg-base-r': '240', '--fg-base-g': '216', '--fg-base-b': '200',
       '--bg-base': '#0E0804', '--bg-panel': '#130A06', '--bg-input': '#0A0604',
       '--border': '#2A1408', '--border-gold': 'rgba(170,58,32,0.4)',
+      '--bg-overlay': '#0A0402', '--bg-window': 'rgba(19,10,6,0.95)',
+      '--bg-window-heavy': 'rgba(19,10,6,0.97)',
+      '--overlay-dim': 'rgba(0,0,0,0.7)', '--overlay-dim-heavy': 'rgba(0,0,0,0.85)',
     },
     js: {
       typeConfig: {
@@ -4877,6 +4901,9 @@ const THEMES = {
       '--fg-base-r': '216', '--fg-base-g': '200', '--fg-base-b': '240',
       '--bg-base': '#08040E', '--bg-panel': '#0C0814', '--bg-input': '#060410',
       '--border': '#1A0A2A', '--border-gold': 'rgba(122,58,170,0.4)',
+      '--bg-overlay': '#04020A', '--bg-window': 'rgba(12,8,20,0.95)',
+      '--bg-window-heavy': 'rgba(12,8,20,0.97)',
+      '--overlay-dim': 'rgba(0,0,0,0.7)', '--overlay-dim-heavy': 'rgba(0,0,0,0.85)',
     },
     js: {
       typeConfig: {
@@ -4916,6 +4943,9 @@ const THEMES = {
       '--fg-base-r': '212', '--fg-base-g': '232', '--fg-base-b': '240',
       '--bg-base': '#060C12', '--bg-panel': '#0A1218', '--bg-input': '#060A0E',
       '--border': '#1A2A38', '--border-gold': 'rgba(74,138,170,0.4)',
+      '--bg-overlay': '#040810', '--bg-window': 'rgba(10,18,24,0.95)',
+      '--bg-window-heavy': 'rgba(10,18,24,0.97)',
+      '--overlay-dim': 'rgba(0,0,0,0.7)', '--overlay-dim-heavy': 'rgba(0,0,0,0.85)',
     },
     js: {
       typeConfig: {
@@ -4940,6 +4970,48 @@ const THEMES = {
         解放: 'rgba(74,204,208,0.05)', 封印: 'rgba(122,156,200,0.05)',
         滅亡: 'rgba(170,74,106,0.05)', 覚醒: 'rgba(74,170,187,0.05)',
         自己紹介: 'rgba(138,156,200,0.05)',
+      },
+    }
+  },
+  seiten: {
+    name: '聖典',
+    css: {
+      '--fg-base': '#2A1A0A', '--fg-dim': '#6A4A2A',
+      '--gold': '#7A4A10', '--gold-bright': '#9A6A20',
+      '--gold-r': '122', '--gold-g': '74', '--gold-b': '16',
+      '--gold-bright-r': '154', '--gold-bright-g': '106', '--gold-bright-b': '32',
+      '--teal': '#4A6A3A', '--teal-dim': '#C8E0B8',
+      '--teal-r': '74', '--teal-g': '106', '--teal-b': '58',
+      '--fg-base-r': '42', '--fg-base-g': '26', '--fg-base-b': '10',
+      '--bg-base': '#F0E8D8', '--bg-panel': '#E8DCC8', '--bg-input': '#F4EEE0',
+      '--border': '#C8B898', '--border-gold': 'rgba(122,74,16,0.3)',
+      '--bg-overlay': '#D8C8A8', '--bg-window': 'rgba(232,220,200,0.97)',
+      '--bg-window-heavy': 'rgba(224,212,188,0.99)',
+      '--overlay-dim': 'rgba(180,160,120,0.7)', '--overlay-dim-heavy': 'rgba(160,140,100,0.85)',
+    },
+    js: {
+      typeConfig: {
+        自動: { color: '#9A6A20', altarRgb: [122, 74, 16] },
+        召喚: { color: '#9A6A20', altarRgb: [122, 74, 16] },
+        解放: { color: '#4A8A5A', altarRgb: [74, 138, 90] },
+        封印: { color: '#6A4A8A', altarRgb: [100, 74, 130] },
+        滅亡: { color: '#8A2A2A', altarRgb: [138, 42, 42] },
+        覚醒: { color: '#8A7A20', altarRgb: [138, 122, 32] },
+        自己紹介: { color: '#7A5A8A', altarRgb: [120, 90, 138] },
+      },
+      imageTypeColors: {
+        自動: '#9A6A20', 召喚: '#9A6A20', 解放: '#4A8A5A',
+        封印: '#6A4A8A', 滅亡: '#8A2A2A', 覚醒: '#8A7A20', 自己紹介: '#7A5A8A',
+      },
+      countdownTypeColors: {
+        自動: '#9A6A20', 召喚: '#9A6A20', 解放: '#4A8A5A',
+        封印: '#6A4A8A', 滅亡: '#8A2A2A', 覚醒: '#8A7A20', 自己紹介: '#7A5A8A',
+      },
+      historyTypeBg: {
+        自動: 'rgba(122,74,16,0.08)', 召喚: 'rgba(122,74,16,0.08)',
+        解放: 'rgba(74,138,90,0.08)', 封印: 'rgba(100,74,130,0.08)',
+        滅亡: 'rgba(138,42,42,0.08)', 覚醒: 'rgba(138,122,32,0.08)',
+        自己紹介: 'rgba(120,90,138,0.08)',
       },
     }
   }
@@ -5612,6 +5684,9 @@ function updateBattleBtn() {
         </button>
         <button class="theme-btn" data-theme="souen" onclick="applyTheme('souen')">
           <span class="theme-preview" style="background:#4A8AAA;"></span>蒼炎
+        </button>
+        <button class="theme-btn" data-theme="seiten" onclick="applyTheme('seiten')">
+          <span class="theme-preview" style="background:#9A6A20;"></span>聖典
         </button>
       </div>
     </div>
