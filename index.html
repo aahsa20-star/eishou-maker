@@ -5234,6 +5234,10 @@ function resetBattle() {
   const btn = document.getElementById('battle-start-btn');
   btn.disabled = false;
   btn.textContent = '⚔ バトル開始';
+  // 魔法陣アニメーション再開
+  if (!altarAnimId && altarCanvas) {
+    altarAnimId = requestAnimationFrame(altarLoop);
+  }
 }
 
 function addBattleWordManual(team) {
@@ -5288,6 +5292,12 @@ async function startBattle() {
   if (battleSelected.red.length === 0 || battleSelected.blue.length === 0) {
     alert('両陣営に言霊が必要です');
     return;
+  }
+
+  // 魔法陣アニメーションを停止（html2canvas競合防止）
+  if (altarAnimId) {
+    cancelAnimationFrame(altarAnimId);
+    altarAnimId = null;
   }
 
   const btn = document.getElementById('battle-start-btn');
@@ -5476,6 +5486,10 @@ function closeBattleOverlay() {
   const win = document.getElementById('battleOverlayWindow');
   bg.classList.remove('visible');
   win.classList.remove('visible');
+  // 魔法陣アニメーション再開
+  if (!altarAnimId && altarCanvas) {
+    altarAnimId = requestAnimationFrame(altarLoop);
+  }
 }
 
 async function saveBattleResultImage() {
