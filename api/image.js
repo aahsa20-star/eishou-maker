@@ -69,7 +69,7 @@ export default async function handler(req, res) {
     });
   }
 
-  const { chantText, type, element } = req.body || {};
+  const { chantText, type, element, words, profile } = req.body || {};
   if (!chantText) {
     return res.status(400).json({ error: '詠唱文が指定されていません' });
   }
@@ -79,6 +79,46 @@ export default async function handler(req, res) {
   if (!anthropicKey || !openaiKey) {
     return res.status(500).json({ error: 'APIキーが設定されていません' });
   }
+
+  // タイプ別・プロフィール対応のシステムプロンプト
+  let systemPrompt = `あなたはダークファンタジーアニメ風のイラスト生成AIへのプロンプトを作成する専門家です。
+与えられた詠唱文・タイプ・キーワードから、DALL-E 3用の英語プロンプトを1つだけ生成してください。
+
+必ず以下のスタイル指定を含めること：
+- dark fantasy anime illustration style
+- dramatic lighting and cinematic composition
+- highly detailed
+- no text, no words, no letters, no writing
+
+タイプ別の方向性：
+- 召喚：召喚された強大な存在・精霊・モンスター。魔法陣と共に次元の裂け目から現れる瞬間
+- 解放：束縛から解き放たれた力の爆発。鎖が砕ける瞬間・解放されたエネルギーの奔流
+- 封印：古の存在が封印される瞬間。神秘的な光の鎖・結界・古代の紋章
+- 滅亡：終末の使者・崩壊する世界・破滅をもたらす存在の降臨
+- 覚醒：戦士や術者の覚醒変容の瞬間。オーラの爆発・力の解放・超越の瞬間
+- 自己紹介：その人物を体現したファンタジーキャラクターのポートレート。配信者・クリエイターとしての個性を反映した、ドラマチックなポーズと衣装
+- 自動：詠唱文の内容・雰囲気から最も合うダークファンタジーシーンを選ぶ
+
+プロンプトは英語で200〜300語程度。
+余計な説明は不要。プロンプト文のみ出力すること。`;
+
+  if (type === '自己紹介' && profile) {
+    systemPrompt += `\n\n自己紹介タイプの追加指示：
+実在の人物名は使わず「a powerful creator character」のように表現すること。
+その人物の活動・強み・キーワードから性格・スタイルを読み取りファンタジーキャラクターとして昇華させること。
+ポートレート構図（上半身〜全身）で、印象的なキャラクターデザインに。`;
+  }
+
+  const wordList = (words || []).join('、');
+  const profileInfo = profile
+    ? `名前：${profile.name || ''}、活動：${profile.activity || ''}、強み：${profile.strength || ''}、キーワード：${profile.keywords || ''}`
+    : null;
+
+  const userMessage = `詠唱タイプ：${type || '自動'}
+詠唱文：${chantText.slice(0, 300)}
+属性：${element || 'なし'}
+${wordList ? `使用単語：${wordList}` : ''}
+${profileInfo ? `プロフィール：${profileInfo}` : ''}`.trim();
 
   try {
     // Step1: Claude APIで詠唱文→英語画像プロンプト変換
@@ -91,18 +131,11 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
-        max_tokens: 300,
+        max_tokens: 500,
+        system: systemPrompt,
         messages: [{
           role: 'user',
-          content: `以下の詠唱文と属性情報をもとに、DALL-E 3用の英語画像プロンプトを1つだけ生成してください。
-ファンタジーRPGの魔法陣・召喚シーンのイメージで、
-ダークファンタジー・フリーレン風の神秘的な雰囲気にしてください。
-人物は含めず、魔法のエフェクト・風景・オーラを中心にしてください。
-プロンプトのみ出力してください（説明不要）。
-
-詠唱文：${chantText.slice(0, 200)}
-タイプ：${type || '召喚'}
-属性：${element || 'なし'}`
+          content: userMessage
         }]
       })
     });

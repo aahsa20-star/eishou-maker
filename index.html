@@ -3755,7 +3755,7 @@ function showChantOverlay(text, type, chantWords, evaluation, imageUrl) {
     }
 
     // 現在の詠唱情報を保持（コピー・画像保存用）
-    _lastChantOverlay = { text, type, words: chantWords, evaluation, imageUrl: imageUrl || null };
+    _lastChantOverlay = { text, type, words: chantWords, evaluation, imageUrl: imageUrl || null, profile: null };
   }, totalLineTime);
 }
 
@@ -3892,14 +3892,16 @@ async function generateChantImage() {
   imageArea.classList.add('visible');
 
   try {
-    const { text, type, evaluation } = _lastChantOverlay;
+    const { text, type, words: chantWords, evaluation, profile } = _lastChantOverlay;
     const res = await fetch('/api/image', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         chantText: text,
         type: type || '召喚',
-        element: evaluation ? evaluation.element : null
+        element: evaluation ? evaluation.element : null,
+        words: chantWords || [],
+        profile: profile || null,
       })
     });
     const data = await res.json();
@@ -4160,6 +4162,9 @@ async function generate() {
       ? [document.getElementById('profileName').value.trim()].filter(Boolean)
       : [...selected];
     showChantOverlay(text, displayType, historyWords, evaluation);
+    if (isProfileMode && _lastChantOverlay) {
+      _lastChantOverlay.profile = requestBody.profile;
+    }
 
     saveHistory({ text, words: historyWords, type: displayType, timestamp: Date.now(), evaluation, imageUrl: _lastGeneratedImageUrl || null });
     updateSessionData(text, evaluation);
