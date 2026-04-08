@@ -5500,11 +5500,39 @@ function closeBattleOverlay() {
 async function saveBattleResultImage() {
   await document.fonts.ready;
   const el = document.getElementById('battleOverlayWindow');
+  if (!el) return;
+
+  // fixed+transformだとhtml2canvasが正しく取得できないため
+  // 一時的にstatic配置に切り替えてキャプチャ
+  const orig = {
+    position: el.style.position,
+    left: el.style.left,
+    top: el.style.top,
+    transform: el.style.transform,
+    maxHeight: el.style.maxHeight,
+  };
+  el.style.position = 'absolute';
+  el.style.left = '-9999px';
+  el.style.top = '0';
+  el.style.transform = 'none';
+  el.style.maxHeight = 'none';
+
   const canvas = await html2canvas(el, {
     scale: 1.5,
     backgroundColor: getThemeBgBase(),
     useCORS: true,
+    allowTaint: true,
+    scrollX: 0,
+    scrollY: 0,
   });
+
+  // スタイルを復元
+  el.style.position = orig.position;
+  el.style.left = orig.left;
+  el.style.top = orig.top;
+  el.style.transform = orig.transform;
+  el.style.maxHeight = orig.maxHeight;
+
   const link = document.createElement('a');
   link.download = `詠唱バトル_${Date.now()}.png`;
   link.href = canvas.toDataURL('image/png');
